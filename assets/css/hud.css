@@ -1,0 +1,6 @@
+#hud {
+  position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
+  color: rgba(255,240,220,0.2); font-family: 'Cormorant Garamond', Georgia, serif; font-size: 11px;
+  z-index: 2; pointer-events: none; letter-spacing: 2px; text-align: center;
+  text-transform: lowercase;
+}
