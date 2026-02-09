@@ -1,1 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ODE PLX</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <canvas id="viewport"></canvas>
+  <div id="scroll-fade"></div>
+  <div id="hud">scroll to ascend</div>
 
+  <nav id="footer-bar">
+    <a href="#" class="footer-link footer-left">Lineup</a>
+    <a href="#" class="footer-logo">ODE PLX</a>
+    <a href="https://tickets.example.com" target="_blank" rel="noopener" class="footer-link footer-right">Biljetter</a>
+  </nav>
+
+  <script type="importmap">
+  { "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+    "lil-gui": "https://cdn.jsdelivr.net/npm/lil-gui@0.19.2/dist/lil-gui.esm.min.js"
+  }}
+  </script>
+
+  <script type="module" src="main.js"></script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+import * as THREE from 'three';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { FRUSTUM, TOP_H } from './config.js';
+
+// =====================================================
+// RENDERER + SCENE
+// =====================================================
+export const canvas = document.getElementById('viewport');
+export const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.6;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+
+export const scene = new THREE.Scene();
+export const fogColor = 0x1a120a;
+scene.background = new THREE.Color(0x2a1a0e);
+scene.fog = new THREE.FogExp2(fogColor, 0.06);
+
+const pmrem = new THREE.PMREMGenerator(renderer);
+scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+pmrem.dispose();
+
+const aspect = window.innerWidth / window.innerHeight;
+export const camera = new THREE.OrthographicCamera(
+  -FRUSTUM * aspect / 2, FRUSTUM * aspect / 2, FRUSTUM / 2, -FRUSTUM / 2, 0.1, 300
+);
+
+// =====================================================
+// LIGHTS
+// =====================================================
+scene.add(new THREE.AmbientLight(0x3a2a1a, 0.5));
+export const keyLight = new THREE.DirectionalLight(0xffe0a0, 5);
+keyLight.position.set(-5, 25, -12);
+keyLight.castShadow = true;
+keyLight.shadow.mapSize.set(4096, 4096);
+keyLight.shadow.camera.left = -15; keyLight.shadow.camera.right = 15;
+keyLight.shadow.camera.top = 70; keyLight.shadow.camera.bottom = -5;
+keyLight.shadow.camera.far = 150;
+scene.add(keyLight);
+
+// Warm rim light from sun side
+export const rimLight = new THREE.DirectionalLight(0xffcc80, 0.6);
+rimLight.position.set(-10, 20, -15);
+scene.add(rimLight);
+scene.add(new THREE.HemisphereLight(0xffddaa, 0x1a0e06, 0.3));
+
+// Sun — far behind the tower for backlighting
+export const sunPos = new THREE.Vector3(-25, TOP_H * 0.6, -50);
+export const sunLight = new THREE.DirectionalLight(0xffe0a0, 0.8);
+sunLight.position.copy(sunPos);
+scene.add(sunLight);
+
+// Large sun mesh (golden glow behind the structure)
+export const sunMesh = new THREE.Mesh(
+  new THREE.SphereGeometry(3, 16, 16),
+  new THREE.MeshBasicMaterial({ color: 0xffe8c0 })
+);
+sunMesh.position.copy(sunPos);
+scene.add(sunMesh);
+
+// Occlusion scene — renders scene as black silhouettes, sun as bright white
+export const occlusionScene = new THREE.Scene();
+export const occlusionMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
+export const sunOccMesh = new THREE.Mesh(
+  new THREE.SphereGeometry(3, 16, 16),
+  new THREE.MeshBasicMaterial({ color: 0xffffff })
+);
+sunOccMesh.position.copy(sunPos);
+occlusionScene.add(sunOccMesh);
+
+export const occRT = new THREE.WebGLRenderTarget(
+  Math.floor(window.innerWidth / 2), Math.floor(window.innerHeight / 2)
+);
+
+// =====================================================
+// ORTHO HELPER
+// =====================================================
+export function setOrtho() {
+  const a = window.innerWidth / window.innerHeight;
+  camera.left = -FRUSTUM*a/2; camera.right = FRUSTUM*a/2;
+  camera.top = FRUSTUM/2; camera.bottom = -FRUSTUM/2;
+  camera.updateProjectionMatrix();
+}
