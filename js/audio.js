@@ -3,7 +3,7 @@ import { STAGES } from './config.js';
 // =====================================================
 // DYNAMIC AUDIO — Web Audio API with per-stage effects
 // =====================================================
-export const bgMusic = new Audio('Disco Elysium - Martinaise District Theme 1.mp3');
+export const bgMusic = new Audio('assets/audio/Disco Elysium - Martinaise District Theme 1.mp3');
 bgMusic.loop = true;
 bgMusic.crossOrigin = 'anonymous';
 

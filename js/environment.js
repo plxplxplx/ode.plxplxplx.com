@@ -248,7 +248,7 @@ scene.add(vineGroup);
 // VINE GLB MODEL
 // =====================================================
 const gltfLoader = new GLTFLoader();
-gltfLoader.load('vine.glb', (gltf) => {
+gltfLoader.load('assets/models/vine.glb', (gltf) => {
   const vineModel = gltf.scene;
   vineModel.traverse(child => {
     if (child.isMesh) {
@@ -342,7 +342,7 @@ gltfLoader.load('vine.glb', (gltf) => {
 // =====================================================
 // IVY GLB MODEL
 // =====================================================
-gltfLoader.load('Ivy.glb', (gltf) => {
+gltfLoader.load('assets/models/Ivy.glb', (gltf) => {
   const ivyModel = gltf.scene;
   ivyModel.traverse(child => {
     if (child.isMesh) {
@@ -439,10 +439,10 @@ gltfLoader.load('Ivy.glb', (gltf) => {
 // =====================================================
 // SHRUB BILLBOARDS
 // =====================================================
-const shrubAlbedo = new THREE.TextureLoader().load('TCom_Shrub_Blueberry01_512_albedo.png');
-const shrubAlpha = new THREE.TextureLoader().load('TCom_Shrub_Blueberry01_512_alpha.png');
-const shrubNormal = new THREE.TextureLoader().load('TCom_Shrub_Blueberry01_512_normal.png');
-const shrubRough = new THREE.TextureLoader().load('TCom_Shrub_Blueberry01_512_roughness.png');
+const shrubAlbedo = new THREE.TextureLoader().load('assets/textures/shrub/TCom_Shrub_Blueberry01_512_albedo.png');
+const shrubAlpha = new THREE.TextureLoader().load('assets/textures/shrub/TCom_Shrub_Blueberry01_512_alpha.png');
+const shrubNormal = new THREE.TextureLoader().load('assets/textures/shrub/TCom_Shrub_Blueberry01_512_normal.png');
+const shrubRough = new THREE.TextureLoader().load('assets/textures/shrub/TCom_Shrub_Blueberry01_512_roughness.png');
 
 const shrubMat = new THREE.MeshStandardMaterial({
   map: shrubAlbedo,
@@ -530,7 +530,7 @@ scene.add(shrubGroup);
 // FIGURE — standing in SUMMIT stage corner against railing
 // =====================================================
 const fbxLoader = new FBXLoader();
-fbxLoader.load('Male Standing Pose.fbx', (fbx) => {
+fbxLoader.load('assets/models/Male Standing Pose.fbx', (fbx) => {
   const boundingBox = new THREE.Box3().setFromObject(fbx);
   const height = boundingBox.max.y - boundingBox.min.y;
   const targetHeight = 1.8;

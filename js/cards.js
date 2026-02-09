@@ -20,7 +20,7 @@ export const IMG_FILES = [
 ];
 export const CARD_COUNT = 30;
 const texLoader = new THREE.TextureLoader();
-const imgTextures = IMG_FILES.map(f => texLoader.load('img/' + f));
+const imgTextures = IMG_FILES.map(f => texLoader.load('assets/img/' + f));
 
 export const CARD_OPTS = {
   radiusMin: 7,

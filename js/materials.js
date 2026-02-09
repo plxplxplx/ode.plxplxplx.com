@@ -7,18 +7,18 @@ import { STAGES } from './config.js';
 const texLoader = new THREE.TextureLoader();
 
 // Light marble (Marble001) — for upper stages (THIRD + SUMMIT)
-export const lightColor = texLoader.load('Marble001_1K-JPG/Marble001_1K-JPG_Color.jpg');
-export const lightNormal = texLoader.load('Marble001_1K-JPG/Marble001_1K-JPG_NormalGL.jpg');
-export const lightRoughness = texLoader.load('Marble001_1K-JPG/Marble001_1K-JPG_Roughness.jpg');
+export const lightColor = texLoader.load('assets/textures/Marble001_1K-JPG/Marble001_1K-JPG_Color.jpg');
+export const lightNormal = texLoader.load('assets/textures/Marble001_1K-JPG/Marble001_1K-JPG_NormalGL.jpg');
+export const lightRoughness = texLoader.load('assets/textures/Marble001_1K-JPG/Marble001_1K-JPG_Roughness.jpg');
 for (const tex of [lightColor, lightNormal, lightRoughness]) {
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
   tex.repeat.set(1, 2);
 }
 
 // Dark marble (Marble016) — for lower stages (GROUND + SECOND)
-export const darkColor = texLoader.load('Marble016_1K-JPG/Marble016_1K-JPG_Color.jpg');
-export const darkNormal = texLoader.load('Marble016_1K-JPG/Marble016_1K-JPG_NormalGL.jpg');
-export const darkRoughness = texLoader.load('Marble016_1K-JPG/Marble016_1K-JPG_Roughness.jpg');
+export const darkColor = texLoader.load('assets/textures/Marble016_1K-JPG/Marble016_1K-JPG_Color.jpg');
+export const darkNormal = texLoader.load('assets/textures/Marble016_1K-JPG/Marble016_1K-JPG_NormalGL.jpg');
+export const darkRoughness = texLoader.load('assets/textures/Marble016_1K-JPG/Marble016_1K-JPG_Roughness.jpg');
 for (const tex of [darkColor, darkNormal, darkRoughness]) {
   tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
   tex.repeat.set(1, 2);
