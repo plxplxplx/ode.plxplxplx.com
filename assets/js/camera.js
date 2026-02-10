@@ -30,7 +30,7 @@ export const SCROLL_LERP = 0.06;
 export let virtualScroll = 0;
 let lastRawScroll = 0;
 export const SCROLL_SENSITIVITY = 0.7;
-export const FADE_ZONE = 10;
+export const FADE_ZONE = 14;
 const fadeEl = document.getElementById('scroll-fade');
 
 export function onScroll() {
@@ -58,6 +58,29 @@ window.addEventListener('scroll', onScroll, { passive: true });
 window.scrollTo({ top: (document.body.scrollHeight - window.innerHeight) * 0.5, behavior: 'instant' });
 lastRawScroll = window.scrollY;
 onScroll();
+
+// Touch-based scroll for mobile (OrbitControls eats touch → native scroll never fires)
+controls.touches = { ONE: null, TWO: null }; // disable OrbitControls touch
+let lastTouchY = null;
+
+canvas.addEventListener('touchstart', (e) => {
+  if (e.touches.length === 1) lastTouchY = e.touches[0].clientY;
+}, { passive: true });
+
+canvas.addEventListener('touchmove', (e) => {
+  if (e.touches.length === 1 && lastTouchY !== null) {
+    const touchY = e.touches[0].clientY;
+    const deltaPixels = lastTouchY - touchY;
+    lastTouchY = touchY;
+    const deltaFrac = deltaPixels / window.innerHeight;
+    virtualScroll += deltaFrac * TOP_H * SCROLL_SENSITIVITY * 0.5;
+    virtualScroll = ((virtualScroll % TOP_H) + TOP_H) % TOP_H;
+    scrollTarget.y = virtualScroll;
+    scrollTarget.angle += deltaFrac * Math.PI * 3 * SCROLL_SENSITIVITY * 0.5;
+  }
+}, { passive: true });
+
+canvas.addEventListener('touchend', () => { lastTouchY = null; }, { passive: true });
 
 // =====================================================
 // CAMERA UPDATE (scroll-driven orbit)

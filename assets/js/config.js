@@ -10,9 +10,9 @@ export const STAGES = [
   { name: 'GROUND',   floorY: 0,    scaffLevels: 14 },
   { name: 'SECOND',   floorY: 30,   scaffLevels: 14 },
   { name: 'THIRD',    floorY: 60,   scaffLevels: 14 },
-  { name: 'SUMMIT',   floorY: 90,   scaffLevels: 8  },
+  { name: 'SUMMIT',   floorY: 90,   scaffLevels: 14 },
 ];
-export const TOP_H = 106;
+export const TOP_H = 118;
 export const ZONES_COLORS = [0x1a120a, 0x1a1a22, 0x1f150a, 0x1a1008];
 export const NUM_LEVELS = Math.ceil(TOP_H / LEVEL_H);
 
