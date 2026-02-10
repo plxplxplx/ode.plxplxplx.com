@@ -9,6 +9,7 @@ import {
   FilmGrainShader, ColorGradeShader,
 } from './shaders.js';
 import { renderer, scene, camera, occRT, occBlurRT, setOrtho } from './scene.js';
+import { isMobile } from './config.js';
 
 // =====================================================
 // POST-PROCESSING
@@ -19,6 +20,7 @@ composer.addPass(new RenderPass(scene, camera));
 export const bloom = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight), 0.7, 0.5, 0.6
 );
+bloom.enabled = !isMobile;
 composer.addPass(bloom);
 
 export const bokehPass = new BokehPass(scene, camera, {
@@ -26,23 +28,26 @@ export const bokehPass = new BokehPass(scene, camera, {
   aperture: 0.004,
   maxblur: 0.001,
 });
-bokehPass.enabled = true;
+bokehPass.enabled = !isMobile;
 composer.addPass(bokehPass);
 
 export const godRaysPass = new ShaderPass(GodRaysShader);
 godRaysPass.uniforms.tOcclusion.value = occRT.texture;
-godRaysPass.enabled = true;
+godRaysPass.enabled = !isMobile;
 composer.addPass(godRaysPass);
 
-composer.addPass(new ShaderPass(VignetteShader));
+const vignettePass = new ShaderPass(VignetteShader);
+composer.addPass(vignettePass);
 
 export const chromaPass = new ShaderPass(ChromaticAberrationShader);
+chromaPass.enabled = !isMobile;
 composer.addPass(chromaPass);
 
 export const colorGradePass = new ShaderPass(ColorGradeShader);
 composer.addPass(colorGradePass);
 
 export const grainPass = new ShaderPass(FilmGrainShader);
+grainPass.enabled = !isMobile;
 composer.addPass(grainPass);
 
 // Reference to the render pass for camera swap

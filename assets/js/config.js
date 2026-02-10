@@ -21,6 +21,9 @@ export const gz = j => j * BAY_D - TOTAL_D / 2;
 export const cellCx = i => gx(i) + BAY_W / 2;
 export const cellCz = j => gz(j) + BAY_D / 2;
 
+// Mobile detection + quality tier
+export const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768;
+
 // Character + camera config
 export const MOVE_SPEED = 4.0, JUMP_VEL = 7.2, GRAVITY = -20, STEP_UP = 0.35;
 export const FRUSTUM = 12, CAM_DIST = 60, CAM_SMOOTH = 0.07;

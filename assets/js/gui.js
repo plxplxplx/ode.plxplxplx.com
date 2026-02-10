@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import GUI from 'lil-gui';
-import { FRUSTUM } from './config.js';
+import { FRUSTUM, isMobile } from './config.js';
 import { renderer, scene, sunPos, sunMesh, sunOccMesh, keyLight, perspCamera, switchCamera, buildPlane } from './scene.js';
 import * as sceneModule from './scene.js';
 import { STAGE_MATS, matSteel, loadMarbleTextures, getMarbleTextures, applyMarbleTextures } from './materials.js';
@@ -22,7 +22,7 @@ export const params = {
   bloomStrength: bloom.strength,
   bloomRadius: bloom.radius,
   bloomThreshold: bloom.threshold,
-  dofEnabled: true,
+  dofEnabled: !isMobile,
   dofFocus: 1,
   dofAperture: 0.004,
   dofMaxBlur: 0.001,
@@ -65,7 +65,7 @@ export const params = {
   steelMetalness: matSteel.metalness,
   steelRoughness: matSteel.roughness,
   exposure: renderer.toneMappingExposure,
-  godRaysEnabled: true,
+  godRaysEnabled: !isMobile,
   godRayExposure: godRaysPass.uniforms.exposure.value,
   godRayDecay: godRaysPass.uniforms.decay.value,
   godRayDensity: godRaysPass.uniforms.density.value,

@@ -5,7 +5,7 @@ import { manager } from './loader.js';
 import {
   BAYS_X, BAYS_Z, BAY_W, BAY_D, LEVEL_H, TOP_H,
   STAGES, ZONES_COLORS, PLAT_H, TOTAL_W, TOTAL_D,
-  gx, gz,
+  gx, gz, isMobile,
 } from './config.js';
 import { scene } from './scene.js';
 import { stageGlowVert, stageGlowFrag, backdropFogVert, backdropFogFrag } from './shaders.js';
@@ -593,7 +593,7 @@ gltfLoader.load('assets/models/Vines.glb', (gltf) => {
 export const flowerLight = new THREE.DirectionalLight(0xffe4b0, 1.8);
 flowerLight.position.set(4, 8, 3);
 flowerLight.target.position.set(0, 0, 0);
-flowerLight.castShadow = true;
+flowerLight.castShadow = !isMobile;
 flowerLight.shadow.mapSize.set(1024, 1024);
 flowerLight.shadow.camera.near = 0.5;
 flowerLight.shadow.camera.far = 30;
