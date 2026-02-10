@@ -315,7 +315,6 @@ export const cardArcFrag = `
     shade = clamp(shade, 0.8, 1.25);
     if (!gl_FrontFacing) {
       shade *= 0.9;
-      tex.rgb = mix(tex.rgb, vec3(dot(tex.rgb, vec3(0.3, 0.6, 0.1))), 0.15);
     }
     gl_FragColor = vec4(tex.rgb * shade, tex.a * opacity);
   }

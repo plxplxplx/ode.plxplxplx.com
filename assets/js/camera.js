@@ -16,18 +16,18 @@ controls.maxPolarAngle = Math.PI * 0.85;
 controls.minPolarAngle = 0.2;
 controls.autoRotate = false;
 
-// Scroll state
-export let scrollTarget = { y: 0, angle: 0 };
-export let scrollCurrent = { y: 0, angle: 0 };
+// Scroll state — start above fade zone
+const START_Y = 20;
+export let scrollTarget = { y: START_Y, angle: 0 };
+export let scrollCurrent = { y: START_Y, angle: 0 };
 export const ORBIT_RADIUS = 12;
 
-// Start on the first floor at orbit distance
-camera.position.set(ORBIT_RADIUS, 4, 0);
-controls.target.set(0, 1, 0);
+camera.position.set(ORBIT_RADIUS, START_Y + 4, 0);
+controls.target.set(0, START_Y + 1, 0);
 controls.update();
 export const SCROLL_LERP = 0.06;
 
-export let virtualScroll = 0;
+export let virtualScroll = START_Y;
 let lastRawScroll = 0;
 export const SCROLL_SENSITIVITY = 0.7;
 export const FADE_ZONE = 14;
