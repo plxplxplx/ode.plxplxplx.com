@@ -36,7 +36,7 @@ export const ORBIT_RADIUS = 12;
 // Intro animation — twirl around scaffold into position
 const INTRO_DURATION = 3.5;
 const INTRO_START_Y = START_Y + 5;
-const INTRO_START_ANGLE = -Math.PI * 2;
+const INTRO_START_ANGLE = -Math.PI * 0.75;
 let introElapsed = 0;
 let introActive = true;
 
