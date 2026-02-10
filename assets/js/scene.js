@@ -53,7 +53,7 @@ scene.add(new THREE.AmbientLight(0x3a2a1a, 0.5));
 export const keyLight = new THREE.DirectionalLight(0xffe0a0, 5);
 keyLight.position.set(-5, 25, -12);
 keyLight.castShadow = true;
-keyLight.shadow.mapSize.set(4096, 4096);
+keyLight.shadow.mapSize.set(2048, 2048);
 keyLight.shadow.camera.left = -15; keyLight.shadow.camera.right = 15;
 keyLight.shadow.camera.top = 70; keyLight.shadow.camera.bottom = -5;
 keyLight.shadow.camera.far = 150;

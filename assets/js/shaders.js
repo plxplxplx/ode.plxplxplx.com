@@ -469,10 +469,13 @@ export const tapeFrag = `
   uniform sampler2D tapeMap;
   uniform float opacity;
   uniform float repeats;
+  uniform float flipU;
   varying vec2 vUv;
 
   void main() {
-    vec2 uv = vec2(vUv.x * repeats, 1.0 - vUv.y);
+    float u = vUv.x * repeats;
+    if (flipU > 0.5) u = repeats - u;
+    vec2 uv = vec2(u, 1.0 - vUv.y);
     vec4 tex = texture2D(tapeMap, uv);
     gl_FragColor = vec4(tex.rgb, tex.a * opacity);
   }

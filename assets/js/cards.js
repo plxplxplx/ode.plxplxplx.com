@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { TOP_H, STAGES } from './config.js';
 import { cardArcVert, cardArcFrag } from './shaders.js';
 import { scene, canvas } from './scene.js';
+import { manager } from './loader.js';
 import { buildRibbonGeo } from './zones.js';
 
 // =====================================================
@@ -20,7 +21,7 @@ export const IMG_FILES = [
   'iz30Ho2Gku-1920.jpeg','LnLVhxBU-J-2400.jpeg','QGqfYT3OLI-2400.jpeg',
 ];
 export const CARD_COUNT = 30;
-const texLoader = new THREE.TextureLoader();
+const texLoader = new THREE.TextureLoader(manager);
 
 export const CARD_OPTS = {
   radius: 12.5,

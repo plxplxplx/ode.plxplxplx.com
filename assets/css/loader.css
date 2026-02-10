@@ -1,0 +1,50 @@
+#loader {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #1a120a;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: opacity 0.8s ease;
+}
+
+#loader.loaded {
+  opacity: 0;
+  pointer-events: none;
+}
+
+#loader-text {
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 300;
+  font-size: 4rem;
+  letter-spacing: 0.3em;
+  color: #c9a96e;
+}
+
+#loader-track {
+  margin-top: 1.5rem;
+  width: 180px;
+  height: 2px;
+  background: rgba(201, 169, 110, 0.15);
+  border-radius: 1px;
+  overflow: hidden;
+}
+
+#loader-bar {
+  height: 100%;
+  width: 0%;
+  background: #c9a96e;
+  border-radius: 1px;
+  transition: width 0.2s ease;
+}
+
+#loader-pct {
+  margin-top: 0.75rem;
+  font-family: 'Cormorant Garamond', serif;
+  font-weight: 300;
+  font-size: 0.9rem;
+  letter-spacing: 0.15em;
+  color: rgba(201, 169, 110, 0.5);
+}

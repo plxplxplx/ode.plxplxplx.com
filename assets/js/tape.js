@@ -54,9 +54,10 @@ export const TAPE_OPTS = {
   color: '#FFD700',
   textColor: '#000000',
   text: 'ODE',
-  opacity: 0.9,
+  opacity: 0.5,
   width: 0.4,
   waveAmount: 1.0,
+  flipText: true,
 };
 
 const hw = TOTAL_W / 2;
@@ -123,6 +124,7 @@ export function buildTape(opts = TAPE_OPTS) {
         time: { value: 0 },
         waveAmount: { value: opts.waveAmount },
         repeats: { value: repeats },
+        flipU: { value: opts.flipText ? 1.0 : 0.0 },
       },
       vertexShader: tapeVert,
       fragmentShader: tapeFrag,

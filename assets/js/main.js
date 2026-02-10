@@ -44,6 +44,9 @@ import { composer, colorGradePass, grainPass, godRaysPass } from './postprocessi
 // GUI (must be last — reads from all modules)
 import { params, updateFPS } from './gui.js';
 
+// Loader
+import { loaderReady } from './loader.js';
+
 // Canvas ref for cursor
 import { canvas } from './scene.js';
 
@@ -279,4 +282,11 @@ function animate() {
 // =====================================================
 // START
 // =====================================================
-animate();
+loaderReady.then(() => {
+  // Warm up GPU — compile all shaders and generate shadow maps behind the overlay
+  renderer.compile(scene, sceneModule.camera);
+  renderer.render(scene, sceneModule.camera);
+
+  document.getElementById('loader').classList.add('loaded');
+  animate();
+});

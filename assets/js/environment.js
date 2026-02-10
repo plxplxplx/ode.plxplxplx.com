@@ -1,14 +1,15 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
 import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+import { manager } from './loader.js';
 import {
   BAYS_X, BAYS_Z, BAY_W, BAY_D, LEVEL_H, TOP_H,
   STAGES, ZONES_COLORS, PLAT_H, TOTAL_W, TOTAL_D,
   gx, gz,
 } from './config.js';
-import { scene, fogColor } from './scene.js';
+import { scene } from './scene.js';
 import { stageGlowVert, stageGlowFrag, backdropFogVert, backdropFogFrag } from './shaders.js';
-import { totalLevels, LOOKOUTS, collidables } from './scaffold.js';
+import { totalLevels, LOOKOUTS } from './scaffold.js';
 
 // =====================================================
 // VOLUMETRIC FOG BANDS between stages
@@ -69,77 +70,7 @@ for (let end = 0; end < 2; end++) {
   }
 }
 
-// =====================================================
-// MARBLE FLOOR
-// =====================================================
-function makeMarbleTex(size = 1024) {
-  const c = document.createElement('canvas');
-  c.width = c.height = size;
-  const ctx = c.getContext('2d');
-  ctx.fillStyle = '#e8e0d4';
-  ctx.fillRect(0, 0, size, size);
-  for (let pass = 0; pass < 6; pass++) {
-    const veinColor = pass < 3 ? 'rgba(160,145,130,' : 'rgba(100,90,80,';
-    const alpha = 0.04 + Math.random() * 0.06;
-    ctx.strokeStyle = veinColor + alpha + ')';
-    ctx.lineWidth = 0.5 + Math.random() * 2;
-    for (let v = 0; v < 30; v++) {
-      ctx.beginPath();
-      let x = Math.random() * size, y = Math.random() * size;
-      ctx.moveTo(x, y);
-      const segs = 6 + Math.floor(Math.random() * 12);
-      for (let s = 0; s < segs; s++) {
-        x += (Math.random() - 0.5) * 120;
-        y += (Math.random() - 0.3) * 80;
-        ctx.lineTo(x, y);
-      }
-      ctx.stroke();
-    }
-  }
-  const img = ctx.getImageData(0, 0, size, size);
-  for (let i = 0; i < img.data.length; i += 4) {
-    const noise = (Math.random() - 0.5) * 12;
-    img.data[i] += noise; img.data[i+1] += noise; img.data[i+2] += noise;
-  }
-  ctx.putImageData(img, 0, 0);
-  ctx.strokeStyle = 'rgba(180,170,160,0.15)';
-  ctx.lineWidth = 1;
-  const tileSize = size / 4;
-  for (let g = 0; g <= 4; g++) {
-    ctx.beginPath(); ctx.moveTo(g * tileSize, 0); ctx.lineTo(g * tileSize, size); ctx.stroke();
-    ctx.beginPath(); ctx.moveTo(0, g * tileSize); ctx.lineTo(size, g * tileSize); ctx.stroke();
-  }
-  const tex = new THREE.CanvasTexture(c);
-  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-  tex.repeat.set(12, 12);
-  return tex;
-}
-
-const marbleTex = makeMarbleTex();
-export const ground = new THREE.Mesh(
-  new THREE.PlaneGeometry(100, 100),
-  new THREE.MeshStandardMaterial({
-    map: marbleTex, color: 0xc0a890,
-    metalness: 0.1, roughness: 0.3,
-  })
-);
-ground.rotation.x = -Math.PI / 2;
-ground.position.y = -0.02;
-ground.receiveShadow = true;
-scene.add(ground);
-collidables.push(ground);
-
-// Ground fog — dense at the base, fading upward
-const fogGeo = new THREE.PlaneGeometry(300, 300);
-for (let i = 0; i < 14; i++) {
-  const fp = new THREE.Mesh(fogGeo, new THREE.MeshBasicMaterial({
-    color: fogColor, transparent: true, opacity: 0.5 * Math.pow(1 - i / 14, 2),
-    depthWrite: false, side: THREE.DoubleSide,
-  }));
-  fp.rotation.x = -Math.PI / 2;
-  fp.position.y = i * 0.5 + 0.05;
-  scene.add(fp);
-}
+// Ground floor removed — open bottom matches open top for seamless scroll wrap
 
 // =====================================================
 // VEGETATION GROUP (GLB models placed below)
@@ -152,7 +83,7 @@ scene.add(vineGroup);
 // =====================================================
 // VINE GLB MODEL
 // =====================================================
-const gltfLoader = new GLTFLoader();
+const gltfLoader = new GLTFLoader(manager);
 gltfLoader.load('assets/models/vine.glb', (gltf) => {
   const vineModel = gltf.scene;
   vineModel.traverse(child => {
@@ -393,10 +324,11 @@ gltfLoader.load('assets/models/Ivy 2.glb', (gltf) => {
 // =====================================================
 // SHRUB BILLBOARDS
 // =====================================================
-const shrubAlbedo = new THREE.TextureLoader().load('assets/textures/shrub/TCom_Shrub_Blueberry01_512_albedo.png');
-const shrubAlpha = new THREE.TextureLoader().load('assets/textures/shrub/TCom_Shrub_Blueberry01_512_alpha.png');
-const shrubNormal = new THREE.TextureLoader().load('assets/textures/shrub/TCom_Shrub_Blueberry01_512_normal.png');
-const shrubRough = new THREE.TextureLoader().load('assets/textures/shrub/TCom_Shrub_Blueberry01_512_roughness.png');
+const shrubTexLoader = new THREE.TextureLoader(manager);
+const shrubAlbedo = shrubTexLoader.load('assets/textures/shrub/TCom_Shrub_Blueberry01_512_albedo.png');
+const shrubAlpha = shrubTexLoader.load('assets/textures/shrub/TCom_Shrub_Blueberry01_512_alpha.png');
+const shrubNormal = shrubTexLoader.load('assets/textures/shrub/TCom_Shrub_Blueberry01_512_normal.png');
+const shrubRough = shrubTexLoader.load('assets/textures/shrub/TCom_Shrub_Blueberry01_512_roughness.png');
 
 const shrubMat = new THREE.MeshStandardMaterial({
   map: shrubAlbedo,
@@ -483,7 +415,7 @@ scene.add(shrubGroup);
 // =====================================================
 // FIGURE — standing in SUMMIT stage corner against railing
 // =====================================================
-const fbxLoader = new FBXLoader();
+const fbxLoader = new FBXLoader(manager);
 fbxLoader.load('assets/models/Male Standing Pose.fbx', (fbx) => {
   const boundingBox = new THREE.Box3().setFromObject(fbx);
   const height = boundingBox.max.y - boundingBox.min.y;

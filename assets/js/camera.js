@@ -25,15 +25,13 @@ export const ORBIT_RADIUS = 12;
 camera.position.set(ORBIT_RADIUS, 4, 0);
 controls.target.set(0, 1, 0);
 controls.update();
-export const SCROLL_LERP = 0.04;
+export const SCROLL_LERP = 0.06;
 
 export let virtualScroll = 0;
 let lastRawScroll = 0;
-export const SCROLL_SENSITIVITY = 1.2;
-export const FADE_ZONE = 6;
+export const SCROLL_SENSITIVITY = 0.7;
+export const FADE_ZONE = 10;
 const fadeEl = document.getElementById('scroll-fade');
-let isFading = false;
-let fadeTimer = null;
 
 export function onScroll() {
   const maxScroll = document.body.scrollHeight - window.innerHeight;
@@ -43,38 +41,13 @@ export function onScroll() {
   const deltaFrac = rawFrac - lastRawScroll / maxScroll;
   lastRawScroll = rawScroll;
 
-  const prevScroll = virtualScroll;
   virtualScroll += deltaFrac * TOP_H * SCROLL_SENSITIVITY;
-
-  const didWrap = (prevScroll > TOP_H - FADE_ZONE && virtualScroll > TOP_H) ||
-                  (prevScroll < FADE_ZONE && virtualScroll < 0);
-
   virtualScroll = ((virtualScroll % TOP_H) + TOP_H) % TOP_H;
-
-  if (didWrap && !isFading) {
-    isFading = true;
-    fadeEl.classList.add('active');
-    clearTimeout(fadeTimer);
-    fadeTimer = setTimeout(() => {
-      fadeEl.classList.remove('active');
-      setTimeout(() => { isFading = false; }, 400);
-    }, 350);
-  }
 
   if (rawFrac > 0.85 || rawFrac < 0.15) {
     const midY = maxScroll * 0.5;
     lastRawScroll = midY;
     window.scrollTo({ top: midY, behavior: 'instant' });
-  }
-
-  const distToTop = TOP_H - virtualScroll;
-  const distToBottom = virtualScroll;
-  const nearestBoundary = Math.min(distToTop, distToBottom);
-  if (nearestBoundary < FADE_ZONE && !isFading) {
-    const fade = 1 - nearestBoundary / FADE_ZONE;
-    fadeEl.style.opacity = fade * 0.7;
-  } else if (!isFading) {
-    fadeEl.style.opacity = 0;
   }
 
   scrollTarget.y = virtualScroll;
@@ -93,6 +66,8 @@ export function setControlsCamera(cam) {
   controls.object = cam;
 }
 
+let fadeOpacity = 0;
+
 export function updateCam(dt) {
   const smooth = 1 - Math.exp(-SCROLL_LERP * 60 * dt);
   let dy = scrollTarget.y - scrollCurrent.y;
@@ -101,6 +76,16 @@ export function updateCam(dt) {
   scrollCurrent.y += dy * smooth;
   scrollCurrent.y = ((scrollCurrent.y % TOP_H) + TOP_H) % TOP_H;
   scrollCurrent.angle += (scrollTarget.angle - scrollCurrent.angle) * smooth;
+
+  // Fade synced to actual camera height — only when actively scrolling near boundary
+  const distToTop = TOP_H - scrollCurrent.y;
+  const distToBottom = scrollCurrent.y;
+  const nearestBoundary = Math.min(distToTop, distToBottom);
+  const moving = Math.abs(dy) > 0.15;
+  const t = Math.max(0, 1 - nearestBoundary / FADE_ZONE);
+  const targetOp = (moving && t > 0) ? t * t * (3 - 2 * t) : 0;  // smoothstep
+  fadeOpacity += (targetOp - fadeOpacity) * Math.min(1, dt * 14);
+  fadeEl.style.opacity = fadeOpacity < 0.01 ? 0 : fadeOpacity;
 
   const cx = Math.cos(scrollCurrent.angle) * ORBIT_RADIUS;
   const cz = Math.sin(scrollCurrent.angle) * ORBIT_RADIUS;

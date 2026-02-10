@@ -116,9 +116,10 @@ export const params = {
   tapeColor: TAPE_OPTS.color,
   tapeTextColor: TAPE_OPTS.textColor,
   tapeText: TAPE_OPTS.text,
-  tapeOpacity: TAPE_OPTS.opacity,
+  tapeOpacity: 0.5,
   tapeWidth: TAPE_OPTS.width,
   tapeWaveAmount: TAPE_OPTS.waveAmount,
+  tapeFlipText: true,
 };
 
 export const gui = new GUI({ title: 'Installation Controls' });
@@ -126,10 +127,11 @@ gui.domElement.style.setProperty('--left', '0');
 gui.domElement.style.position = 'fixed';
 gui.domElement.style.left = '0';
 gui.domElement.style.right = 'auto';
+gui.domElement.style.display = 'none';
 
 // FPS counter
 export const fpsEl = document.createElement('div');
-fpsEl.style.cssText = 'position:fixed;top:12px;right:16px;color:rgba(255,240,220,0.35);font:11px monospace;z-index:20;pointer-events:none;';
+fpsEl.style.cssText = 'position:fixed;top:12px;right:16px;color:rgba(255,240,220,0.35);font:11px monospace;z-index:20;pointer-events:none;display:none;';
 document.body.appendChild(fpsEl);
 let fpsFrames = 0, fpsLast = performance.now();
 export function updateFPS() {
@@ -375,6 +377,9 @@ tapeFolder.add(params, 'tapeWidth', 0.1, 2, 0.05).name('Width').onChange(v => {
 tapeFolder.add(params, 'tapeWaveAmount', 0, 3, 0.05).name('Flutter').onChange(v => {
   tapeGroup.children.forEach(m => { m.material.uniforms.waveAmount.value = v; });
 });
+tapeFolder.add(params, 'tapeFlipText').name('Flip Text').onChange(v => {
+  tapeGroup.children.forEach(m => { m.material.uniforms.flipU.value = v ? 1.0 : 0.0; });
+});
 
 const textFolder = gui.addFolder('Typography');
 textFolder.add(params, 'textMaxOpacity', 0, 1, 0.01).name('Max Opacity');
@@ -420,7 +425,8 @@ gui.children.forEach(c => { if (c.close) c.close(); });
 window.addEventListener('keydown', e => {
   if ((e.metaKey || e.ctrlKey) && e.code === 'KeyG') {
     e.preventDefault();
-    const d = gui.domElement.style.display;
-    gui.domElement.style.display = d === 'none' ? '' : 'none';
+    const hidden = gui.domElement.style.display === 'none';
+    gui.domElement.style.display = hidden ? '' : 'none';
+    fpsEl.style.display = hidden ? '' : 'none';
   }
 });
