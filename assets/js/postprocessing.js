@@ -45,6 +45,14 @@ composer.addPass(colorGradePass);
 export const grainPass = new ShaderPass(FilmGrainShader);
 composer.addPass(grainPass);
 
+// Reference to the render pass for camera swap
+const renderPass = composer.passes[0];
+
+export function setPostCamera(cam) {
+  renderPass.camera = cam;
+  bokehPass.camera = cam;
+}
+
 // Resize handler
 window.addEventListener('resize', () => {
   renderer.setSize(window.innerWidth, window.innerHeight);

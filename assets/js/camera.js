@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CAM_DIST, TOP_H, FRUSTUM } from './config.js';
 import { camera, canvas } from './scene.js';
+import * as sceneModule from './scene.js';
 
 // =====================================================
 // SCROLL-BASED CAMERA (orbit + climb)
@@ -87,6 +88,10 @@ onScroll();
 // =====================================================
 // CAMERA UPDATE (scroll-driven orbit)
 // =====================================================
+export function setControlsCamera(cam) {
+  controls.object = cam;
+}
+
 export function updateCam(dt) {
   const smooth = 1 - Math.exp(-SCROLL_LERP * 60 * dt);
   let dy = scrollTarget.y - scrollCurrent.y;
@@ -100,7 +105,8 @@ export function updateCam(dt) {
   const cz = Math.sin(scrollCurrent.angle) * ORBIT_RADIUS;
   const cy = scrollCurrent.y + 4;
 
-  camera.position.set(cx, cy, cz);
+  const cam = sceneModule.camera;
+  cam.position.set(cx, cy, cz);
   controls.target.set(0, scrollCurrent.y + 1, 0);
   controls.update();
 }

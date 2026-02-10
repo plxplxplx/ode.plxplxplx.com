@@ -7,16 +7,16 @@ import { ribbonVert, ribbonFrag } from './shaders.js';
 // =====================================================
 export const ZONES = [
   { name: 'GROUND',    y: STAGES[0].floorY, fogColor: 0x1a120a, fogDensity: 0.07,  tint: [1.1, 0.95, 0.78],
-    title: 'STAGE ONE',
+    title: '',
     text: 'Where raw material meets the earth.\nThe scaffolding begins here — steel\nrooted in stone, a structure rising\nfrom the silence of the ground.' },
   { name: 'SECOND',    y: STAGES[1].floorY, fogColor: 0x1a1a22, fogDensity: 0.06,  tint: [0.9, 0.95, 1.1],
-    title: 'STAGE TWO',
+    title: '',
     text: 'Through the low mist, forms emerge\nand dissolve. Each level repeats\nthe one below — yet nothing here\nis ever truly the same twice.' },
   { name: 'THIRD',     y: STAGES[2].floorY, fogColor: 0x1f150a, fogDensity: 0.05,  tint: [1.15, 0.9, 0.7],
-    title: 'STAGE THREE',
+    title: '',
     text: 'The golden hour stretches across\nthe framework. Light finds every gap\nbetween the poles, casting long\nshadows that reach back to the ground.' },
   { name: 'SUMMIT',    y: STAGES[3].floorY, fogColor: 0x1a1008, fogDensity: 0.035, tint: [1.2, 1.0, 0.75],
-    title: 'STAGE FOUR',
+    title: '',
     text: 'At the highest platform, the view\nexpands beyond the installation.\nThe scaffolding was never the point —\nit was always about the climb.' },
 ];
 
@@ -32,24 +32,29 @@ function makeRibbonTex(title, body, width = 4096, height = 512) {
   ctx.clearRect(0, 0, width, height);
 
   const pad = 80;
-  const titleSize = Math.floor(height * 0.4);
-  ctx.fillStyle = 'rgba(255,240,220,0.7)';
-  ctx.font = `300 ${titleSize}px Georgia, serif`;
-  ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-  ctx.fillText(title, pad, pad * 0.35);
+  let bodyX = pad;
 
-  const titleW = ctx.measureText(title).width;
-  ctx.strokeStyle = 'rgba(255,240,220,0.25)';
-  ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(pad + titleW + 40, pad * 0.35 + titleSize * 0.5);
-  ctx.lineTo(pad + titleW + 160, pad * 0.35 + titleSize * 0.5);
-  ctx.stroke();
+  if (title) {
+    const titleSize = Math.floor(height * 0.4);
+    ctx.fillStyle = 'rgba(255,240,220,0.7)';
+    ctx.font = `300 ${titleSize}px Georgia, serif`;
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText(title, pad, pad * 0.35);
+
+    const titleW = ctx.measureText(title).width;
+    ctx.strokeStyle = 'rgba(255,240,220,0.25)';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(pad + titleW + 40, pad * 0.35 + titleSize * 0.5);
+    ctx.lineTo(pad + titleW + 160, pad * 0.35 + titleSize * 0.5);
+    ctx.stroke();
+    bodyX = pad + titleW + 180;
+  }
 
   const bodySize = Math.floor(height * 0.22);
   ctx.fillStyle = 'rgba(255,240,220,0.5)';
   ctx.font = `300 ${bodySize}px Georgia, serif`;
-  const bodyX = pad + titleW + 180;
+  ctx.textAlign = 'left'; ctx.textBaseline = 'top';
   const lines = body.split('\n');
   let by = pad * 0.3;
   for (const line of lines) {
@@ -109,7 +114,7 @@ ZONES.forEach((zone, i) => {
       time: { value: 0 },
       phase: { value: i * 2.5 },
       opacity: { value: 0.0 },
-      brightness: { value: 1.5 },
+      brightness: { value: 4.3 },
     },
     vertexShader: ribbonVert,
     fragmentShader: ribbonFrag,
@@ -120,9 +125,9 @@ ZONES.forEach((zone, i) => {
   });
 
   const startAngle = i * Math.PI * 0.6;
-  const geo = buildRibbonGeo(10, Math.PI * 1.5, 5.5, RIBBON_SEGS, startAngle, 10);
+  const geo = buildRibbonGeo(6.5, 295 * Math.PI / 180, 5.5, RIBBON_SEGS, startAngle, 18);
   const mesh = new THREE.Mesh(geo, mat);
-  mesh.position.y = zone.y + LEVEL_H * 4;
+  mesh.position.y = zone.y + 3;
   ribbonOverlayScene.add(mesh);
   sideTexts.push({ mesh, mat, zoneY: zone.y, zoneIdx: i, startAngle });
 });

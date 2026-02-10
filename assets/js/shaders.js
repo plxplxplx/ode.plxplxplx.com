@@ -123,7 +123,7 @@ export const ColorGradeShader = {
     tDiffuse: { value: null },
     saturation: { value: 0.65 },
     contrast: { value: 1.2 },
-    brightness: { value: 0.02 },
+    brightness: { value: 0.12 },
     tintR: { value: 1.1 },
     tintG: { value: 0.95 },
     tintB: { value: 0.78 },
@@ -260,6 +260,128 @@ export const leafletFrag = `
 `;
 
 // =====================================================
+// ARC CARD SHADERS (image cards curved around tower with flag wave)
+// =====================================================
+export const cardArcVert = `
+  uniform float time;
+  uniform float phase;
+  uniform float waveAmp;
+  varying vec2 vUv;
+  varying float vDisplacement;
+
+  void main(){
+    vUv = vec2(uv.x, 1.0 - uv.y); // flip V so image is right-side up
+    vec3 pos = position;
+
+    // Radial direction (outward from cylinder center)
+    vec2 xz = vec2(pos.x, pos.z);
+    float rLen = length(xz);
+    vec3 radial = rLen > 0.001 ? vec3(xz.x / rLen, 0.0, xz.y / rLen) : vec3(1.0, 0.0, 0.0);
+
+    // Flag wave — multiple sine waves along the arc (uv.x)
+    float u = uv.x;
+    float wave1 = sin(u * 7.0 - time * 1.0 + phase) * 0.12;
+    float wave2 = sin(u * 12.0 - time * 0.6 + phase * 2.1) * 0.06;
+    float wave3 = sin(u * 4.0 + time * 0.35 + phase * 0.8) * 0.15;
+
+    // More flutter toward trailing edge
+    float edgeFactor = u * u;
+
+    // Vertical ripple
+    float vertWave = sin(uv.y * 6.0 + time * 1.1 + phase) * 0.03;
+
+    float totalDisp = (wave1 + wave2 + wave3) * edgeFactor * waveAmp + vertWave * waveAmp;
+    totalDisp = clamp(totalDisp, -3.0, 3.0);
+
+    // Displace outward along radial
+    pos += radial * totalDisp;
+
+    vDisplacement = totalDisp;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+  }
+`;
+
+export const cardArcFrag = `
+  uniform sampler2D image;
+  uniform float opacity;
+  varying vec2 vUv;
+  varying float vDisplacement;
+
+  void main(){
+    vec2 uv = gl_FrontFacing ? vUv : vec2(1.0 - vUv.x, vUv.y);
+    vec4 tex = texture2D(image, uv);
+    // Fold shading from displacement
+    float shade = 1.0 + vDisplacement * 2.5;
+    shade = clamp(shade, 0.8, 1.25);
+    if (!gl_FrontFacing) {
+      shade *= 0.9;
+      tex.rgb = mix(tex.rgb, vec3(dot(tex.rgb, vec3(0.3, 0.6, 0.1))), 0.15);
+    }
+    gl_FragColor = vec4(tex.rgb * shade, tex.a * opacity);
+  }
+`;
+
+// =====================================================
+// STAGE GLOW — radial gradient floor plane
+// =====================================================
+export const stageGlowVert = `
+  varying vec2 vUv;
+  void main(){
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+export const stageGlowFrag = `
+  uniform vec3 glowColor;
+  uniform float opacity;
+  uniform float innerRadius;
+  uniform float outerRadius;
+  varying vec2 vUv;
+
+  void main(){
+    // Distance from center of plane (UVs are 0-1, center at 0.5)
+    float dist = length(vUv - 0.5) * 2.0; // 0 at center, 1 at edge
+    // Smooth radial falloff
+    float inner = innerRadius;
+    float outer = outerRadius;
+    float alpha = 1.0 - smoothstep(inner, outer, dist);
+    // Extra soft glow — power curve for luminous feel
+    alpha = alpha * alpha;
+    gl_FragColor = vec4(glowColor, alpha * opacity);
+  }
+`;
+
+// =====================================================
+// BACKDROP FOG — vertical distant atmosphere panels
+// =====================================================
+export const backdropFogVert = `
+  varying vec2 vUv;
+  void main(){
+    vUv = uv;
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+  }
+`;
+
+export const backdropFogFrag = `
+  uniform vec3 fogColor;
+  uniform float opacity;
+  uniform float time;
+  varying vec2 vUv;
+
+  void main(){
+    // Vertical gradient — strongest at bottom half, fading up
+    float vFade = 1.0 - smoothstep(0.0, 0.85, vUv.y);
+    // Horizontal fade at edges
+    float hFade = smoothstep(0.0, 0.15, vUv.x) * (1.0 - smoothstep(0.85, 1.0, vUv.x));
+    // Subtle shimmer
+    float shimmer = 0.95 + 0.05 * sin(vUv.x * 8.0 + time * 0.3) * sin(vUv.y * 4.0 + time * 0.2);
+    float alpha = vFade * hFade * shimmer;
+    gl_FragColor = vec4(fogColor, alpha * opacity);
+  }
+`;
+
+// =====================================================
 // RIBBON FLAG-WAVE SHADERS (for typography)
 // =====================================================
 export const ribbonVert = `
@@ -314,5 +436,44 @@ export const ribbonFrag = `
       shade *= 0.88;
     }
     gl_FragColor = vec4(tex.rgb * shade * brightness, tex.a * opacity);
+  }
+`;
+
+// =====================================================
+// CAUTION TAPE SHADERS (flutter wave + texture)
+// =====================================================
+export const tapeVert = `
+  uniform float time;
+  uniform float waveAmount;
+  varying vec2 vUv;
+
+  void main() {
+    vUv = uv;
+    vec3 pos = position;
+
+    // Flutter wave along tape length, tethered at ends
+    float envelope = sin(uv.x * 3.14159);
+    float wave1 = sin(uv.x * 20.0 - time * 3.0) * 0.08;
+    float wave2 = sin(uv.x * 12.0 + time * 2.0) * 0.05;
+    float wave3 = sin(uv.x * 7.0 - time * 1.5) * 0.06;
+    float totalWave = (wave1 + wave2 + wave3) * envelope * waveAmount;
+
+    // Displace along local Z (normal to the tape plane)
+    pos.z += totalWave;
+
+    gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
+  }
+`;
+
+export const tapeFrag = `
+  uniform sampler2D tapeMap;
+  uniform float opacity;
+  uniform float repeats;
+  varying vec2 vUv;
+
+  void main() {
+    vec2 uv = vec2(vUv.x * repeats, vUv.y);
+    vec4 tex = texture2D(tapeMap, uv);
+    gl_FragColor = vec4(tex.rgb, tex.a * opacity);
   }
 `;

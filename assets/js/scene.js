@@ -13,6 +13,11 @@ renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.6;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.localClippingEnabled = true;
+
+// Build clipping plane — clips everything above (normal points down)
+// Starts disabled (constant far above tower)
+export const buildPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 99999);
 
 export const scene = new THREE.Scene();
 export const fogColor = 0x1a120a;
@@ -24,9 +29,22 @@ scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
 pmrem.dispose();
 
 const aspect = window.innerWidth / window.innerHeight;
-export const camera = new THREE.OrthographicCamera(
+export const orthoCamera = new THREE.OrthographicCamera(
   -FRUSTUM * aspect / 2, FRUSTUM * aspect / 2, FRUSTUM / 2, -FRUSTUM / 2, 0.1, 300
 );
+export const perspCamera = new THREE.PerspectiveCamera(50, aspect, 0.1, 300);
+export let camera = orthoCamera;
+export let usePerspective = false;
+
+export function switchCamera(toPerspective) {
+  usePerspective = toPerspective;
+  const prev = camera;
+  camera = toPerspective ? perspCamera : orthoCamera;
+  camera.position.copy(prev.position);
+  camera.quaternion.copy(prev.quaternion);
+  updateProjection();
+  return camera;
+}
 
 // =====================================================
 // LIGHTS
@@ -76,11 +94,15 @@ export const occRT = new THREE.WebGLRenderTarget(
 );
 
 // =====================================================
-// ORTHO HELPER
+// PROJECTION HELPER
 // =====================================================
-export function setOrtho() {
+export function updateProjection() {
   const a = window.innerWidth / window.innerHeight;
-  camera.left = -FRUSTUM*a/2; camera.right = FRUSTUM*a/2;
-  camera.top = FRUSTUM/2; camera.bottom = -FRUSTUM/2;
-  camera.updateProjectionMatrix();
+  orthoCamera.left = -FRUSTUM*a/2; orthoCamera.right = FRUSTUM*a/2;
+  orthoCamera.top = FRUSTUM/2; orthoCamera.bottom = -FRUSTUM/2;
+  orthoCamera.updateProjectionMatrix();
+  perspCamera.aspect = a;
+  perspCamera.updateProjectionMatrix();
 }
+// Keep backward compat alias
+export const setOrtho = updateProjection;

@@ -4,7 +4,8 @@ import * as THREE from 'three';
 import { TOP_H, LEVEL_H, STAGES } from './config.js';
 
 // Scene setup
-import { renderer, scene, camera, keyLight, sunPos, occlusionScene, occRT } from './scene.js';
+import { renderer, scene, keyLight, sunPos, sunMesh, sunOccMesh, sunLight, occlusionScene, occlusionMat, occRT, buildPlane } from './scene.js';
+import * as sceneModule from './scene.js';
 
 // Materials (loaded by scaffold/environment)
 import './materials.js';
@@ -12,20 +13,23 @@ import './materials.js';
 // Structure
 import './scaffold.js';
 
-// Environment (fog, floor, vines, shrubs)
-import { transitionPlanes, shroudPlanes, vineData, vineGroup } from './environment.js';
+// Environment (fog, floor, vines, shrubs, stage glow)
+import { transitionPlanes, shroudPlanes, vineGroup, stageGlowPlanes, backdropPanels } from './environment.js';
 
 // Zones & typography
 import { ZONES, sideTexts, ribbonOverlayScene } from './zones.js';
 
 // Floating cards
-import { cards, CARD_OPTS, cardRaycaster, cardPointer, hoveredCard, setHoveredCard, IMG_FILES } from './cards.js';
+import { cards, CARD_OPTS, cardGroup, cardRaycaster, cardPointer, hoveredCard, setHoveredCard, IMG_FILES } from './cards.js';
 
 // Character
 import { charGroup, orbCore, orbGlow, halo, charLight, updateChar } from './character.js';
 
 // Effects (grid lights, particles, fireflies)
 import { gridLights, pickLightTarget, fireflies, FF_STAGE_COLORS } from './effects.js';
+
+// Caution tape
+import { updateTape } from './tape.js';
 import { gx, gz } from './config.js';
 
 // Camera & scroll
@@ -55,6 +59,11 @@ function animate() {
 
   updateCam(dt);
 
+  // Build-as-you-scroll — update clipping plane
+  if (params.buildMode) {
+    buildPlane.constant = scrollCurrent.y + params.buildOffset;
+  }
+
   // Zone blending — interpolate atmosphere based on camera height
   const camH = scrollCurrent.y;
   let zoneA = ZONES[0], zoneB = ZONES[0], zoneFrac = 0;
@@ -81,8 +90,12 @@ function animate() {
 
   // Fade side typography in/out + animate flag wave
   for (const st of sideTexts) {
-    const dist = Math.abs(camH - st.zoneY);
-    st.mat.uniforms.opacity.value = Math.max(0, 1 - dist / params.textFadeRange) * params.textMaxOpacity;
+    const diff = camH - st.zoneY;
+    const fadeIn = params.textFadeRange;
+    const fadeOut = params.textFadeRange * params.textFadeOutMult;
+    const range = diff < 0 ? fadeIn : fadeOut;
+    const dist = Math.abs(diff);
+    st.mat.uniforms.opacity.value = Math.max(0, 1 - dist / range) * params.textMaxOpacity;
     st.mat.uniforms.time.value = t;
   }
 
@@ -98,6 +111,21 @@ function animate() {
     const dist = Math.abs(camH - sp.layerY);
     const proximity = Math.max(0, 1 - dist / 15);
     sp.mesh.material.opacity = proximity * sp.maxOpacity;
+  }
+
+  // Stage glow floor planes — fade in when near each stage
+  for (const sg of stageGlowPlanes) {
+    const dist = Math.abs(camH - sg.stageY);
+    const proximity = Math.max(0, 1 - dist / 20);
+    sg.mat.uniforms.opacity.value = proximity * params.stageGlowIntensity;
+  }
+
+  // Distant backdrop fog panels — fade in near each stage
+  for (const bp of backdropPanels) {
+    const dist = Math.abs(camH - bp.stageY);
+    const proximity = Math.max(0, 1 - dist / 22);
+    bp.mat.uniforms.opacity.value = proximity * params.backdropIntensity;
+    bp.mat.uniforms.time.value = t;
   }
 
   // Key light tracks scroll height
@@ -131,10 +159,12 @@ function animate() {
     gl.light.intensity = 0.5 + 0.3 * Math.sin(t * 1.5 + gl.gi);
   }
 
-  // Floating cards — orbit + noise drift + soft billboard
+  // Arc image cards — slow group rotation + shader-driven wave
+  cardGroup.rotation.y += CARD_OPTS.orbitSpeed * dt;
+
   const doRaycast = (Math.round(t * 60) % 3 === 0);
   if (doRaycast) {
-    cardRaycaster.setFromCamera(cardPointer, camera);
+    cardRaycaster.setFromCamera(cardPointer, sceneModule.camera);
     const cardMeshes = cards.map(c => c.mesh);
     const hits = cardRaycaster.intersectObjects(cardMeshes, false);
     const prevHovered = hoveredCard;
@@ -147,44 +177,10 @@ function animate() {
 
   for (const card of cards) {
     card.mat.uniforms.time.value = t;
-    card.theta += card.speed * dt;
-    const bx = Math.cos(card.theta) * card.radius;
-    const bz = Math.sin(card.theta) * card.radius;
-    const f = CARD_OPTS.driftFreq;
-    const a = CARD_OPTS.driftAmp;
-    const s1 = card.s1, s2 = card.s2, s3 = card.s3;
-    const driftX = a * (
-      Math.sin(t * f + s1) * 0.5 +
-      Math.sin(t * f * 1.7 + s2 * 3) * 0.3 +
-      Math.sin(t * f * 0.4 + s3) * 0.2
-    );
-    const driftZ = a * (
-      Math.cos(t * f * 0.8 + s2) * 0.5 +
-      Math.sin(t * f * 1.3 + s1 * 2) * 0.3 +
-      Math.cos(t * f * 0.3 + s3 * 4) * 0.2
-    );
-    const cardBob = card.bobAmp * Math.sin(t * card.bobSpd + card.phase) +
-                card.bobAmp * 0.3 * Math.sin(t * card.bobSpd * 1.6 + s1);
-    const radiusDrift = Math.sin(t * f * 0.5 + s3 * 2) * 1.2;
-    const finalR = card.radius + radiusDrift;
-    card.mesh.position.set(
-      Math.cos(card.theta) * finalR + driftX,
-      card.baseY + cardBob,
-      Math.sin(card.theta) * finalR + driftZ
-    );
-    const fl = CARD_OPTS.flutterAmp;
-    const baseYaw = card.theta + Math.PI;
-    const yawWander = (Math.sin(t * 0.15 + card.phase * 2.3) * 0.26 +
-                       Math.sin(t * 0.08 + s2 * 3) * 0.12) * fl;
-    const pitch = (Math.sin(t * 0.22 + card.phase) * 0.18 +
-                   Math.sin(t * 0.11 + s1) * 0.1) * fl;
-    const roll = (Math.sin(t * 0.17 + card.phase * 1.7) * 0.14 +
-                  Math.cos(t * 0.09 + s3) * 0.08) * fl;
-    card.mesh.rotation.set(pitch, baseYaw + yawWander, roll);
-    const targetScale = card.hovered ? card.baseScale * 1.12 : card.baseScale;
-    card.currentScale += (targetScale - card.currentScale) * 0.06;
-    card.mesh.scale.setScalar(card.currentScale);
   }
+
+  // Caution tape flutter
+  updateTape(t);
 
   // Fireflies
   for (const ff of fireflies) {
@@ -217,28 +213,54 @@ function animate() {
     }
   }
 
-  // Vine leaves — gentle sway
-  for (const vd of vineData) {
-    for (const lv of vd.leaves) {
-      lv.mesh.rotation.z = Math.sin(t * 1.2 + lv.phase) * 0.15;
-      lv.mesh.rotation.x = Math.sin(t * 0.8 + lv.phase + 1) * 0.1;
-    }
+  // Sun lock — keep sun at fixed screen position by counter-rotating with camera
+  if (params.sunLocked) {
+    const cam = sceneModule.camera;
+    const dir = new THREE.Vector3().subVectors(sunPos, cam.position).normalize();
+    const dist = sunPos.distanceTo(new THREE.Vector3(0, 0, 0));
+    const lockedPos = cam.position.clone().add(dir.multiplyScalar(dist));
+    // Keep original offset direction relative to camera
+    const baseSunDir = new THREE.Vector3(sunPos.x, 0, sunPos.z).normalize();
+    const camDir = new THREE.Vector3(cam.position.x, 0, cam.position.z).normalize();
+    const angle = Math.atan2(camDir.z, camDir.x) - Math.atan2(baseSunDir.z, baseSunDir.x);
+    const sx = Math.cos(Math.atan2(sunPos.z, sunPos.x) + angle) * Math.sqrt(sunPos.x * sunPos.x + sunPos.z * sunPos.z);
+    const sz = Math.sin(Math.atan2(sunPos.z, sunPos.x) + angle) * Math.sqrt(sunPos.x * sunPos.x + sunPos.z * sunPos.z);
+    const lockY = sunPos.y + (scrollCurrent.y - sunPos.y) * 0.5;
+    sunMesh.position.set(sx, lockY, sz);
+    sunOccMesh.position.set(sx, lockY, sz);
+    sunLight.position.set(sx, lockY, sz);
+  } else {
+    sunMesh.position.copy(sunPos);
+    sunOccMesh.position.copy(sunPos);
+    sunLight.position.copy(sunPos);
   }
 
-
   // God rays — project sun to screen space
-  const sunScreen = sunPos.clone().project(camera);
+  const sunScreen = sunMesh.position.clone().project(sceneModule.camera);
   godRaysPass.uniforms.lightPosition.value.set(
     (sunScreen.x + 1) * 0.5,
     (sunScreen.y + 1) * 0.5
   );
 
-  // Render occlusion pass
-  occlusionScene.background = new THREE.Color(0x000000);
-  renderer.setRenderTarget(occRT);
-  renderer.clear();
-  renderer.render(occlusionScene, camera);
-  renderer.setRenderTarget(null);
+  // Render occlusion pass (only when god rays active)
+  if (godRaysPass.enabled) {
+    const origBg = scene.background;
+    const origFog = scene.fog;
+    scene.background = new THREE.Color(0x000000);
+    scene.fog = null;
+    scene.overrideMaterial = occlusionMat;
+    renderer.setRenderTarget(occRT);
+    renderer.clear();
+    renderer.render(scene, sceneModule.camera);
+    scene.overrideMaterial = null;
+    scene.background = origBg;
+    scene.fog = origFog;
+    // Sun sphere on top (white, additive)
+    renderer.autoClear = false;
+    renderer.render(occlusionScene, sceneModule.camera);
+    renderer.autoClear = true;
+    renderer.setRenderTarget(null);
+  }
 
   // Update film grain time
   grainPass.uniforms.time.value = t + Math.random() * 100;
@@ -248,7 +270,7 @@ function animate() {
   // Render ribbon text on top
   renderer.autoClear = false;
   renderer.clearDepth();
-  renderer.render(ribbonOverlayScene, camera);
+  renderer.render(ribbonOverlayScene, sceneModule.camera);
   renderer.autoClear = true;
 
   updateFPS();

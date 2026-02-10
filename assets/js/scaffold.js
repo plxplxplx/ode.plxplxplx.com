@@ -5,7 +5,7 @@ import {
   MARGIN, N_TREADS,
 } from './config.js';
 import { STAGE_MATS, steelAt, deckAt, tube, box } from './materials.js';
-import { scene } from './scene.js';
+import { scene, buildPlane } from './scene.js';
 
 // =====================================================
 // BUILD 4-STAGE TOWER
@@ -13,6 +13,7 @@ import { scene } from './scene.js';
 export const scaffold = new THREE.Group();
 scaffold.name = 'scaffold';
 export const collidables = [];
+export const floorMats = []; // cloned materials for floor planes (opacity/mirror control)
 const rampMat = new THREE.MeshBasicMaterial({ visible: false });
 
 // Vertical standards — split per stage for different materials
@@ -104,9 +105,16 @@ for (let si = 0; si < STAGES.length; si++) {
   const sm = STAGE_MATS[si].steel;
   // Full floor platform across all bays (skip ground stage)
   if (si > 0) {
+    const floorDm = dm.clone();
+    floorDm.transparent = true;
+    floorDm.opacity = 1.0;
+    floorDm.side = THREE.DoubleSide;
+    floorDm.clippingPlanes = [buildPlane];
+    floorMats.push(floorDm);
     for (let bi = 0; bi < BAYS_X; bi++) {
       for (let bj = 0; bj < BAYS_Z; bj++) {
-        const p = box(cellCx(bi), y, cellCz(bj), BAY_W, PLAT_H, BAY_D, dm);
+        const p = box(cellCx(bi), y, cellCz(bj), BAY_W, PLAT_H, BAY_D, floorDm);
+        p.castShadow = false;
         p.userData = { componentType: 'platform', stage: stage.name };
         scaffold.add(p);
         collidables.push(p);
@@ -121,8 +129,11 @@ for (let si = 0; si < STAGES.length; si++) {
     const slabMat = new THREE.MeshStandardMaterial({
       color: dm.color, metalness: dm.metalness * 0.8, roughness: dm.roughness * 1.2,
       transparent: true, opacity: 0.85, side: THREE.DoubleSide,
+      clippingPlanes: [buildPlane],
     });
+    floorMats.push(slabMat);
     const slab = box(0, y, 0, slabW, slabH, slabD, slabMat);
+    slab.castShadow = false;
     slab.userData = { componentType: 'transitionSlab', stage: stage.name };
     scaffold.add(slab);
   }
@@ -163,7 +174,13 @@ for (const lo of LOOKOUTS) {
   const armH = 3 * LEVEL_H;
   const dx = lo.dir[0], dz = lo.dir[1];
   const loSteel = STAGE_MATS[lo.stageIdx].steel;
-  const loDeck  = STAGE_MATS[lo.stageIdx].deck;
+  const loDeckBase = STAGE_MATS[lo.stageIdx].deck;
+  const loDeck = loDeckBase.clone();
+  loDeck.transparent = true;
+  loDeck.opacity = 1.0;
+  loDeck.side = THREE.DoubleSide;
+  loDeck.clippingPlanes = [buildPlane];
+  floorMats.push(loDeck);
 
   const startX = dx > 0 ? gx(BAYS_X) : dx < 0 ? gx(0) : 0;
   const startZ = dz > 0 ? gz(BAYS_Z) : dz < 0 ? gz(0) : 0;
@@ -212,6 +229,7 @@ for (const lo of LOOKOUTS) {
       const px = (bx0 + bx1) / 2;
       for (let bj = 0; bj < BAYS_Z; bj++) {
         const p = box(px, baseY, cellCz(bj), BAY_W, PLAT_H, BAY_D, loDeck);
+        p.castShadow = false;
         p.userData = { componentType: 'lookout' };
         scaffold.add(p); collidables.push(p);
       }
@@ -219,6 +237,7 @@ for (const lo of LOOKOUTS) {
       const pz = (bz0 + bz1) / 2;
       for (let bi = 0; bi < BAYS_X; bi++) {
         const p = box(cellCx(bi), baseY, pz, BAY_W, PLAT_H, BAY_D, loDeck);
+        p.castShadow = false;
         p.userData = { componentType: 'lookout' };
         scaffold.add(p); collidables.push(p);
       }

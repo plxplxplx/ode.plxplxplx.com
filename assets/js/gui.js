@@ -1,16 +1,18 @@
 import * as THREE from 'three';
 import GUI from 'lil-gui';
 import { FRUSTUM } from './config.js';
-import { renderer, scene, camera, sunPos, sunMesh, sunOccMesh, keyLight } from './scene.js';
-import { STAGE_MATS, matSteel, lightColor, lightNormal, lightRoughness, darkColor, darkNormal, darkRoughness } from './materials.js';
-import { cards, CARD_OPTS } from './cards.js';
+import { renderer, scene, sunPos, sunMesh, sunOccMesh, keyLight, perspCamera, switchCamera, buildPlane } from './scene.js';
+import * as sceneModule from './scene.js';
+import { STAGE_MATS, matSteel, loadMarbleTextures, getMarbleTextures, applyMarbleTextures } from './materials.js';
+import { TAPE_OPTS, tapeGroup, buildTape } from './tape.js';
+import { cards, CARD_OPTS, rebuildCards } from './cards.js';
 import { ZONES, sideTexts, rebuildRibbons } from './zones.js';
-import { vineGroup } from './environment.js';
-import { shrubGroup } from './environment.js';
+import { vineGroup, shrubGroup, flowerLight } from './environment.js';
 import { gridLights, fireflies, FF_COUNT } from './effects.js';
-import { scaffold } from './scaffold.js';
-import { bloom, bokehPass, godRaysPass, chromaPass, colorGradePass, grainPass } from './postprocessing.js';
+import { scaffold, floorMats } from './scaffold.js';
+import { bloom, bokehPass, godRaysPass, chromaPass, colorGradePass, grainPass, setPostCamera } from './postprocessing.js';
 import { bgMusic, audioCtx, masterGain } from './audio.js';
+import { setControlsCamera } from './camera.js';
 
 // =====================================================
 // LIL-GUI
@@ -32,24 +34,28 @@ export const params = {
   keyLightIntensity: keyLight.intensity,
   cardsVisible: false,
   cardOpacity: 0.92,
-  cardOrbitSpeed: 1.0,
-  cardDriftAmp: CARD_OPTS.driftAmp,
-  cardFlutter: CARD_OPTS.flutterAmp,
-  cardRadiusMin: CARD_OPTS.radiusMin,
-  cardRadiusMax: CARD_OPTS.radiusMax,
+  cardRadius: CARD_OPTS.radius,
+  cardH: CARD_OPTS.cardH,
+  cardRise: CARD_OPTS.cardRise,
+  cardWaveAmp: CARD_OPTS.waveAmp,
+  cardOrbitSpeed: CARD_OPTS.orbitSpeed,
+  cardRadiusSpread: CARD_OPTS.radiusSpread,
   vinesVisible: true,
   shrubsVisible: true,
-  textMaxOpacity: 0.6,
-  textBrightness: 1.5,
+  flowersVisible: true,
+  flowerLightIntensity: 1.8,
+  textMaxOpacity: 0.63,
+  textBrightness: 4.3,
   textFadeRange: 30,
+  textFadeOutMult: 4.8,
   textFlipX: true,
   textFlipY: false,
   textFlipZ: true,
-  textRadius: 10,
-  textArc: 270,
+  textRadius: 6.5,
+  textArc: 295,
   textHeight: 5.5,
-  textRise: 10,
-  textYOffset: 6,
+  textRise: 18,
+  textYOffset: 3,
   textRotY: 0,
   textStartAngleOffset: 0,
   poleThickness: 1.5,
@@ -68,7 +74,7 @@ export const params = {
   grainIntensity: grainPass.uniforms.intensity.value,
   colorSaturation: colorGradePass.uniforms.saturation.value,
   colorContrast: colorGradePass.uniforms.contrast.value,
-  colorBrightness: colorGradePass.uniforms.brightness.value,
+  colorBrightness: 0.12,
   tintR: colorGradePass.uniforms.tintR.value,
   tintG: colorGradePass.uniforms.tintG.value,
   tintB: colorGradePass.uniforms.tintB.value,
@@ -83,12 +89,36 @@ export const params = {
   ffGlowOpacity: 1.0,
   ffLightDecay: 2,
   musicVolume: bgMusic.volume,
+  // Camera
+  usePerspective: false,
+  perspFov: 50,
+  perspNear: 0.1,
+  perspFar: 300,
+  sunLocked: false,
+  buildMode: false,
+  buildOffset: 10,
   // Particles
+  // Stage atmosphere
+  stageGlowIntensity: 0,
+  backdropIntensity: 1.2,
+  stageFloorsVisible: false,
+  floorOpacity: 1.0,
+  floorMetalness: 0.3,
+  floorRoughness: 0.5,
+  floorSlabSize: 120,
   // Texture
-  texRepeatU: 1,
-  texRepeatV: 2,
+  texRepeatU: 0.5,
+  texRepeatV: 0.5,
   texEnabled: false,
   normalScale: 1.0,
+  // Caution Tape
+  tapeVisible: TAPE_OPTS.visible,
+  tapeColor: TAPE_OPTS.color,
+  tapeTextColor: TAPE_OPTS.textColor,
+  tapeText: TAPE_OPTS.text,
+  tapeOpacity: TAPE_OPTS.opacity,
+  tapeWidth: TAPE_OPTS.width,
+  tapeWaveAmount: TAPE_OPTS.waveAmount,
 };
 
 export const gui = new GUI({ title: 'Installation Controls' });
@@ -112,12 +142,35 @@ export function updateFPS() {
 }
 
 const camFolder = gui.addFolder('Camera');
-camFolder.add(params, 'frustum', 5, 50).onChange(v => {
-  const a = window.innerWidth / window.innerHeight;
-  camera.left = -v*a/2; camera.right = v*a/2;
-  camera.top = v/2; camera.bottom = -v/2;
-  camera.updateProjectionMatrix();
+camFolder.add(params, 'usePerspective').name('Perspective').onChange(v => {
+  const cam = switchCamera(v);
+  setControlsCamera(cam);
+  setPostCamera(cam);
 });
+camFolder.add(params, 'frustum', 5, 50).name('Ortho Frustum').onChange(v => {
+  const { orthoCamera } = sceneModule;
+  const a = window.innerWidth / window.innerHeight;
+  orthoCamera.left = -v*a/2; orthoCamera.right = v*a/2;
+  orthoCamera.top = v/2; orthoCamera.bottom = -v/2;
+  orthoCamera.updateProjectionMatrix();
+});
+camFolder.add(params, 'perspFov', 20, 120, 1).name('FOV').onChange(v => {
+  perspCamera.fov = v;
+  perspCamera.updateProjectionMatrix();
+});
+camFolder.add(params, 'perspNear', 0.01, 5, 0.01).name('Near').onChange(v => {
+  perspCamera.near = v;
+  perspCamera.updateProjectionMatrix();
+});
+camFolder.add(params, 'perspFar', 50, 1000, 10).name('Far').onChange(v => {
+  perspCamera.far = v;
+  perspCamera.updateProjectionMatrix();
+});
+camFolder.add(params, 'sunLocked').name('Lock Sun to View');
+camFolder.add(params, 'buildMode').name('Build Mode').onChange(v => {
+  if (!v) buildPlane.constant = 99999; // disable clipping
+});
+camFolder.add(params, 'buildOffset', 0, 40, 1).name('Build Offset');
 
 const bloomFolder = gui.addFolder('Bloom');
 bloomFolder.add(params, 'bloomStrength', 0, 3, 0.01).onChange(v => bloom.strength = v);
@@ -131,7 +184,40 @@ dofFolder.add(params, 'dofAperture', 0, 0.01, 0.0001).name('Aperture').onChange(
 dofFolder.add(params, 'dofMaxBlur', 0, 0.1, 0.001).name('Max Blur').onChange(v => bokehPass.uniforms['maxblur'].value = v);
 
 const fogFolder = gui.addFolder('Fog');
-fogFolder.add(params, 'fogDensity', 0, 0.1, 0.001).onChange(v => scene.fog.density = v);
+fogFolder.add(params, 'fogDensity', 0, 0.5, 0.005).onChange(v => scene.fog.density = v);
+
+const atmoFolder = gui.addFolder('Stage Atmosphere');
+atmoFolder.add(params, 'stageGlowIntensity', 0, 20, 0.1).name('Floor Glow');
+atmoFolder.add(params, 'backdropIntensity', 0, 20, 0.1).name('Backdrop Fog');
+const setFloorsVisible = v => {
+  scaffold.traverse(child => {
+    if (child.isMesh && child.userData.componentType) {
+      const t = child.userData.componentType;
+      if (t === 'platform' || t === 'transitionSlab' || t === 'lookout') {
+        child.visible = v;
+      }
+    }
+  });
+};
+atmoFolder.add(params, 'stageFloorsVisible').name('Stage Floors').onChange(setFloorsVisible);
+setFloorsVisible(params.stageFloorsVisible);
+atmoFolder.add(params, 'floorOpacity', 0, 1, 0.01).name('Floor Opacity').onChange(v => {
+  floorMats.forEach(m => { m.opacity = v; });
+});
+atmoFolder.add(params, 'floorMetalness', 0, 1, 0.01).name('Floor Metalness').onChange(v => {
+  floorMats.forEach(m => { m.metalness = v; });
+});
+atmoFolder.add(params, 'floorRoughness', 0, 1, 0.01).name('Floor Roughness').onChange(v => {
+  floorMats.forEach(m => { m.roughness = v; });
+});
+atmoFolder.add(params, 'floorSlabSize', 120, 500, 10).name('Slab Size').onChange(v => {
+  scaffold.traverse(child => {
+    if (child.isMesh && child.userData.componentType === 'transitionSlab') {
+      child.geometry.dispose();
+      child.geometry = new THREE.BoxGeometry(v, 0.12, v);
+    }
+  });
+});
 
 const lightFolder = gui.addFolder('Lights');
 lightFolder.add(params, 'gridLightIntensity', 0, 10, 0.1).onChange(v => {
@@ -153,18 +239,13 @@ cardFolder.add(params, 'cardsVisible').name('Visible').onChange(v => {
 cardFolder.add(params, 'cardOpacity', 0, 1, 0.01).name('Opacity').onChange(v => {
   cards.forEach(c => c.mat.uniforms.opacity.value = v);
 });
-cardFolder.add(params, 'cardOrbitSpeed', 0, 3, 0.05).name('Orbit Speed').onChange(v => {
-  cards.forEach(c => c.speed = Math.sign(c.speed) * THREE.MathUtils.lerp(CARD_OPTS.orbitSpeedMin, CARD_OPTS.orbitSpeedMax, Math.random()) * v);
-});
-cardFolder.add(params, 'cardDriftAmp', 0, 3, 0.05).name('Drift').onChange(v => { CARD_OPTS.driftAmp = v; });
-cardFolder.add(params, 'cardFlutter', 0, 3, 0.05).name('Flutter').onChange(v => { CARD_OPTS.flutterAmp = v; });
-cardFolder.add(params, 'cardRadiusMin', 3, 20, 0.5).name('Radius Min').onChange(v => {
-  CARD_OPTS.radiusMin = v;
-  cards.forEach(c => { c.radius = THREE.MathUtils.lerp(v, CARD_OPTS.radiusMax, Math.random()); });
-});
-cardFolder.add(params, 'cardRadiusMax', 5, 30, 0.5).name('Radius Max').onChange(v => {
-  CARD_OPTS.radiusMax = v;
-  cards.forEach(c => { c.radius = THREE.MathUtils.lerp(CARD_OPTS.radiusMin, v, Math.random()); });
+cardFolder.add(params, 'cardRadius', 3, 20, 0.5).name('Radius').onChange(() => rebuildCards(params));
+cardFolder.add(params, 'cardH', 1, 15, 0.5).name('Height').onChange(() => rebuildCards(params));
+cardFolder.add(params, 'cardRise', 0, 30, 0.5).name('Rise').onChange(() => rebuildCards(params));
+cardFolder.add(params, 'cardWaveAmp', 0, 3, 0.05).name('Wave Amp').onChange(() => rebuildCards(params));
+cardFolder.add(params, 'cardRadiusSpread', 0, 8, 0.5).name('Radius Spread').onChange(() => rebuildCards(params));
+cardFolder.add(params, 'cardOrbitSpeed', 0, 0.05, 0.001).name('Orbit Speed').onChange(v => {
+  CARD_OPTS.orbitSpeed = v;
 });
 
 const godRayFolder = gui.addFolder('God Rays');
@@ -244,26 +325,28 @@ matFolder.add(params, 'steelRoughness', 0, 1, 0.01).onChange(v => {
 });
 matFolder.add(params, 'vinesVisible').name('Vines').onChange(v => vineGroup.visible = v);
 matFolder.add(params, 'shrubsVisible').name('Shrubs').onChange(v => shrubGroup.visible = v);
+matFolder.add(params, 'flowersVisible').name('Flowers').onChange(v => {
+  scene.traverse(o => { if (o.name === 'flowers') o.visible = v; });
+});
+matFolder.add(params, 'flowerLightIntensity', 0, 5, 0.1).name('Flower Light').onChange(v => {
+  flowerLight.intensity = v;
+});
 
-const allMarbleTex = [lightColor, lightNormal, lightRoughness, darkColor, darkNormal, darkRoughness];
 const texFolder = gui.addFolder('Texture');
 texFolder.add(params, 'texEnabled').name('Marble Texture').onChange(v => {
-  STAGE_MATS.forEach(sm => {
-    sm.steel.map = v ? sm.steel.userData.origMap : null;
-    sm.steel.normalMap = v ? sm.steel.userData.origNormal : null;
-    sm.steel.roughnessMap = v ? sm.steel.userData.origRough : null;
-    sm.steel.needsUpdate = true;
-    sm.deck.map = v ? sm.deck.userData.origMap : null;
-    sm.deck.normalMap = v ? sm.deck.userData.origNormal : null;
-    sm.deck.roughnessMap = v ? sm.deck.userData.origRough : null;
-    sm.deck.needsUpdate = true;
-  });
+  if (v) {
+    loadMarbleTextures().then(() => applyMarbleTextures(true));
+  } else {
+    applyMarbleTextures(false);
+  }
 });
 texFolder.add(params, 'texRepeatU', 0.1, 10, 0.1).name('Repeat U').onChange(v => {
-  allMarbleTex.forEach(tex => { tex.repeat.x = v; });
+  const tex = getMarbleTextures();
+  if (tex) Object.values(tex).forEach(t => { t.repeat.x = v; });
 });
 texFolder.add(params, 'texRepeatV', 0.1, 10, 0.1).name('Repeat V').onChange(v => {
-  allMarbleTex.forEach(tex => { tex.repeat.y = v; });
+  const tex = getMarbleTextures();
+  if (tex) Object.values(tex).forEach(t => { t.repeat.y = v; });
 });
 texFolder.add(params, 'normalScale', 0, 3, 0.05).name('Normal Strength').onChange(v => {
   STAGE_MATS.forEach(sm => {
@@ -271,18 +354,26 @@ texFolder.add(params, 'normalScale', 0, 3, 0.05).name('Normal Strength').onChang
     sm.deck.normalScale.set(v, v);
   });
 });
-// Store original texture refs for toggle, then strip (off by default)
-STAGE_MATS.forEach(sm => {
-  sm.steel.userData.origMap = sm.steel.map;
-  sm.steel.userData.origNormal = sm.steel.normalMap;
-  sm.steel.userData.origRough = sm.steel.roughnessMap;
-  sm.steel.map = null; sm.steel.normalMap = null; sm.steel.roughnessMap = null;
-  sm.steel.needsUpdate = true;
-  sm.deck.userData.origMap = sm.deck.map;
-  sm.deck.userData.origNormal = sm.deck.normalMap;
-  sm.deck.userData.origRough = sm.deck.roughnessMap;
-  sm.deck.map = null; sm.deck.normalMap = null; sm.deck.roughnessMap = null;
-  sm.deck.needsUpdate = true;
+
+const tapeFolder = gui.addFolder('Caution Tape');
+tapeFolder.add(params, 'tapeVisible').name('Visible').onChange(v => { tapeGroup.visible = v; });
+tapeFolder.addColor(params, 'tapeColor').name('Tape Color').onChange(v => {
+  TAPE_OPTS.color = v; buildTape(TAPE_OPTS);
+});
+tapeFolder.addColor(params, 'tapeTextColor').name('Text Color').onChange(v => {
+  TAPE_OPTS.textColor = v; buildTape(TAPE_OPTS);
+});
+tapeFolder.add(params, 'tapeText').name('Text').onChange(v => {
+  TAPE_OPTS.text = v; buildTape(TAPE_OPTS);
+});
+tapeFolder.add(params, 'tapeOpacity', 0, 1, 0.01).name('Opacity').onChange(v => {
+  tapeGroup.children.forEach(m => { m.material.uniforms.opacity.value = v; });
+});
+tapeFolder.add(params, 'tapeWidth', 0.1, 2, 0.05).name('Width').onChange(v => {
+  TAPE_OPTS.width = v; buildTape(TAPE_OPTS);
+});
+tapeFolder.add(params, 'tapeWaveAmount', 0, 3, 0.05).name('Flutter').onChange(v => {
+  tapeGroup.children.forEach(m => { m.material.uniforms.waveAmount.value = v; });
 });
 
 const textFolder = gui.addFolder('Typography');
@@ -290,11 +381,12 @@ textFolder.add(params, 'textMaxOpacity', 0, 1, 0.01).name('Max Opacity');
 textFolder.add(params, 'textBrightness', 0.5, 5, 0.1).name('Brightness').onChange(v => {
   sideTexts.forEach(st => st.mat.uniforms.brightness.value = v);
 });
-textFolder.add(params, 'textFadeRange', 2, 30, 0.5).name('Fade Range');
+textFolder.add(params, 'textFadeRange', 2, 30, 0.5).name('Fade In Range');
+textFolder.add(params, 'textFadeOutMult', 1, 5, 0.1).name('Fade Out Mult');
 textFolder.add(params, 'textRadius', 3, 25, 0.5).name('Radius').onChange(() => rebuildRibbons(params));
 textFolder.add(params, 'textArc', 30, 360, 5).name('Arc (deg)').onChange(() => rebuildRibbons(params));
 textFolder.add(params, 'textHeight', 1, 15, 0.5).name('Height').onChange(() => rebuildRibbons(params));
-textFolder.add(params, 'textRise', 0, 20, 0.5).name('Rise').onChange(() => rebuildRibbons(params));
+textFolder.add(params, 'textRise', 0, 30, 0.5).name('Rise').onChange(() => rebuildRibbons(params));
 textFolder.add(params, 'textYOffset', 0, 20, 0.5).name('Y Offset').onChange(() => rebuildRibbons(params));
 textFolder.add(params, 'textRotY', -180, 180, 5).name('Rotation Y').onChange(() => rebuildRibbons(params));
 textFolder.add(params, 'textStartAngleOffset', -180, 180, 5).name('Start Angle').onChange(() => rebuildRibbons(params));
