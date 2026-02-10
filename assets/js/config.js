@@ -13,7 +13,7 @@ export const STAGES = [
   { name: 'SUMMIT',   floorY: 90,   scaffLevels: 22 },
 ];
 export const TOP_H = 134;
-export const ZONES_COLORS = [0x1a120a, 0x1a1a22, 0x1f150a, 0x1a1008];
+export const ZONES_COLORS = [0x050505, 0x060608, 0x060504, 0x050404];
 export const NUM_LEVELS = Math.ceil(TOP_H / LEVEL_H);
 
 export const gx = i => i * BAY_W - TOTAL_W / 2;

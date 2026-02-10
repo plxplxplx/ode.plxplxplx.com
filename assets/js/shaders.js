@@ -8,12 +8,12 @@ export const GodRaysShader = {
     tDiffuse: { value: null },
     tOcclusion: { value: null },
     lightPosition: { value: new THREE.Vector2(0.5, 0.5) },
-    exposure: { value: 0.45 },
+    exposure: { value: 0.3 },
     decay: { value: 0.97 },
-    density: { value: 0.9 },
-    weight: { value: 0.8 },
-    samples: { value: 80 },
-    godRayColor: { value: new THREE.Vector3(1.0, 0.85, 0.55) },
+    density: { value: 1.45 },
+    weight: { value: 0.05 },
+    samples: { value: 120 },
+    godRayColor: { value: new THREE.Vector3(1.0, 0.92, 0.7) },
   },
   vertexShader: `varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
   fragmentShader: `
@@ -35,7 +35,7 @@ export const GodRaysShader = {
       float illumination = 0.0;
       float currentDecay = 1.0;
       vec2 sampleCoord = texCoord;
-      for(int i = 0; i < 80; i++){
+      for(int i = 0; i < 120; i++){
         sampleCoord -= deltaTexCoord;
         float s = texture2D(tOcclusion, sampleCoord).r;
         s *= currentDecay * weight;

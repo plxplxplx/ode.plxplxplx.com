@@ -6,16 +6,16 @@ import { ribbonVert, ribbonFrag } from './shaders.js';
 // ATMOSPHERE ZONES (different vibes as you ascend)
 // =====================================================
 export const ZONES = [
-  { name: 'GROUND',    y: STAGES[0].floorY, fogColor: 0x1a120a, fogDensity: 0.07,  tint: [1.1, 0.95, 0.78],
+  { name: 'GROUND',    y: STAGES[0].floorY, fogColor: 0x050505, fogDensity: 0.09,  tint: [1.1, 0.95, 0.78],
     title: '',
     text: 'Where raw material meets the earth.\nThe scaffolding begins here — steel\nrooted in stone, a structure rising\nfrom the silence of the ground.' },
-  { name: 'SECOND',    y: STAGES[1].floorY, fogColor: 0x1a1a22, fogDensity: 0.06,  tint: [0.9, 0.95, 1.1],
+  { name: 'SECOND',    y: STAGES[1].floorY, fogColor: 0x060608, fogDensity: 0.08,  tint: [0.9, 0.95, 1.1],
     title: '',
     text: 'Through the low mist, forms emerge\nand dissolve. Each level repeats\nthe one below — yet nothing here\nis ever truly the same twice.' },
-  { name: 'THIRD',     y: STAGES[2].floorY, fogColor: 0x1f150a, fogDensity: 0.05,  tint: [1.15, 0.9, 0.7],
+  { name: 'THIRD',     y: STAGES[2].floorY, fogColor: 0x060504, fogDensity: 0.07,  tint: [1.15, 0.9, 0.7],
     title: '',
     text: 'The golden hour stretches across\nthe framework. Light finds every gap\nbetween the poles, casting long\nshadows that reach back to the ground.' },
-  { name: 'SUMMIT',    y: STAGES[3].floorY, fogColor: 0x1a1008, fogDensity: 0.035, tint: [1.2, 1.0, 0.75],
+  { name: 'SUMMIT',    y: STAGES[3].floorY, fogColor: 0x050404, fogDensity: 0.055, tint: [1.2, 1.0, 0.75],
     title: '',
     text: 'At the highest platform, the view\nexpands beyond the installation.\nThe scaffolding was never the point —\nit was always about the climb.' },
 ];
@@ -36,13 +36,13 @@ function makeRibbonTex(title, body, width = 4096, height = 512) {
 
   if (title) {
     const titleSize = Math.floor(height * 0.4);
-    ctx.fillStyle = 'rgba(255,240,220,0.7)';
+    ctx.fillStyle = 'rgba(255,255,255,0.8)';
     ctx.font = `300 ${titleSize}px Georgia, serif`;
     ctx.textAlign = 'left'; ctx.textBaseline = 'top';
     ctx.fillText(title, pad, pad * 0.35);
 
     const titleW = ctx.measureText(title).width;
-    ctx.strokeStyle = 'rgba(255,240,220,0.25)';
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(pad + titleW + 40, pad * 0.35 + titleSize * 0.5);
@@ -52,7 +52,7 @@ function makeRibbonTex(title, body, width = 4096, height = 512) {
   }
 
   const bodySize = Math.floor(height * 0.22);
-  ctx.fillStyle = 'rgba(255,240,220,0.5)';
+  ctx.fillStyle = 'rgba(255,255,255,0.6)';
   ctx.font = `300 ${bodySize}px Georgia, serif`;
   ctx.textAlign = 'left'; ctx.textBaseline = 'top';
   const lines = body.split('\n');

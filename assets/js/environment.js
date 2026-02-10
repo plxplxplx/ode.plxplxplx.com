@@ -12,6 +12,50 @@ import { stageGlowVert, stageGlowFrag, backdropFogVert, backdropFogFrag } from '
 import { totalLevels, LOOKOUTS } from './scaffold.js';
 
 // =====================================================
+// SEEDED PRNG — deterministic vegetation placement
+// =====================================================
+let _seed = 12345;
+function seededRandom() { _seed = (_seed * 16807) % 2147483647; return (_seed - 1) / 2147483646; }
+
+// =====================================================
+// INSTANCED MESH HELPER
+// =====================================================
+function createInstancedMeshes(model, transforms, targetGroup) {
+  if (transforms.length === 0) return;
+  model.updateMatrixWorld(true);
+  const modelInverse = new THREE.Matrix4().copy(model.matrixWorld).invert();
+
+  const meshChildren = [];
+  model.traverse(child => {
+    if (child.isMesh) {
+      const relativeMatrix = new THREE.Matrix4().multiplyMatrices(modelInverse, child.matrixWorld);
+      meshChildren.push({ geometry: child.geometry, material: child.material, relativeMatrix });
+    }
+  });
+
+  const parentMatrix = new THREE.Matrix4();
+  const instanceMatrix = new THREE.Matrix4();
+  const quat = new THREE.Quaternion();
+
+  for (const { geometry, material, relativeMatrix } of meshChildren) {
+    const instMesh = new THREE.InstancedMesh(geometry, material, transforms.length);
+    instMesh.frustumCulled = false;
+    instMesh.castShadow = true;
+    instMesh.receiveShadow = true;
+
+    for (let i = 0; i < transforms.length; i++) {
+      const t = transforms[i];
+      quat.setFromEuler(t.rotation);
+      parentMatrix.compose(t.position, quat, t.scale);
+      instanceMatrix.multiplyMatrices(parentMatrix, relativeMatrix);
+      instMesh.setMatrixAt(i, instanceMatrix);
+    }
+    instMesh.instanceMatrix.needsUpdate = true;
+    targetGroup.add(instMesh);
+  }
+}
+
+// =====================================================
 // VOLUMETRIC FOG BANDS between stages
 // =====================================================
 export const transitionPlanes = [];
@@ -49,7 +93,7 @@ for (let si = 1; si < STAGES.length; si++) {
 // Dark shroud at top and bottom of tower
 const SHROUD_LAYERS = 12;
 const SHROUD_DEPTH = 8;
-const shroudColor = new THREE.Color(0x0a0604);
+const shroudColor = new THREE.Color(0x020202);
 export const shroudPlanes = [];
 
 for (let end = 0; end < 2; end++) {
@@ -81,130 +125,131 @@ export const vineData = []; // kept for main.js leaf-sway compatibility
 scene.add(vineGroup);
 
 // =====================================================
-// VINE GLB MODEL
+// VINE GLB MODEL — InstancedMesh
 // =====================================================
 const gltfLoader = new GLTFLoader(manager);
 gltfLoader.load('assets/models/vine.glb', (gltf) => {
+  _seed = 54321;
   const vineModel = gltf.scene;
-  vineModel.traverse(child => {
-    if (child.isMesh) {
-      child.castShadow = true;
-      child.receiveShadow = true;
-    }
-  });
+  const vineTransforms = [];
 
-  function placeVine(x, y, z, opts = {}) {
-    const clone = vineModel.clone();
-    clone.position.set(x, y, z);
-    clone.rotation.y = opts.yRot ?? Math.random() * Math.PI * 2;
-    clone.rotation.z = opts.zRot ?? 0;
-    clone.rotation.x = opts.xRot ?? 0;
-    const s = opts.scale ?? (0.3 + Math.random() * 0.6);
-    const sy = opts.scaleY ?? s * (0.8 + Math.random() * 0.8);
-    clone.scale.set(s, sy, s);
-    vineGroup.add(clone);
+  function collectVine(x, y, z, opts = {}) {
+    const yRot = opts.yRot ?? seededRandom() * Math.PI * 2;
+    const zRot = opts.zRot ?? 0;
+    const xRot = opts.xRot ?? 0;
+    const s = opts.scale ?? (0.3 + seededRandom() * 0.6);
+    const sy = opts.scaleY ?? s * (0.8 + seededRandom() * 0.8);
+    vineTransforms.push({
+      position: new THREE.Vector3(x, y, z),
+      rotation: new THREE.Euler(xRot, yRot, zRot),
+      scale: new THREE.Vector3(s, sy, s),
+    });
   }
 
+  // Column vines
   for (let i = 0; i <= BAYS_X; i++) {
     for (let j = 0; j <= BAYS_Z; j++) {
-      if (Math.random() > 0.4) continue;
+      if (seededRandom() > 0.4) continue;
       const px = gx(i), pz = gz(j);
-      const count = 1 + Math.floor(Math.random() * 3);
+      const count = 1 + Math.floor(seededRandom() * 3);
       for (let n = 0; n < count; n++) {
-        const y = Math.random() * TOP_H * 0.85;
-        placeVine(px, y, pz, { scale: 0.25 + Math.random() * 0.5, scaleY: 0.6 + Math.random() * 1.2 });
+        const y = seededRandom() * TOP_H * 0.85;
+        collectVine(px, y, pz, { scale: 0.25 + seededRandom() * 0.5, scaleY: 0.6 + seededRandom() * 1.2 });
       }
     }
   }
 
+  // Horizontal vines
   for (let lv = 0; lv < totalLevels; lv++) {
-    if (Math.random() > 0.2) continue;
+    if (seededRandom() > 0.2) continue;
     const y = lv * LEVEL_H;
-    const i = Math.floor(Math.random() * BAYS_X);
-    const j = Math.floor(Math.random() * (BAYS_Z + 1));
+    const i = Math.floor(seededRandom() * BAYS_X);
+    const j = Math.floor(seededRandom() * (BAYS_Z + 1));
     const mx = (gx(i) + gx(i + 1)) / 2;
-    placeVine(mx, y, gz(j), {
+    collectVine(mx, y, gz(j), {
       xRot: 0,
-      zRot: Math.PI / 2 * (0.8 + Math.random() * 0.4),
-      scale: 0.2 + Math.random() * 0.35,
-      scaleY: 0.4 + Math.random() * 0.6,
+      zRot: Math.PI / 2 * (0.8 + seededRandom() * 0.4),
+      scale: 0.2 + seededRandom() * 0.35,
+      scaleY: 0.4 + seededRandom() * 0.6,
     });
   }
 
+  // Stage edge drapes
   for (let si = 0; si < STAGES.length; si++) {
     const y = STAGES[si].floorY + 1.0;
-    const hangCount = 3 + Math.floor(Math.random() * 4);
+    const hangCount = 3 + Math.floor(seededRandom() * 4);
     for (let h = 0; h < hangCount; h++) {
-      const side = Math.floor(Math.random() * 4);
+      const side = Math.floor(seededRandom() * 4);
       let hx, hz;
-      if (side === 0) { hx = gx(0); hz = gz(Math.random() * BAYS_Z); }
-      else if (side === 1) { hx = gx(BAYS_X); hz = gz(Math.random() * BAYS_Z); }
-      else if (side === 2) { hx = gx(Math.random() * BAYS_X); hz = gz(0); }
-      else { hx = gx(Math.random() * BAYS_X); hz = gz(BAYS_Z); }
-      placeVine(hx, y, hz, {
-        xRot: Math.PI * (0.4 + Math.random() * 0.3),
-        scale: 0.2 + Math.random() * 0.4,
-        scaleY: 0.5 + Math.random() * 1.0,
+      if (side === 0) { hx = gx(0); hz = gz(seededRandom() * BAYS_Z); }
+      else if (side === 1) { hx = gx(BAYS_X); hz = gz(seededRandom() * BAYS_Z); }
+      else if (side === 2) { hx = gx(seededRandom() * BAYS_X); hz = gz(0); }
+      else { hx = gx(seededRandom() * BAYS_X); hz = gz(BAYS_Z); }
+      collectVine(hx, y, hz, {
+        xRot: Math.PI * (0.4 + seededRandom() * 0.3),
+        scale: 0.2 + seededRandom() * 0.4,
+        scaleY: 0.5 + seededRandom() * 1.0,
       });
     }
   }
 
+  // Lookout vines
   for (const lo of LOOKOUTS) {
     const stage = STAGES[lo.stageIdx];
     for (let b = 1; b <= lo.bays; b++) {
-      if (Math.random() > 0.4) continue;
+      if (seededRandom() > 0.4) continue;
       const ox = lo.dir[0] * b * BAY_W;
       const oz = lo.dir[1] * b * BAY_D;
-      placeVine(ox, stage.floorY + Math.random() * 2, oz, {
-        scale: 0.3 + Math.random() * 0.4,
+      collectVine(ox, stage.floorY + seededRandom() * 2, oz, {
+        scale: 0.3 + seededRandom() * 0.4,
       });
     }
   }
 
+  // Stage base vines
   for (let si = 0; si < STAGES.length; si++) {
     const y = STAGES[si].floorY;
     for (let i = 0; i <= BAYS_X; i++) {
       for (let j = 0; j <= BAYS_Z; j++) {
-        if (Math.random() > 0.35) continue;
-        placeVine(gx(i), y + Math.random() * 0.5, gz(j), {
-          scale: 0.15 + Math.random() * 0.3,
-          scaleY: 0.3 + Math.random() * 0.5,
+        if (seededRandom() > 0.35) continue;
+        collectVine(gx(i), y + seededRandom() * 0.5, gz(j), {
+          scale: 0.15 + seededRandom() * 0.3,
+          scaleY: 0.3 + seededRandom() * 0.5,
         });
       }
     }
   }
+
+  createInstancedMeshes(vineModel, vineTransforms, vineGroup);
 }, undefined, (err) => console.warn('vine.glb load error:', err));
 
 // =====================================================
-// IVY GLB MODEL
+// IVY GLB MODEL — InstancedMesh
 // =====================================================
 gltfLoader.load('assets/models/Ivy.glb', (gltf) => {
+  _seed = 13579;
   const ivyModel = gltf.scene;
-  ivyModel.traverse(child => {
-    if (child.isMesh) {
-      child.castShadow = true;
-      child.receiveShadow = true;
-    }
-  });
+  const ivyTransforms = [];
 
-  function placeIvy(x, y, z, opts = {}) {
-    const clone = ivyModel.clone();
-    clone.position.set(x, y, z);
-    clone.rotation.y = opts.yRot ?? Math.random() * Math.PI * 2;
-    clone.rotation.z = opts.zRot ?? 0;
-    clone.rotation.x = opts.xRot ?? 0;
-    const s = opts.scale ?? (0.3 + Math.random() * 0.5);
-    clone.scale.setScalar(s);
-    vineGroup.add(clone);
+  function collectIvy(x, y, z, opts = {}) {
+    const yRot = opts.yRot ?? seededRandom() * Math.PI * 2;
+    const zRot = opts.zRot ?? 0;
+    const xRot = opts.xRot ?? 0;
+    const s = opts.scale ?? (0.3 + seededRandom() * 0.5);
+    ivyTransforms.push({
+      position: new THREE.Vector3(x, y, z),
+      rotation: new THREE.Euler(xRot, yRot, zRot),
+      scale: new THREE.Vector3(s, s, s),
+    });
   }
 
-  // On vertical columns — anchored to grid nodes
+  // On vertical columns
   for (let lv = 0; lv < totalLevels; lv++) {
-    if (Math.random() > 0.25) continue;
+    if (seededRandom() > 0.25) continue;
     const y = lv * LEVEL_H;
-    const i = Math.floor(Math.random() * (BAYS_X + 1));
-    const j = Math.floor(Math.random() * (BAYS_Z + 1));
-    placeIvy(gx(i), y, gz(j), { scale: 0.2 + Math.random() * 0.4 });
+    const i = Math.floor(seededRandom() * (BAYS_X + 1));
+    const j = Math.floor(seededRandom() * (BAYS_Z + 1));
+    collectIvy(gx(i), y, gz(j), { scale: 0.2 + seededRandom() * 0.4 });
   }
 
   // At stage floor column bases
@@ -212,96 +257,36 @@ gltfLoader.load('assets/models/Ivy.glb', (gltf) => {
     const y = STAGES[si].floorY;
     for (let i = 0; i <= BAYS_X; i++) {
       for (let j = 0; j <= BAYS_Z; j++) {
-        if (Math.random() > 0.4) continue;
-        placeIvy(gx(i), y, gz(j), {
-          scale: 0.3 + Math.random() * 0.5,
+        if (seededRandom() > 0.4) continue;
+        collectIvy(gx(i), y, gz(j), {
+          scale: 0.3 + seededRandom() * 0.5,
         });
       }
     }
   }
 
-  // On outer edge columns — anchored to grid nodes
+  // On outer edge columns — X edges
   for (const i of [0, BAYS_X]) {
     for (let j = 0; j <= BAYS_Z; j++) {
-      const patches = 2 + Math.floor(Math.random() * 3);
+      const patches = 2 + Math.floor(seededRandom() * 3);
       for (let p = 0; p < patches; p++) {
-        const y = Math.random() * TOP_H * 0.9;
-        placeIvy(gx(i), y, gz(j), {
+        const y = seededRandom() * TOP_H * 0.9;
+        collectIvy(gx(i), y, gz(j), {
           yRot: i === 0 ? Math.PI : 0,
-          scale: 0.25 + Math.random() * 0.5,
+          scale: 0.25 + seededRandom() * 0.5,
         });
       }
     }
   }
+  // On outer edge columns — Z edges
   for (const j of [0, BAYS_Z]) {
     for (let i = 0; i <= BAYS_X; i++) {
-      const patches = 2 + Math.floor(Math.random() * 3);
+      const patches = 2 + Math.floor(seededRandom() * 3);
       for (let p = 0; p < patches; p++) {
-        const y = Math.random() * TOP_H * 0.9;
-        placeIvy(gx(i), y, gz(j), {
+        const y = seededRandom() * TOP_H * 0.9;
+        collectIvy(gx(i), y, gz(j), {
           yRot: j === 0 ? -Math.PI / 2 : Math.PI / 2,
-          scale: 0.25 + Math.random() * 0.5,
-        });
-      }
-    }
-  }
-
-  for (const lo of LOOKOUTS) {
-    const stage = STAGES[lo.stageIdx];
-    for (let b = 0; b <= lo.bays; b++) {
-      if (Math.random() > 0.45) continue;
-      const ox = lo.dir[0] * b * BAY_W;
-      const oz = lo.dir[1] * b * BAY_D;
-      placeIvy(ox, stage.floorY + Math.random() * 1.5, oz, {
-        scale: 0.2 + Math.random() * 0.45,
-      });
-    }
-  }
-}, undefined, (err) => console.warn('Ivy.glb load error:', err));
-
-// =====================================================
-// IVY 2 GLB MODEL (denser variant)
-// =====================================================
-gltfLoader.load('assets/models/Ivy 2.glb', (gltf) => {
-  const ivy2Model = gltf.scene;
-  ivy2Model.traverse(child => {
-    if (child.isMesh) {
-      child.castShadow = true;
-      child.receiveShadow = true;
-    }
-  });
-
-  function placeIvy2(x, y, z, opts = {}) {
-    const clone = ivy2Model.clone();
-    clone.position.set(x, y, z);
-    clone.rotation.y = opts.yRot ?? Math.random() * Math.PI * 2;
-    clone.rotation.x = opts.xRot ?? 0;
-    const s = opts.scale ?? (0.25 + Math.random() * 0.45);
-    clone.scale.setScalar(s);
-    vineGroup.add(clone);
-  }
-
-  // Scatter on vertical columns alongside existing ivy
-  for (let i = 0; i <= BAYS_X; i++) {
-    for (let j = 0; j <= BAYS_Z; j++) {
-      if (Math.random() > 0.6) continue;
-      const patches = 1 + Math.floor(Math.random() * 2);
-      for (let p = 0; p < patches; p++) {
-        const y = Math.random() * TOP_H * 0.85;
-        placeIvy2(gx(i), y, gz(j), { scale: 0.2 + Math.random() * 0.4 });
-      }
-    }
-  }
-
-  // Drape on stage platform edges — anchored to column nodes
-  for (let si = 0; si < STAGES.length; si++) {
-    const y = STAGES[si].floorY;
-    for (let i = 0; i <= BAYS_X; i++) {
-      for (let j = 0; j <= BAYS_Z; j++) {
-        if (Math.random() > 0.35) continue;
-        placeIvy2(gx(i), y, gz(j), {
-          xRot: Math.PI * (0.3 + Math.random() * 0.35),
-          scale: 0.25 + Math.random() * 0.5,
+          scale: 0.25 + seededRandom() * 0.5,
         });
       }
     }
@@ -311,18 +296,81 @@ gltfLoader.load('assets/models/Ivy 2.glb', (gltf) => {
   for (const lo of LOOKOUTS) {
     const stage = STAGES[lo.stageIdx];
     for (let b = 0; b <= lo.bays; b++) {
-      if (Math.random() > 0.5) continue;
+      if (seededRandom() > 0.45) continue;
       const ox = lo.dir[0] * b * BAY_W;
       const oz = lo.dir[1] * b * BAY_D;
-      placeIvy2(ox, stage.floorY + Math.random() * 1.5, oz, {
-        scale: 0.2 + Math.random() * 0.4,
+      collectIvy(ox, stage.floorY + seededRandom() * 1.5, oz, {
+        scale: 0.2 + seededRandom() * 0.45,
       });
     }
   }
+
+  createInstancedMeshes(ivyModel, ivyTransforms, vineGroup);
+}, undefined, (err) => console.warn('Ivy.glb load error:', err));
+
+// =====================================================
+// IVY 2 GLB MODEL (denser variant) — InstancedMesh
+// =====================================================
+gltfLoader.load('assets/models/Ivy 2.glb', (gltf) => {
+  _seed = 24680;
+  const ivy2Model = gltf.scene;
+  const ivy2Transforms = [];
+
+  function collectIvy2(x, y, z, opts = {}) {
+    const yRot = opts.yRot ?? seededRandom() * Math.PI * 2;
+    const xRot = opts.xRot ?? 0;
+    const s = opts.scale ?? (0.25 + seededRandom() * 0.45);
+    ivy2Transforms.push({
+      position: new THREE.Vector3(x, y, z),
+      rotation: new THREE.Euler(xRot, yRot, 0),
+      scale: new THREE.Vector3(s, s, s),
+    });
+  }
+
+  // Scatter on vertical columns
+  for (let i = 0; i <= BAYS_X; i++) {
+    for (let j = 0; j <= BAYS_Z; j++) {
+      if (seededRandom() > 0.6) continue;
+      const patches = 1 + Math.floor(seededRandom() * 2);
+      for (let p = 0; p < patches; p++) {
+        const y = seededRandom() * TOP_H * 0.85;
+        collectIvy2(gx(i), y, gz(j), { scale: 0.2 + seededRandom() * 0.4 });
+      }
+    }
+  }
+
+  // Drape on stage platform edges
+  for (let si = 0; si < STAGES.length; si++) {
+    const y = STAGES[si].floorY;
+    for (let i = 0; i <= BAYS_X; i++) {
+      for (let j = 0; j <= BAYS_Z; j++) {
+        if (seededRandom() > 0.35) continue;
+        collectIvy2(gx(i), y, gz(j), {
+          xRot: Math.PI * (0.3 + seededRandom() * 0.35),
+          scale: 0.25 + seededRandom() * 0.5,
+        });
+      }
+    }
+  }
+
+  // On lookout arms
+  for (const lo of LOOKOUTS) {
+    const stage = STAGES[lo.stageIdx];
+    for (let b = 0; b <= lo.bays; b++) {
+      if (seededRandom() > 0.5) continue;
+      const ox = lo.dir[0] * b * BAY_W;
+      const oz = lo.dir[1] * b * BAY_D;
+      collectIvy2(ox, stage.floorY + seededRandom() * 1.5, oz, {
+        scale: 0.2 + seededRandom() * 0.4,
+      });
+    }
+  }
+
+  createInstancedMeshes(ivy2Model, ivy2Transforms, vineGroup);
 }, undefined, (err) => console.warn('Ivy 2.glb load error:', err));
 
 // =====================================================
-// SHRUB BILLBOARDS
+// SHRUB BILLBOARDS — InstancedMesh
 // =====================================================
 const shrubTexLoader = new THREE.TextureLoader(manager);
 const shrubAlbedo = shrubTexLoader.load('assets/textures/shrub/TCom_Shrub_Blueberry01_512_albedo.png');
@@ -347,45 +395,44 @@ const shrubGeo = new THREE.PlaneGeometry(1.5, 1.5);
 export const shrubGroup = new THREE.Group();
 shrubGroup.name = 'shrubs';
 
-function placeShrub(x, y, z, scale) {
-  const s = new THREE.Mesh(shrubGeo, shrubMat);
-  s.position.set(x, y + scale * 0.45, z);
-  s.rotation.y = Math.random() * Math.PI * 2;
-  s.scale.setScalar(scale);
-  s.castShadow = true;
-  s.receiveShadow = true;
-  shrubGroup.add(s);
-  const s2 = s.clone();
-  s2.rotation.y += Math.PI / 2;
-  shrubGroup.add(s2);
+// Collect shrub transforms (seed already at initial value from synchronous execution)
+const shrubTransforms = [];
+
+function collectShrub(x, y, z, scale) {
+  const rotY = seededRandom() * Math.PI * 2;
+  shrubTransforms.push({
+    position: new THREE.Vector3(x, y + scale * 0.45, z),
+    rotY,
+    scale,
+  });
 }
 
 for (let si = 0; si < STAGES.length; si++) {
   const y = STAGES[si].floorY + PLAT_H;
   for (let i = 0; i <= BAYS_X; i++) {
     for (let j = 0; j <= BAYS_Z; j++) {
-      if (Math.random() > 0.4) continue;
-      const sc = 0.2 + Math.random() * 0.45;
-      placeShrub(gx(i) + (Math.random() - 0.5) * 0.3, y, gz(j) + (Math.random() - 0.5) * 0.3, sc);
+      if (seededRandom() > 0.4) continue;
+      const sc = 0.2 + seededRandom() * 0.45;
+      collectShrub(gx(i) + (seededRandom() - 0.5) * 0.3, y, gz(j) + (seededRandom() - 0.5) * 0.3, sc);
     }
   }
   for (let e = 0; e < 6; e++) {
-    const edgeSide = Math.floor(Math.random() * 4);
+    const edgeSide = Math.floor(seededRandom() * 4);
     let ex, ez;
-    if (edgeSide === 0) { ex = gx(0) + Math.random() * TOTAL_W; ez = gz(0); }
-    else if (edgeSide === 1) { ex = gx(0) + Math.random() * TOTAL_W; ez = gz(BAYS_Z); }
-    else if (edgeSide === 2) { ex = gx(0); ez = gz(0) + Math.random() * TOTAL_D; }
-    else { ex = gx(BAYS_X); ez = gz(0) + Math.random() * TOTAL_D; }
-    placeShrub(ex, y, ez, 0.25 + Math.random() * 0.5);
+    if (edgeSide === 0) { ex = gx(0) + seededRandom() * TOTAL_W; ez = gz(0); }
+    else if (edgeSide === 1) { ex = gx(0) + seededRandom() * TOTAL_W; ez = gz(BAYS_Z); }
+    else if (edgeSide === 2) { ex = gx(0); ez = gz(0) + seededRandom() * TOTAL_D; }
+    else { ex = gx(BAYS_X); ez = gz(0) + seededRandom() * TOTAL_D; }
+    collectShrub(ex, y, ez, 0.25 + seededRandom() * 0.5);
   }
 }
 
 for (let lv = 0; lv < totalLevels; lv++) {
-  if (Math.random() > 0.12) continue;
+  if (seededRandom() > 0.12) continue;
   const y = lv * LEVEL_H;
-  const i = Math.floor(Math.random() * (BAYS_X + 1));
-  const j = Math.floor(Math.random() * (BAYS_Z + 1));
-  placeShrub(gx(i), y, gz(j), 0.15 + Math.random() * 0.35);
+  const i = Math.floor(seededRandom() * (BAYS_X + 1));
+  const j = Math.floor(seededRandom() * (BAYS_Z + 1));
+  collectShrub(gx(i), y, gz(j), 0.15 + seededRandom() * 0.35);
 }
 
 for (const lo of LOOKOUTS) {
@@ -393,21 +440,56 @@ for (const lo of LOOKOUTS) {
   const y = stage.floorY + PLAT_H;
   const endX = lo.dir[0] * lo.bays * BAY_W;
   const endZ = lo.dir[1] * lo.bays * BAY_D;
-  if (Math.random() > 0.3) {
-    placeShrub(endX, y, endZ, 0.3 + Math.random() * 0.5);
+  if (seededRandom() > 0.3) {
+    collectShrub(endX, y, endZ, 0.3 + seededRandom() * 0.5);
   }
   for (let b = 1; b < lo.bays; b++) {
-    if (Math.random() > 0.35) continue;
-    placeShrub(lo.dir[0] * b * BAY_W, y, lo.dir[1] * b * BAY_D, 0.2 + Math.random() * 0.35);
+    if (seededRandom() > 0.35) continue;
+    collectShrub(lo.dir[0] * b * BAY_W, y, lo.dir[1] * b * BAY_D, 0.2 + seededRandom() * 0.35);
   }
 }
 
 for (let g = 0; g < 15; g++) {
-  const i = Math.floor(Math.random() * (BAYS_X + 1));
-  const j = Math.floor(Math.random() * (BAYS_Z + 1));
-  const ox = (Math.random() - 0.5) * 1.0;
-  const oz = (Math.random() - 0.5) * 1.0;
-  placeShrub(gx(i) + ox, 0, gz(j) + oz, 0.3 + Math.random() * 0.6);
+  const i = Math.floor(seededRandom() * (BAYS_X + 1));
+  const j = Math.floor(seededRandom() * (BAYS_Z + 1));
+  const ox = (seededRandom() - 0.5) * 1.0;
+  const oz = (seededRandom() - 0.5) * 1.0;
+  collectShrub(gx(i) + ox, 0, gz(j) + oz, 0.3 + seededRandom() * 0.6);
+}
+
+// Build two InstancedMesh objects (perpendicular billboard planes)
+{
+  const count = shrubTransforms.length;
+  const shrubInstanceA = new THREE.InstancedMesh(shrubGeo, shrubMat, count);
+  const shrubInstanceB = new THREE.InstancedMesh(shrubGeo, shrubMat, count);
+  shrubInstanceA.frustumCulled = false;
+  shrubInstanceB.frustumCulled = false;
+  shrubInstanceA.castShadow = true;
+  shrubInstanceA.receiveShadow = true;
+  shrubInstanceB.castShadow = true;
+  shrubInstanceB.receiveShadow = true;
+
+  const m = new THREE.Matrix4();
+  const q = new THREE.Quaternion();
+  const sv = new THREE.Vector3();
+
+  for (let i = 0; i < count; i++) {
+    const t = shrubTransforms[i];
+    sv.setScalar(t.scale);
+
+    q.setFromEuler(new THREE.Euler(0, t.rotY, 0));
+    m.compose(t.position, q, sv);
+    shrubInstanceA.setMatrixAt(i, m);
+
+    q.setFromEuler(new THREE.Euler(0, t.rotY + Math.PI / 2, 0));
+    m.compose(t.position, q, sv);
+    shrubInstanceB.setMatrixAt(i, m);
+  }
+
+  shrubInstanceA.instanceMatrix.needsUpdate = true;
+  shrubInstanceB.instanceMatrix.needsUpdate = true;
+  shrubGroup.add(shrubInstanceA);
+  shrubGroup.add(shrubInstanceB);
 }
 
 scene.add(shrubGroup);
@@ -449,38 +531,35 @@ fbxLoader.load('assets/models/Male Standing Pose.fbx', (fbx) => {
 }, undefined, (err) => console.warn('FBX load error:', err));
 
 // =====================================================
-// VINES GLB MODEL (new dense variant)
+// VINES GLB MODEL (dense variant) — InstancedMesh
 // =====================================================
 gltfLoader.load('assets/models/Vines.glb', (gltf) => {
+  _seed = 97531;
   const vinesModel = gltf.scene;
-  vinesModel.traverse(child => {
-    if (child.isMesh) {
-      child.castShadow = true;
-      child.receiveShadow = true;
-    }
-  });
+  const vinesTransforms = [];
 
-  function placeVines(x, y, z, opts = {}) {
-    const clone = vinesModel.clone();
-    clone.position.set(x, y, z);
-    clone.rotation.y = opts.yRot ?? Math.random() * Math.PI * 2;
-    clone.rotation.x = opts.xRot ?? 0;
-    clone.rotation.z = opts.zRot ?? 0;
-    const s = opts.scale ?? (0.3 + Math.random() * 0.5);
-    const sy = opts.scaleY ?? s * (0.8 + Math.random() * 0.6);
-    clone.scale.set(s, sy, s);
-    vineGroup.add(clone);
+  function collectVines(x, y, z, opts = {}) {
+    const yRot = opts.yRot ?? seededRandom() * Math.PI * 2;
+    const xRot = opts.xRot ?? 0;
+    const zRot = opts.zRot ?? 0;
+    const s = opts.scale ?? (0.3 + seededRandom() * 0.5);
+    const sy = opts.scaleY ?? s * (0.8 + seededRandom() * 0.6);
+    vinesTransforms.push({
+      position: new THREE.Vector3(x, y, z),
+      rotation: new THREE.Euler(xRot, yRot, zRot),
+      scale: new THREE.Vector3(s, sy, s),
+    });
   }
 
   // Scatter across vertical columns
   for (let i = 0; i <= BAYS_X; i++) {
     for (let j = 0; j <= BAYS_Z; j++) {
-      if (Math.random() > 0.5) continue;
-      const count = 1 + Math.floor(Math.random() * 2);
+      if (seededRandom() > 0.5) continue;
+      const count = 1 + Math.floor(seededRandom() * 2);
       for (let n = 0; n < count; n++) {
-        placeVines(gx(i), Math.random() * TOP_H * 0.8, gz(j), {
-          scale: 0.2 + Math.random() * 0.4,
-          scaleY: 0.5 + Math.random() * 1.0,
+        collectVines(gx(i), seededRandom() * TOP_H * 0.8, gz(j), {
+          scale: 0.2 + seededRandom() * 0.4,
+          scaleY: 0.5 + seededRandom() * 1.0,
         });
       }
     }
@@ -489,21 +568,23 @@ gltfLoader.load('assets/models/Vines.glb', (gltf) => {
   // Drape at stage edges
   for (let si = 0; si < STAGES.length; si++) {
     const y = STAGES[si].floorY;
-    const count = 2 + Math.floor(Math.random() * 3);
+    const count = 2 + Math.floor(seededRandom() * 3);
     for (let c = 0; c < count; c++) {
-      const side = Math.floor(Math.random() * 4);
+      const side = Math.floor(seededRandom() * 4);
       let vx, vz;
-      if (side === 0) { vx = gx(0); vz = gz(Math.random() * BAYS_Z); }
-      else if (side === 1) { vx = gx(BAYS_X); vz = gz(Math.random() * BAYS_Z); }
-      else if (side === 2) { vx = gx(Math.random() * BAYS_X); vz = gz(0); }
-      else { vx = gx(Math.random() * BAYS_X); vz = gz(BAYS_Z); }
-      placeVines(vx, y + Math.random() * 2, vz, {
-        xRot: Math.PI * (0.3 + Math.random() * 0.4),
-        scale: 0.25 + Math.random() * 0.4,
-        scaleY: 0.4 + Math.random() * 0.8,
+      if (side === 0) { vx = gx(0); vz = gz(seededRandom() * BAYS_Z); }
+      else if (side === 1) { vx = gx(BAYS_X); vz = gz(seededRandom() * BAYS_Z); }
+      else if (side === 2) { vx = gx(seededRandom() * BAYS_X); vz = gz(0); }
+      else { vx = gx(seededRandom() * BAYS_X); vz = gz(BAYS_Z); }
+      collectVines(vx, y + seededRandom() * 2, vz, {
+        xRot: Math.PI * (0.3 + seededRandom() * 0.4),
+        scale: 0.25 + seededRandom() * 0.4,
+        scaleY: 0.4 + seededRandom() * 0.8,
       });
     }
   }
+
+  createInstancedMeshes(vinesModel, vinesTransforms, vineGroup);
 }, undefined, (err) => console.warn('Vines.glb load error:', err));
 
 // =====================================================
@@ -527,21 +608,18 @@ const flowerGroup = new THREE.Group();
 flowerGroup.name = 'flowers';
 
 gltfLoader.load('assets/models/Flowers.glb', (gltf) => {
+  _seed = 86420;
   const flowerModel = gltf.scene;
-  flowerModel.traverse(child => {
-    if (child.isMesh) {
-      child.castShadow = true;
-      child.receiveShadow = true;
-    }
-  });
+  const flowerTransforms = [];
 
-  function placeFlower(x, y, z, opts = {}) {
-    const clone = flowerModel.clone();
-    clone.position.set(x, y, z);
-    clone.rotation.y = opts.yRot ?? Math.random() * Math.PI * 2;
-    const s = opts.scale ?? (0.15 + Math.random() * 0.3);
-    clone.scale.setScalar(s);
-    flowerGroup.add(clone);
+  function collectFlower(x, y, z, opts = {}) {
+    const yRot = opts.yRot ?? seededRandom() * Math.PI * 2;
+    const s = opts.scale ?? (0.15 + seededRandom() * 0.3);
+    flowerTransforms.push({
+      position: new THREE.Vector3(x, y, z),
+      rotation: new THREE.Euler(0, yRot, 0),
+      scale: new THREE.Vector3(s, s, s),
+    });
   }
 
   const groundY = STAGES[0].floorY + PLAT_H;
@@ -549,13 +627,13 @@ gltfLoader.load('assets/models/Flowers.glb', (gltf) => {
   // Along scaffolding grid nodes at ground level
   for (let i = 0; i <= BAYS_X; i++) {
     for (let j = 0; j <= BAYS_Z; j++) {
-      if (Math.random() > 0.5) continue;
-      const cluster = 1 + Math.floor(Math.random() * 3);
+      if (seededRandom() > 0.5) continue;
+      const cluster = 1 + Math.floor(seededRandom() * 3);
       for (let c = 0; c < cluster; c++) {
-        const ox = (Math.random() - 0.5) * BAY_W * 0.6;
-        const oz = (Math.random() - 0.5) * BAY_D * 0.6;
-        placeFlower(gx(i) + ox, groundY, gz(j) + oz, {
-          scale: 0.12 + Math.random() * 0.25,
+        const ox = (seededRandom() - 0.5) * BAY_W * 0.6;
+        const oz = (seededRandom() - 0.5) * BAY_D * 0.6;
+        collectFlower(gx(i) + ox, groundY, gz(j) + oz, {
+          scale: 0.12 + seededRandom() * 0.25,
         });
       }
     }
@@ -563,50 +641,51 @@ gltfLoader.load('assets/models/Flowers.glb', (gltf) => {
 
   // Along edges of the ground platform
   for (let e = 0; e < 12; e++) {
-    const side = Math.floor(Math.random() * 4);
+    const side = Math.floor(seededRandom() * 4);
     let fx, fz;
-    if (side === 0) { fx = gx(0) + Math.random() * TOTAL_W; fz = gz(0); }
-    else if (side === 1) { fx = gx(0) + Math.random() * TOTAL_W; fz = gz(BAYS_Z); }
-    else if (side === 2) { fx = gx(0); fz = gz(0) + Math.random() * TOTAL_D; }
-    else { fx = gx(BAYS_X); fz = gz(0) + Math.random() * TOTAL_D; }
-    placeFlower(fx, groundY, fz, {
-      scale: 0.15 + Math.random() * 0.3,
+    if (side === 0) { fx = gx(0) + seededRandom() * TOTAL_W; fz = gz(0); }
+    else if (side === 1) { fx = gx(0) + seededRandom() * TOTAL_W; fz = gz(BAYS_Z); }
+    else if (side === 2) { fx = gx(0); fz = gz(0) + seededRandom() * TOTAL_D; }
+    else { fx = gx(BAYS_X); fz = gz(0) + seededRandom() * TOTAL_D; }
+    collectFlower(fx, groundY, fz, {
+      scale: 0.15 + seededRandom() * 0.3,
     });
   }
 
   // A few on the first couple of scaffolding levels
   for (let lv = 1; lv <= 4; lv++) {
-    if (Math.random() > 0.6) continue;
+    if (seededRandom() > 0.6) continue;
     const y = lv * LEVEL_H;
-    const i = Math.floor(Math.random() * (BAYS_X + 1));
-    const j = Math.floor(Math.random() * (BAYS_Z + 1));
-    placeFlower(gx(i), y, gz(j), {
-      scale: 0.1 + Math.random() * 0.2,
+    const i = Math.floor(seededRandom() * (BAYS_X + 1));
+    const j = Math.floor(seededRandom() * (BAYS_Z + 1));
+    collectFlower(gx(i), y, gz(j), {
+      scale: 0.1 + seededRandom() * 0.2,
     });
   }
+
+  createInstancedMeshes(flowerModel, flowerTransforms, flowerGroup);
 }, undefined, (err) => console.warn('Flowers.glb load error:', err));
 
 scene.add(flowerGroup);
 
 // =====================================================
-// ANCIENT PILLARS — placed on THIRD stage (Y=60)
+// ANCIENT PILLARS — placed on THIRD stage (Y=60) — InstancedMesh
 // =====================================================
 gltfLoader.load('assets/models/ancient_pillars.glb', (gltf) => {
+  _seed = 11235;
   const pillarsModel = gltf.scene;
-  pillarsModel.traverse(child => {
-    if (child.isMesh) {
-      child.castShadow = true;
-      child.receiveShadow = true;
-    }
-  });
+  const pillarTransforms = [];
 
-  function placePillars(x, y, z, opts = {}) {
-    const clone = pillarsModel.clone();
-    clone.position.set(x, y, z);
-    clone.rotation.y = opts.yRot ?? Math.random() * Math.PI * 2;
-    const s = opts.scale ?? (0.4 + Math.random() * 0.3);
-    clone.scale.setScalar(s);
-    scene.add(clone);
+  function collectPillar(x, y, z, opts = {}) {
+    const yRot = opts.yRot ?? seededRandom() * Math.PI * 2;
+    const xRot = opts.xRot ?? 0;
+    const zRot = opts.zRot ?? 0;
+    const s = opts.scale ?? (0.4 + seededRandom() * 0.3);
+    pillarTransforms.push({
+      position: new THREE.Vector3(x, y, z),
+      rotation: new THREE.Euler(xRot, yRot, zRot),
+      scale: new THREE.Vector3(s, s, s),
+    });
   }
 
   const pillarStage = STAGES[2]; // THIRD stage
@@ -615,41 +694,40 @@ gltfLoader.load('assets/models/ancient_pillars.glb', (gltf) => {
   // Place pillars at scaffolding grid corners
   for (let i = 0; i <= BAYS_X; i++) {
     for (let j = 0; j <= BAYS_Z; j++) {
-      if (Math.random() > 0.45) continue;
-      placePillars(gx(i), y, gz(j), {
-        scale: 0.3 + Math.random() * 0.25,
+      if (seededRandom() > 0.45) continue;
+      collectPillar(gx(i), y, gz(j), {
+        scale: 0.3 + seededRandom() * 0.25,
       });
     }
   }
 
   // A few along the edges of the platform
   for (let e = 0; e < 6; e++) {
-    const side = Math.floor(Math.random() * 4);
+    const side = Math.floor(seededRandom() * 4);
     let px, pz;
-    if (side === 0) { px = gx(0) - 0.5; pz = gz(Math.random() * BAYS_Z); }
-    else if (side === 1) { px = gx(BAYS_X) + 0.5; pz = gz(Math.random() * BAYS_Z); }
-    else if (side === 2) { px = gx(Math.random() * BAYS_X); pz = gz(0) - 0.5; }
-    else { px = gx(Math.random() * BAYS_X); pz = gz(BAYS_Z) + 0.5; }
-    placePillars(px, y, pz, {
-      scale: 0.25 + Math.random() * 0.35,
+    if (side === 0) { px = gx(0) - 0.5; pz = gz(seededRandom() * BAYS_Z); }
+    else if (side === 1) { px = gx(BAYS_X) + 0.5; pz = gz(seededRandom() * BAYS_Z); }
+    else if (side === 2) { px = gx(seededRandom() * BAYS_X); pz = gz(0) - 0.5; }
+    else { px = gx(seededRandom() * BAYS_X); pz = gz(BAYS_Z) + 0.5; }
+    collectPillar(px, y, pz, {
+      scale: 0.25 + seededRandom() * 0.35,
     });
   }
 
   // A couple of broken/tilted ones for variety
   for (let t = 0; t < 3; t++) {
-    const ti = Math.floor(Math.random() * BAYS_X);
-    const tj = Math.floor(Math.random() * BAYS_Z);
+    const ti = Math.floor(seededRandom() * BAYS_X);
+    const tj = Math.floor(seededRandom() * BAYS_Z);
     const cx = (gx(ti) + gx(ti + 1)) / 2;
     const cz = (gz(tj) + gz(tj + 1)) / 2;
-    const clone = pillarsModel.clone();
-    clone.position.set(cx, y, cz);
-    clone.rotation.y = Math.random() * Math.PI * 2;
-    clone.rotation.z = (Math.random() - 0.5) * 0.15; // slight tilt
-    clone.rotation.x = (Math.random() - 0.5) * 0.1;
-    const s = 0.2 + Math.random() * 0.25;
-    clone.scale.setScalar(s);
-    scene.add(clone);
+    collectPillar(cx, y, cz, {
+      xRot: (seededRandom() - 0.5) * 0.1,
+      zRot: (seededRandom() - 0.5) * 0.15,
+      scale: 0.2 + seededRandom() * 0.25,
+    });
   }
+
+  createInstancedMeshes(pillarsModel, pillarTransforms, scene);
 }, undefined, (err) => console.warn('ancient_pillars.glb load error:', err));
 
 // =====================================================

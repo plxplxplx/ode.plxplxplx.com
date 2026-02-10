@@ -8,7 +8,7 @@ import {
   GodRaysShader, VignetteShader, ChromaticAberrationShader,
   FilmGrainShader, ColorGradeShader,
 } from './shaders.js';
-import { renderer, scene, camera, occRT, setOrtho } from './scene.js';
+import { renderer, scene, camera, occRT, occBlurRT, setOrtho } from './scene.js';
 
 // =====================================================
 // POST-PROCESSING
@@ -31,7 +31,7 @@ composer.addPass(bokehPass);
 
 export const godRaysPass = new ShaderPass(GodRaysShader);
 godRaysPass.uniforms.tOcclusion.value = occRT.texture;
-godRaysPass.enabled = false;
+godRaysPass.enabled = true;
 composer.addPass(godRaysPass);
 
 composer.addPass(new ShaderPass(VignetteShader));
@@ -60,5 +60,6 @@ window.addEventListener('resize', () => {
   bloom.resolution.set(window.innerWidth, window.innerHeight);
   bokehPass.setSize(window.innerWidth, window.innerHeight);
   occRT.setSize(Math.floor(window.innerWidth / 2), Math.floor(window.innerHeight / 2));
+  occBlurRT.setSize(Math.floor(window.innerWidth / 2), Math.floor(window.innerHeight / 2));
   setOrtho();
 });

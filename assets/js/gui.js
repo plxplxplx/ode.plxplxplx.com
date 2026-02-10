@@ -7,7 +7,7 @@ import { STAGE_MATS, matSteel, loadMarbleTextures, getMarbleTextures, applyMarbl
 import { TAPE_OPTS, tapeGroup, buildTape } from './tape.js';
 import { cards, CARD_OPTS, rebuildCards } from './cards.js';
 import { ZONES, sideTexts, rebuildRibbons } from './zones.js';
-import { vineGroup, shrubGroup, flowerLight } from './environment.js';
+import { vineGroup, shrubGroup, flowerLight, stageGlowPlanes, backdropPanels, shroudPlanes } from './environment.js';
 import { gridLights, fireflies, FF_COUNT } from './effects.js';
 import { scaffold, floorMats } from './scaffold.js';
 import { bloom, bokehPass, godRaysPass, chromaPass, colorGradePass, grainPass, setPostCamera } from './postprocessing.js';
@@ -32,6 +32,9 @@ export const params = {
   gridLightSpeed: 0.2,
   ambientIntensity: 0.35,
   keyLightIntensity: keyLight.intensity,
+  keyLightX: keyLight.position.x,
+  keyLightY: 18,
+  keyLightZ: keyLight.position.z,
   cardsVisible: false,
   cardOpacity: 0.92,
   cardRadius: CARD_OPTS.radius,
@@ -62,7 +65,7 @@ export const params = {
   steelMetalness: matSteel.metalness,
   steelRoughness: matSteel.roughness,
   exposure: renderer.toneMappingExposure,
-  godRaysEnabled: false,
+  godRaysEnabled: true,
   godRayExposure: godRaysPass.uniforms.exposure.value,
   godRayDecay: godRaysPass.uniforms.decay.value,
   godRayDensity: godRaysPass.uniforms.density.value,
@@ -94,13 +97,16 @@ export const params = {
   perspFov: 50,
   perspNear: 0.1,
   perspFar: 300,
-  sunLocked: false,
+  sunLocked: true,
   buildMode: false,
   buildOffset: 10,
   // Particles
   // Stage atmosphere
+  stageGlowEnabled: false,
   stageGlowIntensity: 0,
+  backdropEnabled: true,
   backdropIntensity: 1.2,
+  shroudEnabled: true,
   stageFloorsVisible: false,
   floorOpacity: 1.0,
   floorMetalness: 0.3,
@@ -189,8 +195,17 @@ const fogFolder = gui.addFolder('Fog');
 fogFolder.add(params, 'fogDensity', 0, 0.5, 0.005).onChange(v => scene.fog.density = v);
 
 const atmoFolder = gui.addFolder('Stage Atmosphere');
-atmoFolder.add(params, 'stageGlowIntensity', 0, 20, 0.1).name('Floor Glow');
-atmoFolder.add(params, 'backdropIntensity', 0, 20, 0.1).name('Backdrop Fog');
+atmoFolder.add(params, 'stageGlowEnabled').name('Stage Glow').onChange(v => {
+  stageGlowPlanes.forEach(sg => { sg.mesh.visible = v; });
+});
+atmoFolder.add(params, 'stageGlowIntensity', 0, 20, 0.1).name('Glow Intensity');
+atmoFolder.add(params, 'backdropEnabled').name('Backdrop').onChange(v => {
+  backdropPanels.forEach(bp => { bp.mesh.visible = v; });
+});
+atmoFolder.add(params, 'backdropIntensity', 0, 20, 0.1).name('Backdrop Intensity');
+atmoFolder.add(params, 'shroudEnabled').name('Shroud').onChange(v => {
+  shroudPlanes.forEach(sp => { sp.mesh.visible = v; });
+});
 const setFloorsVisible = v => {
   scaffold.traverse(child => {
     if (child.isMesh && child.userData.componentType) {
@@ -203,6 +218,8 @@ const setFloorsVisible = v => {
 };
 atmoFolder.add(params, 'stageFloorsVisible').name('Stage Floors').onChange(setFloorsVisible);
 setFloorsVisible(params.stageFloorsVisible);
+// Apply initial visibility
+stageGlowPlanes.forEach(sg => { sg.mesh.visible = params.stageGlowEnabled; });
 atmoFolder.add(params, 'floorOpacity', 0, 1, 0.01).name('Floor Opacity').onChange(v => {
   floorMats.forEach(m => { m.opacity = v; });
 });
@@ -212,7 +229,7 @@ atmoFolder.add(params, 'floorMetalness', 0, 1, 0.01).name('Floor Metalness').onC
 atmoFolder.add(params, 'floorRoughness', 0, 1, 0.01).name('Floor Roughness').onChange(v => {
   floorMats.forEach(m => { m.roughness = v; });
 });
-atmoFolder.add(params, 'floorSlabSize', 120, 500, 10).name('Slab Size').onChange(v => {
+atmoFolder.add(params, 'floorSlabSize', 10, 500, 5).name('Slab Size').onChange(v => {
   scaffold.traverse(child => {
     if (child.isMesh && child.userData.componentType === 'transitionSlab') {
       child.geometry.dispose();
@@ -232,6 +249,9 @@ lightFolder.add(params, 'gridLightSpeed', 0.01, 2, 0.01).onChange(v => {
   gridLights.forEach(gl => gl.speed = v);
 });
 lightFolder.add(params, 'keyLightIntensity', 0, 20, 0.1).onChange(v => keyLight.intensity = v);
+lightFolder.add(params, 'keyLightX', -30, 30, 0.5).name('Key X').onChange(v => keyLight.position.x = v);
+lightFolder.add(params, 'keyLightY', 0, 50, 0.5).name('Key Y offset');
+lightFolder.add(params, 'keyLightZ', -30, 30, 0.5).name('Key Z').onChange(v => keyLight.position.z = v);
 lightFolder.add(params, 'exposure', 0.1, 3, 0.05).onChange(v => renderer.toneMappingExposure = v);
 
 const cardFolder = gui.addFolder('Image Cards');
@@ -261,9 +281,9 @@ const updateSun = () => {
   sunMesh.position.copy(sunPos);
   sunOccMesh.position.copy(sunPos);
 };
-godRayFolder.add(params, 'sunX', -40, 40, 0.5).onChange(updateSun);
-godRayFolder.add(params, 'sunY', 0, 50, 0.5).onChange(updateSun);
-godRayFolder.add(params, 'sunZ', -40, 40, 0.5).onChange(updateSun);
+godRayFolder.add(params, 'sunX', -20, 20, 0.5).onChange(updateSun);
+godRayFolder.add(params, 'sunY', -10, 20, 0.5).onChange(updateSun);
+godRayFolder.add(params, 'sunZ', -20, 20, 0.5).onChange(updateSun);
 
 const fxFolder = gui.addFolder('Post FX');
 fxFolder.add(params, 'chromaAmount', 0, 0.02, 0.001).name('Chroma Aberr.').onChange(v => chromaPass.uniforms.amount.value = v);

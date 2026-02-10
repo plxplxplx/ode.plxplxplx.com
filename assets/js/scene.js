@@ -20,9 +20,9 @@ renderer.localClippingEnabled = true;
 export const buildPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 99999);
 
 export const scene = new THREE.Scene();
-export const fogColor = 0x1a120a;
-scene.background = new THREE.Color(0x2a1a0e);
-scene.fog = new THREE.FogExp2(fogColor, 0.06);
+export const fogColor = 0x050505;
+scene.background = new THREE.Color(0x050505);
+scene.fog = new THREE.FogExp2(fogColor, 0.07);
 
 const pmrem = new THREE.PMREMGenerator(renderer);
 scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
@@ -65,15 +65,15 @@ rimLight.position.set(-10, 20, -15);
 scene.add(rimLight);
 scene.add(new THREE.HemisphereLight(0xffddaa, 0x1a0e06, 0.3));
 
-// Sun — far behind the tower for backlighting
-export const sunPos = new THREE.Vector3(-25, TOP_H * 0.6, -50);
+// Sun — behind the scaffold, above and off-screen for bird's-eye god rays
+export const sunPos = new THREE.Vector3(-3, 12, -20);
 export const sunLight = new THREE.DirectionalLight(0xffe0a0, 0.8);
 sunLight.position.copy(sunPos);
 scene.add(sunLight);
 
 // Large sun mesh (golden glow behind the structure)
 export const sunMesh = new THREE.Mesh(
-  new THREE.SphereGeometry(3, 16, 16),
+  new THREE.SphereGeometry(4, 16, 16),
   new THREE.MeshBasicMaterial({ color: 0xffe8c0 })
 );
 sunMesh.position.copy(sunPos);
@@ -83,13 +83,16 @@ scene.add(sunMesh);
 export const occlusionScene = new THREE.Scene();
 export const occlusionMat = new THREE.MeshBasicMaterial({ color: 0x000000 });
 export const sunOccMesh = new THREE.Mesh(
-  new THREE.SphereGeometry(3, 16, 16),
+  new THREE.SphereGeometry(8, 16, 16),
   new THREE.MeshBasicMaterial({ color: 0xffffff })
 );
 sunOccMesh.position.copy(sunPos);
 occlusionScene.add(sunOccMesh);
 
 export const occRT = new THREE.WebGLRenderTarget(
+  Math.floor(window.innerWidth / 2), Math.floor(window.innerHeight / 2)
+);
+export const occBlurRT = new THREE.WebGLRenderTarget(
   Math.floor(window.innerWidth / 2), Math.floor(window.innerHeight / 2)
 );
 

@@ -12,6 +12,7 @@ controls.enableDamping = true;
 controls.dampingFactor = 0.08;
 controls.enablePan = false;
 controls.enableZoom = false;
+controls.enableRotate = false;
 controls.maxPolarAngle = Math.PI * 0.85;
 controls.minPolarAngle = 0.2;
 controls.autoRotate = false;
@@ -30,8 +31,7 @@ export const SCROLL_LERP = 0.06;
 export let virtualScroll = START_Y;
 let lastRawScroll = 0;
 export const SCROLL_SENSITIVITY = 0.7;
-export const FADE_ZONE = 14;
-const fadeEl = document.getElementById('scroll-fade');
+export let wrapFogBoost = 0;
 
 export function onScroll() {
   const maxScroll = document.body.scrollHeight - window.innerHeight;
@@ -89,8 +89,6 @@ export function setControlsCamera(cam) {
   controls.object = cam;
 }
 
-let fadeOpacity = 0;
-
 export function updateCam(dt) {
   const smooth = 1 - Math.exp(-SCROLL_LERP * 60 * dt);
   let dy = scrollTarget.y - scrollCurrent.y;
@@ -100,15 +98,11 @@ export function updateCam(dt) {
   scrollCurrent.y = ((scrollCurrent.y % TOP_H) + TOP_H) % TOP_H;
   scrollCurrent.angle += (scrollTarget.angle - scrollCurrent.angle) * smooth;
 
-  // Fade synced to actual camera height — only when actively scrolling near boundary
-  const distToTop = TOP_H - scrollCurrent.y;
-  const distToBottom = scrollCurrent.y;
-  const nearestBoundary = Math.min(distToTop, distToBottom);
-  const moving = Math.abs(dy) > 0.15;
-  const t = Math.max(0, 1 - nearestBoundary / FADE_ZONE);
-  const targetOp = (moving && t > 0) ? t * t * (3 - 2 * t) : 0;  // smoothstep
-  fadeOpacity += (targetOp - fadeOpacity) * Math.min(1, dt * 14);
-  fadeEl.style.opacity = fadeOpacity < 0.01 ? 0 : fadeOpacity;
+  // Fog density boost during scroll-wrap — hides seam naturally
+  const rawDy = scrollTarget.y - scrollCurrent.y;
+  const isWrapping = Math.abs(rawDy) > TOP_H / 2;
+  const boostTarget = isWrapping ? 0.18 : 0;
+  wrapFogBoost += (boostTarget - wrapFogBoost) * Math.min(1, dt * 6);
 
   const cx = Math.cos(scrollCurrent.angle) * ORBIT_RADIUS;
   const cz = Math.sin(scrollCurrent.angle) * ORBIT_RADIUS;

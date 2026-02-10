@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { TOP_H, LEVEL_H, STAGES } from './config.js';
 
 // Scene setup
-import { renderer, scene, keyLight, sunPos, sunMesh, sunOccMesh, sunLight, occlusionScene, occlusionMat, occRT, buildPlane } from './scene.js';
+import { renderer, scene, keyLight, sunPos, sunMesh, sunOccMesh, sunLight, occlusionScene, occlusionMat, occRT, occBlurRT, buildPlane } from './scene.js';
 import * as sceneModule from './scene.js';
 
 // Materials (loaded by scaffold/environment)
@@ -33,10 +33,10 @@ import { updateTape } from './tape.js';
 import { gx, gz } from './config.js';
 
 // Camera & scroll
-import { controls, scrollCurrent, updateCam } from './camera.js';
+import { controls, scrollCurrent, updateCam, wrapFogBoost } from './camera.js';
 
 // Audio
-import { updateAudio } from './audio.js';
+import { updateAudio, audioCtx, bgMusic } from './audio.js';
 
 // Post-processing
 import { composer, colorGradePass, grainPass, godRaysPass } from './postprocessing.js';
@@ -55,15 +55,51 @@ import { canvas } from './scene.js';
 // =====================================================
 const clock = new THREE.Clock();
 
+// Wrapped distance — accounts for scroll cycling through TOP_H
+function wDist(a, b) { const d = Math.abs(a - b); return Math.min(d, TOP_H - d); }
+
 // Reusable objects — avoids per-frame allocations / GC pressure
 const _colorA = new THREE.Color();
 const _colorB = new THREE.Color();
 const _ffColor = new THREE.Color();
-const _baseSunDir = new THREE.Vector3();
 const _camDir = new THREE.Vector3();
 const _sunScreen = new THREE.Vector3();
 const _occBlack = new THREE.Color(0x000000);
 const _cardMeshes = cards.map(c => c.mesh);
+
+// Gaussian blur for occlusion texture — smooths jagged god ray edges
+const _blurCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
+const _blurScene = new THREE.Scene();
+const _blurMat = new THREE.ShaderMaterial({
+  uniforms: {
+    tDiffuse: { value: null },
+    resolution: { value: new THREE.Vector2() },
+    direction: { value: new THREE.Vector2(1, 0) },
+  },
+  vertexShader: `varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
+  fragmentShader: `
+    uniform sampler2D tDiffuse;
+    uniform vec2 resolution;
+    uniform vec2 direction;
+    varying vec2 vUv;
+    void main(){
+      vec2 texel = direction / resolution * 2.0;
+      float r = 0.0;
+      r += texture2D(tDiffuse, vUv - 4.0*texel).r * 0.016;
+      r += texture2D(tDiffuse, vUv - 3.0*texel).r * 0.054;
+      r += texture2D(tDiffuse, vUv - 2.0*texel).r * 0.122;
+      r += texture2D(tDiffuse, vUv - 1.0*texel).r * 0.196;
+      r += texture2D(tDiffuse, vUv).r * 0.227;
+      r += texture2D(tDiffuse, vUv + 1.0*texel).r * 0.196;
+      r += texture2D(tDiffuse, vUv + 2.0*texel).r * 0.122;
+      r += texture2D(tDiffuse, vUv + 3.0*texel).r * 0.054;
+      r += texture2D(tDiffuse, vUv + 4.0*texel).r * 0.016;
+      gl_FragColor = vec4(vec3(r), 1.0);
+    }
+  `,
+  depthTest: false, depthWrite: false,
+});
+_blurScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), _blurMat));
 
 function animate() {
   requestAnimationFrame(animate);
@@ -77,23 +113,39 @@ function animate() {
     buildPlane.constant = scrollCurrent.y + params.buildOffset;
   }
 
-  // Zone blending — interpolate atmosphere based on camera height
+  // Zone blending — interpolate atmosphere on circular track (SUMMIT wraps to GROUND)
   const camH = scrollCurrent.y;
   let zoneA = ZONES[0], zoneB = ZONES[0], zoneFrac = 0;
-  for (let z = 0; z < ZONES.length - 1; z++) {
-    if (camH >= ZONES[z].y && camH < ZONES[z+1].y) {
-      zoneA = ZONES[z]; zoneB = ZONES[z+1];
-      zoneFrac = (camH - zoneA.y) / (zoneB.y - zoneA.y);
-      break;
+  const zLen = ZONES.length;
+  for (let z = 0; z < zLen; z++) {
+    const curr = ZONES[z];
+    const next = ZONES[(z + 1) % zLen];
+    const currY = curr.y;
+    const nextY = next.y;
+    if (nextY > currY) {
+      // Normal interval
+      if (camH >= currY && camH < nextY) {
+        zoneA = curr; zoneB = next;
+        zoneFrac = (camH - currY) / (nextY - currY);
+        break;
+      }
+    } else {
+      // Wrapped interval (SUMMIT → GROUND, spanning 90→134→0)
+      if (camH >= currY || camH < nextY) {
+        zoneA = curr; zoneB = next;
+        const span = (TOP_H - currY) + nextY;
+        const pos = camH >= currY ? (camH - currY) : (TOP_H - currY + camH);
+        zoneFrac = span > 0 ? pos / span : 0;
+        break;
+      }
     }
-    if (z === ZONES.length - 2) { zoneA = ZONES[z+1]; zoneB = ZONES[z+1]; zoneFrac = 0; }
   }
   // Lerp fog
   _colorA.set(zoneA.fogColor);
   _colorB.set(zoneB.fogColor);
   scene.fog.color.copy(_colorA).lerp(_colorB, zoneFrac);
   scene.background.copy(scene.fog.color);
-  scene.fog.density = THREE.MathUtils.lerp(zoneA.fogDensity, zoneB.fogDensity, zoneFrac);
+  scene.fog.density = THREE.MathUtils.lerp(zoneA.fogDensity, zoneB.fogDensity, zoneFrac) + wrapFogBoost;
   // Lerp color grading tint
   colorGradePass.uniforms.tintR.value = THREE.MathUtils.lerp(zoneA.tint[0], zoneB.tint[0], zoneFrac);
   colorGradePass.uniforms.tintG.value = THREE.MathUtils.lerp(zoneA.tint[1], zoneB.tint[1], zoneFrac);
@@ -102,48 +154,41 @@ function animate() {
   // Dynamic audio
   updateAudio(camH);
 
-  // Fade side typography in/out + animate flag wave
+  // Fade side typography in/out + animate flag wave (wrap-aware)
   for (const st of sideTexts) {
-    const diff = camH - st.zoneY;
-    const fadeIn = params.textFadeRange;
-    const fadeOut = params.textFadeRange * params.textFadeOutMult;
-    const range = diff < 0 ? fadeIn : fadeOut;
-    const dist = Math.abs(diff);
+    const dist = wDist(camH, st.zoneY);
+    const range = params.textFadeRange * params.textFadeOutMult;
     st.mat.uniforms.opacity.value = Math.max(0, 1 - dist / range) * params.textMaxOpacity;
     st.mat.uniforms.time.value = t;
   }
 
-  // Volumetric fog bands
+  // Volumetric fog bands (wrap-aware)
   for (const tp of transitionPlanes) {
-    const distToBoundary = Math.abs(camH - tp.y);
-    const proximity = Math.max(0, 1 - distToBoundary / 10);
+    const proximity = Math.max(0, 1 - wDist(camH, tp.y) / 10);
     tp.mesh.material.opacity = proximity * tp.bellCurve * 0.3;
   }
 
-  // Dark shroud
+  // Dark shroud (wrap-aware)
   for (const sp of shroudPlanes) {
-    const dist = Math.abs(camH - sp.layerY);
-    const proximity = Math.max(0, 1 - dist / 15);
+    const proximity = Math.max(0, 1 - wDist(camH, sp.layerY) / 15);
     sp.mesh.material.opacity = proximity * sp.maxOpacity;
   }
 
-  // Stage glow floor planes — fade in when near each stage
+  // Stage glow floor planes — fade in when near each stage (wrap-aware)
   for (const sg of stageGlowPlanes) {
-    const dist = Math.abs(camH - sg.stageY);
-    const proximity = Math.max(0, 1 - dist / 20);
+    const proximity = Math.max(0, 1 - wDist(camH, sg.stageY) / 20);
     sg.mat.uniforms.opacity.value = proximity * params.stageGlowIntensity;
   }
 
-  // Distant backdrop fog panels — fade in near each stage
+  // Distant backdrop fog panels — fade in near each stage (wrap-aware)
   for (const bp of backdropPanels) {
-    const dist = Math.abs(camH - bp.stageY);
-    const proximity = Math.max(0, 1 - dist / 22);
+    const proximity = Math.max(0, 1 - wDist(camH, bp.stageY) / 22);
     bp.mat.uniforms.opacity.value = proximity * params.backdropIntensity;
     bp.mat.uniforms.time.value = t;
   }
 
   // Key light tracks scroll height
-  keyLight.position.y = scrollCurrent.y + 18;
+  keyLight.position.set(params.keyLightX, scrollCurrent.y + params.keyLightY, params.keyLightZ);
   keyLight.target.position.set(0, scrollCurrent.y, 0);
   keyLight.target.updateMatrixWorld();
 
@@ -226,17 +271,16 @@ function animate() {
     }
   }
 
-  // Sun lock — keep sun at fixed screen position by counter-rotating with camera
+  // Sun lock — place sun opposite camera so rays seep through scaffold
   if (params.sunLocked) {
     const cam = sceneModule.camera;
-    _baseSunDir.set(sunPos.x, 0, sunPos.z).normalize();
-    _camDir.set(cam.position.x, 0, cam.position.z).normalize();
-    const angle = Math.atan2(_camDir.z, _camDir.x) - Math.atan2(_baseSunDir.z, _baseSunDir.x);
+    const camAngle = Math.atan2(cam.position.z, cam.position.x);
     const sunR = Math.sqrt(sunPos.x * sunPos.x + sunPos.z * sunPos.z);
-    const sunAngle = Math.atan2(sunPos.z, sunPos.x) + angle;
+    // Sun on the far side of scaffold, offset ~15° for diagonal bird's-eye angle
+    const sunAngle = camAngle + Math.PI + 0.25;
     const sx = Math.cos(sunAngle) * sunR;
     const sz = Math.sin(sunAngle) * sunR;
-    const lockY = sunPos.y + (scrollCurrent.y - sunPos.y) * 0.5;
+    const lockY = scrollCurrent.y + sunPos.y;
     sunMesh.position.set(sx, lockY, sz);
     sunOccMesh.position.set(sx, lockY, sz);
     sunLight.position.set(sx, lockY, sz);
@@ -253,7 +297,7 @@ function animate() {
     (_sunScreen.y + 1) * 0.5
   );
 
-  // Render occlusion pass (only when god rays active)
+  // Render occlusion pass + blur (only when god rays active)
   if (godRaysPass.enabled) {
     const origBg = scene.background;
     const origFog = scene.fog;
@@ -270,6 +314,20 @@ function animate() {
     renderer.autoClear = false;
     renderer.render(occlusionScene, sceneModule.camera);
     renderer.autoClear = true;
+
+    // Two-pass gaussian blur — smooths scaffold silhouette edges
+    _blurMat.uniforms.resolution.value.set(occRT.width, occRT.height);
+    // Horizontal blur: occRT → occBlurRT
+    _blurMat.uniforms.tDiffuse.value = occRT.texture;
+    _blurMat.uniforms.direction.value.set(1, 0);
+    renderer.setRenderTarget(occBlurRT);
+    renderer.render(_blurScene, _blurCam);
+    // Vertical blur: occBlurRT → occRT
+    _blurMat.uniforms.tDiffuse.value = occBlurRT.texture;
+    _blurMat.uniforms.direction.value.set(0, 1);
+    renderer.setRenderTarget(occRT);
+    renderer.render(_blurScene, _blurCam);
+
     renderer.setRenderTarget(null);
   }
 
@@ -295,6 +353,22 @@ loaderReady.then(() => {
   renderer.compile(scene, sceneModule.camera);
   renderer.render(scene, sceneModule.camera);
 
-  document.getElementById('loader').classList.add('loaded');
-  animate();
+  // Hide progress, show enter button
+  const loaderEl = document.getElementById('loader');
+  const trackEl = document.getElementById('loader-track');
+  const pctEl = document.getElementById('loader-pct');
+  const enterBtn = document.getElementById('loader-enter');
+  if (trackEl) trackEl.style.display = 'none';
+  if (pctEl) pctEl.style.display = 'none';
+  enterBtn.classList.add('visible');
+
+  enterBtn.addEventListener('click', () => {
+    // Start music (requires user gesture for autoplay policy)
+    audioCtx.resume();
+    bgMusic.play().catch(() => {});
+
+    // Dismiss loader and start render loop
+    loaderEl.classList.add('loaded');
+    animate();
+  }, { once: true });
 });
