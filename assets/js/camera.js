@@ -5,13 +5,16 @@ import { camera, canvas } from './scene.js';
 import * as sceneModule from './scene.js';
 import { audioCtx, bgMusic } from './audio.js';
 
-// Start music on first user interaction (scroll or touch)
+// Start music on any user interaction
 let _musicStarted = false;
 function startMusic() {
   if (_musicStarted) return;
   _musicStarted = true;
   audioCtx.resume();
   bgMusic.play().catch(() => {});
+}
+for (const evt of ['click', 'pointerdown', 'keydown', 'scroll', 'touchstart']) {
+  window.addEventListener(evt, startMusic, { once: true, passive: true });
 }
 
 // =====================================================

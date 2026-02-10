@@ -67,21 +67,6 @@ const _sunScreen = new THREE.Vector3();
 const _occBlack = new THREE.Color(0x000000);
 const _cardMeshes = cards.map(c => c.mesh);
 
-// UI accent colors per stage — warm amber, cool blue, golden, pale silver
-const UI_ACCENT_COLORS = [
-  new THREE.Color(0xe8c46a),  // GROUND — bright gold
-  new THREE.Color(0x5b9bd5),  // SECOND — vivid blue
-  new THREE.Color(0xff8c2a),  // THIRD — hot amber
-  new THREE.Color(0xd4a0e0),  // SUMMIT — soft violet
-];
-const _uiColor = new THREE.Color();
-const _uiColorA = new THREE.Color();
-const _uiColorB = new THREE.Color();
-const _navBar = document.getElementById('footer-bar');
-const _dateBar = document.getElementById('date-bar');
-const _navLogo = document.querySelector('.footer-logo');
-const _navLinks = document.querySelectorAll('.footer-link');
-let _lastUIHex = '';
 
 // Gaussian blur for occlusion texture — smooths jagged god ray edges
 const _blurCam = new THREE.OrthographicCamera(-1, 1, 1, -1, 0, 1);
@@ -131,7 +116,7 @@ function animate() {
 
   // Zone blending — interpolate atmosphere on circular track (SUMMIT wraps to GROUND)
   const camH = scrollCurrent.y;
-  let zoneA = ZONES[0], zoneB = ZONES[0], zoneFrac = 0, zoneAi = 0, zoneBi = 0;
+  let zoneA = ZONES[0], zoneB = ZONES[0], zoneFrac = 0;
   const zLen = ZONES.length;
   for (let z = 0; z < zLen; z++) {
     const curr = ZONES[z];
@@ -142,7 +127,7 @@ function animate() {
       // Normal interval
       if (camH >= currY && camH < nextY) {
         zoneA = curr; zoneB = next;
-        zoneAi = z; zoneBi = (z + 1) % zLen;
+
         zoneFrac = (camH - currY) / (nextY - currY);
         break;
       }
@@ -150,7 +135,7 @@ function animate() {
       // Wrapped interval (SUMMIT → GROUND, spanning 90→134→0)
       if (camH >= currY || camH < nextY) {
         zoneA = curr; zoneB = next;
-        zoneAi = z; zoneBi = (z + 1) % zLen;
+
         const span = (TOP_H - currY) + nextY;
         const pos = camH >= currY ? (camH - currY) : (TOP_H - currY + camH);
         zoneFrac = span > 0 ? pos / span : 0;
@@ -168,27 +153,6 @@ function animate() {
   colorGradePass.uniforms.tintR.value = THREE.MathUtils.lerp(zoneA.tint[0], zoneB.tint[0], zoneFrac);
   colorGradePass.uniforms.tintG.value = THREE.MathUtils.lerp(zoneA.tint[1], zoneB.tint[1], zoneFrac);
   colorGradePass.uniforms.tintB.value = THREE.MathUtils.lerp(zoneA.tint[2], zoneB.tint[2], zoneFrac);
-
-  // UI accent color — lerp header tints between stages
-  _uiColorA.copy(UI_ACCENT_COLORS[zoneAi]);
-  _uiColorB.copy(UI_ACCENT_COLORS[zoneBi]);
-  _uiColor.copy(_uiColorA).lerp(_uiColorB, zoneFrac);
-  const hex = '#' + _uiColor.getHexString();
-  if (hex !== _lastUIHex) {
-    _lastUIHex = hex;
-    const r = Math.round(_uiColor.r * 255);
-    const g = Math.round(_uiColor.g * 255);
-    const b = Math.round(_uiColor.b * 255);
-    if (_navBar) {
-      _navBar.style.borderColor = `rgba(${r},${g},${b},0.2)`;
-    }
-    if (_dateBar) {
-      _dateBar.style.borderColor = `rgba(${r},${g},${b},0.15)`;
-      _dateBar.style.color = `rgba(${r},${g},${b},0.6)`;
-    }
-    if (_navLogo) _navLogo.style.color = `rgba(${r},${g},${b},0.92)`;
-    _navLinks.forEach(l => { l.style.color = `rgba(${r},${g},${b},0.4)`; });
-  }
 
   // Dynamic audio
   updateAudio(camH);
