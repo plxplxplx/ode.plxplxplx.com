@@ -55,6 +55,16 @@ import { canvas } from './scene.js';
 // =====================================================
 const clock = new THREE.Clock();
 
+// Reusable objects — avoids per-frame allocations / GC pressure
+const _colorA = new THREE.Color();
+const _colorB = new THREE.Color();
+const _ffColor = new THREE.Color();
+const _baseSunDir = new THREE.Vector3();
+const _camDir = new THREE.Vector3();
+const _sunScreen = new THREE.Vector3();
+const _occBlack = new THREE.Color(0x000000);
+const _cardMeshes = cards.map(c => c.mesh);
+
 function animate() {
   requestAnimationFrame(animate);
   const dt = Math.min(clock.getDelta(), 0.05);
@@ -79,8 +89,9 @@ function animate() {
     if (z === ZONES.length - 2) { zoneA = ZONES[z+1]; zoneB = ZONES[z+1]; zoneFrac = 0; }
   }
   // Lerp fog
-  const cA = new THREE.Color(zoneA.fogColor), cB = new THREE.Color(zoneB.fogColor);
-  scene.fog.color.copy(cA).lerp(cB, zoneFrac);
+  _colorA.set(zoneA.fogColor);
+  _colorB.set(zoneB.fogColor);
+  scene.fog.color.copy(_colorA).lerp(_colorB, zoneFrac);
   scene.background.copy(scene.fog.color);
   scene.fog.density = THREE.MathUtils.lerp(zoneA.fogDensity, zoneB.fogDensity, zoneFrac);
   // Lerp color grading tint
@@ -168,8 +179,7 @@ function animate() {
   const doRaycast = (Math.round(t * 60) % 3 === 0);
   if (doRaycast) {
     cardRaycaster.setFromCamera(cardPointer, sceneModule.camera);
-    const cardMeshes = cards.map(c => c.mesh);
-    const hits = cardRaycaster.intersectObjects(cardMeshes, false);
+    const hits = cardRaycaster.intersectObjects(_cardMeshes, false);
     const prevHovered = hoveredCard;
     const newHovered = hits.length > 0 ? cards.find(c => c.mesh === hits[0].object) : null;
     setHoveredCard(newHovered);
@@ -198,20 +208,20 @@ function animate() {
     ff.sprite.position.set(fx, fy, fz);
     const pulse = Math.max(0, Math.sin(t * ff.pulseSpeed + ff.phase));
     ff.sprite.scale.setScalar(0.6 + pulse * 2.0);
-    let stageCol = FF_STAGE_COLORS[0];
+    _ffColor.copy(FF_STAGE_COLORS[0]);
     for (let si = STAGES.length - 1; si >= 0; si--) {
       if (fy >= STAGES[si].floorY) {
         const nextSi = Math.min(si + 1, STAGES.length - 1);
         const range = (STAGES[nextSi].floorY || TOP_H) - STAGES[si].floorY;
         const frac = range > 0 ? Math.min((fy - STAGES[si].floorY) / range, 1) : 0;
-        stageCol = FF_STAGE_COLORS[si].clone().lerp(FF_STAGE_COLORS[nextSi], frac);
+        _ffColor.copy(FF_STAGE_COLORS[si]).lerp(FF_STAGE_COLORS[nextSi], frac);
         break;
       }
     }
-    ff.mat.color.copy(stageCol);
+    ff.mat.color.copy(_ffColor);
     if (ff.light) {
       ff.light.position.set(fx, fy, fz);
-      ff.light.color.copy(stageCol);
+      ff.light.color.copy(_ffColor);
       ff.light.intensity = ff.baseIntensity * (0.3 + pulse * pulse * 0.7);
     }
   }
@@ -219,15 +229,13 @@ function animate() {
   // Sun lock — keep sun at fixed screen position by counter-rotating with camera
   if (params.sunLocked) {
     const cam = sceneModule.camera;
-    const dir = new THREE.Vector3().subVectors(sunPos, cam.position).normalize();
-    const dist = sunPos.distanceTo(new THREE.Vector3(0, 0, 0));
-    const lockedPos = cam.position.clone().add(dir.multiplyScalar(dist));
-    // Keep original offset direction relative to camera
-    const baseSunDir = new THREE.Vector3(sunPos.x, 0, sunPos.z).normalize();
-    const camDir = new THREE.Vector3(cam.position.x, 0, cam.position.z).normalize();
-    const angle = Math.atan2(camDir.z, camDir.x) - Math.atan2(baseSunDir.z, baseSunDir.x);
-    const sx = Math.cos(Math.atan2(sunPos.z, sunPos.x) + angle) * Math.sqrt(sunPos.x * sunPos.x + sunPos.z * sunPos.z);
-    const sz = Math.sin(Math.atan2(sunPos.z, sunPos.x) + angle) * Math.sqrt(sunPos.x * sunPos.x + sunPos.z * sunPos.z);
+    _baseSunDir.set(sunPos.x, 0, sunPos.z).normalize();
+    _camDir.set(cam.position.x, 0, cam.position.z).normalize();
+    const angle = Math.atan2(_camDir.z, _camDir.x) - Math.atan2(_baseSunDir.z, _baseSunDir.x);
+    const sunR = Math.sqrt(sunPos.x * sunPos.x + sunPos.z * sunPos.z);
+    const sunAngle = Math.atan2(sunPos.z, sunPos.x) + angle;
+    const sx = Math.cos(sunAngle) * sunR;
+    const sz = Math.sin(sunAngle) * sunR;
     const lockY = sunPos.y + (scrollCurrent.y - sunPos.y) * 0.5;
     sunMesh.position.set(sx, lockY, sz);
     sunOccMesh.position.set(sx, lockY, sz);
@@ -239,17 +247,17 @@ function animate() {
   }
 
   // God rays — project sun to screen space
-  const sunScreen = sunMesh.position.clone().project(sceneModule.camera);
+  _sunScreen.copy(sunMesh.position).project(sceneModule.camera);
   godRaysPass.uniforms.lightPosition.value.set(
-    (sunScreen.x + 1) * 0.5,
-    (sunScreen.y + 1) * 0.5
+    (_sunScreen.x + 1) * 0.5,
+    (_sunScreen.y + 1) * 0.5
   );
 
   // Render occlusion pass (only when god rays active)
   if (godRaysPass.enabled) {
     const origBg = scene.background;
     const origFog = scene.fog;
-    scene.background = new THREE.Color(0x000000);
+    scene.background = _occBlack;
     scene.fog = null;
     scene.overrideMaterial = occlusionMat;
     renderer.setRenderTarget(occRT);

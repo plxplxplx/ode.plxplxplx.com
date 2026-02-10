@@ -8,6 +8,7 @@
   align-items: center;
   justify-content: center;
   transition: opacity 0.8s ease;
+  will-change: opacity;
 }
 
 #loader.loaded {
