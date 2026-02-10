@@ -16,64 +16,10 @@
   pointer-events: none;
 }
 
-#loader-text {
-  font-family: 'Cormorant Garamond', serif;
-  font-weight: 300;
-  font-size: 4rem;
-  letter-spacing: 0.3em;
-  padding-left: 0.3em;
-  color: #c9a96e;
-}
-
-#loader-track {
-  margin-top: 1.5rem;
-  width: 180px;
-  height: 2px;
-  background: rgba(201, 169, 110, 0.15);
-  border-radius: 1px;
-  overflow: hidden;
-}
-
-#loader-bar {
-  height: 100%;
-  width: 0%;
-  background: #c9a96e;
-  border-radius: 1px;
-  transition: width 0.2s ease;
-}
-
 #loader-pct {
-  margin-top: 0.75rem;
   font-family: 'Cormorant Garamond', serif;
   font-weight: 300;
   font-size: 0.9rem;
   letter-spacing: 0.15em;
   color: rgba(201, 169, 110, 0.5);
-}
-
-#loader-enter {
-  margin-top: 2.5rem;
-  padding: 0.6rem 2.8rem;
-  font-family: 'Cormorant Garamond', serif;
-  font-weight: 300;
-  font-size: 1.1rem;
-  letter-spacing: 0.25em;
-  text-transform: uppercase;
-  color: #c9a96e;
-  background: transparent;
-  border: 1px solid rgba(201, 169, 110, 0.3);
-  cursor: pointer;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.6s ease, border-color 0.3s ease, color 0.3s ease;
-}
-
-#loader-enter.visible {
-  opacity: 1;
-  pointer-events: auto;
-}
-
-#loader-enter:hover {
-  border-color: rgba(201, 169, 110, 0.7);
-  color: #e0c080;
 }

@@ -22,7 +22,7 @@ export const params = {
   bloomStrength: bloom.strength,
   bloomRadius: bloom.radius,
   bloomThreshold: bloom.threshold,
-  dofEnabled: !isMobile,
+  dofEnabled: false,
   dofFocus: 1,
   dofAperture: 0.004,
   dofMaxBlur: 0.001,
@@ -65,7 +65,7 @@ export const params = {
   steelMetalness: matSteel.metalness,
   steelRoughness: matSteel.roughness,
   exposure: renderer.toneMappingExposure,
-  godRaysEnabled: !isMobile,
+  godRaysEnabled: false,
   godRayExposure: godRaysPass.uniforms.exposure.value,
   godRayDecay: godRaysPass.uniforms.decay.value,
   godRayDensity: godRaysPass.uniforms.density.value,
@@ -98,8 +98,8 @@ export const params = {
   perspNear: 0.1,
   perspFar: 300,
   sunLocked: true,
-  buildMode: false,
-  buildOffset: 10,
+  buildMode: true,
+  buildOffset: 1,
   // Particles
   // Stage atmosphere
   stageGlowEnabled: false,

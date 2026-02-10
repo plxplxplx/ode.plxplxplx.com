@@ -15,11 +15,11 @@
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255,235,210,0.12);
-  box-shadow: 0 4px 24px rgba(0,0,0,0.4);
   border-radius: 28px;
   font-family: 'Cormorant Garamond', Georgia, serif;
   user-select: none;
   white-space: nowrap;
+  transition: border-color 1.2s ease;
 }
 
 .footer-logo {
@@ -29,7 +29,6 @@
   color: rgba(255,240,220,0.92);
   text-decoration: none;
   text-transform: uppercase;
-  text-shadow: 0 1px 8px rgba(255,220,180,0.25);
   transition: color 0.4s ease;
 }
 
@@ -44,8 +43,8 @@
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   border: 1px solid rgba(255,235,210,0.08);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.3);
   border-radius: 16px;
+  transition: border-color 1.2s ease, color 1.2s ease;
   font-family: 'Cormorant Garamond', Georgia, serif;
   font-size: 13px;
   font-weight: 300;

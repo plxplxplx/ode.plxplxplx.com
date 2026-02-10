@@ -28,12 +28,12 @@ export const bokehPass = new BokehPass(scene, camera, {
   aperture: 0.004,
   maxblur: 0.001,
 });
-bokehPass.enabled = !isMobile;
+bokehPass.enabled = false;
 composer.addPass(bokehPass);
 
 export const godRaysPass = new ShaderPass(GodRaysShader);
 godRaysPass.uniforms.tOcclusion.value = occRT.texture;
-godRaysPass.enabled = !isMobile;
+godRaysPass.enabled = false;
 composer.addPass(godRaysPass);
 
 const vignettePass = new ShaderPass(VignetteShader);
