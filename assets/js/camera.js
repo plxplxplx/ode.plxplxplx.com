@@ -15,15 +15,16 @@ controls.enableZoom = false;
 controls.maxPolarAngle = Math.PI * 0.85;
 controls.minPolarAngle = 0.2;
 controls.autoRotate = false;
-// Start looking at base of tower
-camera.position.set(CAM_DIST * 0.5, CAM_DIST * 0.3, CAM_DIST * 0.5);
-controls.target.set(0, 2, 0);
-controls.update();
 
 // Scroll state
 export let scrollTarget = { y: 0, angle: 0 };
 export let scrollCurrent = { y: 0, angle: 0 };
 export const ORBIT_RADIUS = 12;
+
+// Start on the first floor at orbit distance
+camera.position.set(ORBIT_RADIUS, 4, 0);
+controls.target.set(0, 1, 0);
+controls.update();
 export const SCROLL_LERP = 0.04;
 
 export let virtualScroll = 0;

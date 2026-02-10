@@ -472,7 +472,7 @@ export const tapeFrag = `
   varying vec2 vUv;
 
   void main() {
-    vec2 uv = vec2(vUv.x * repeats, vUv.y);
+    vec2 uv = vec2(vUv.x * repeats, 1.0 - vUv.y);
     vec4 tex = texture2D(tapeMap, uv);
     gl_FragColor = vec4(tex.rgb, tex.a * opacity);
   }
