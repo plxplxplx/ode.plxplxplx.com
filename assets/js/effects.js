@@ -6,7 +6,7 @@ import { scene } from './scene.js';
 // TRAVELING GRID LIGHTS
 // =====================================================
 export const gridLights = [];
-const lColors = [0xffaa55, 0xffcc66, 0xff9944, 0xffbb77, 0xffdd88, 0xffee99];
+const lColors = [0x00ff88, 0xff2d9b, 0x00e5ff, 0xb388ff, 0xffff00, 0xff6600];
 const GRID_LIGHT_COUNT = isMobile ? 2 : 6;
 for (let n = 0; n < GRID_LIGHT_COUNT; n++) {
   const lt = new THREE.PointLight(lColors[n], 1.5, 25);
@@ -48,15 +48,15 @@ const ffGlowGeo = new THREE.SphereGeometry(0.06, 6, 4);
 const FF_LIGHT_COUNT = isMobile ? 0 : 4;
 
 export const FF_STAGE_COLORS = [
-  new THREE.Color(0xffcc55), // GROUND — warm amber
-  new THREE.Color(0x88bbff), // SECOND — cool blue-white
-  new THREE.Color(0xffaa44), // THIRD — copper orange
-  new THREE.Color(0xeeeeff), // SUMMIT — pale silver-white
+  new THREE.Color(0xc8ff00), // GROUND — electric lime
+  new THREE.Color(0xff2d9b), // SECOND — hot pink
+  new THREE.Color(0x00e5ff), // THIRD — cyan
+  new THREE.Color(0xb388ff), // SUMMIT — violet
 ];
 
 for (let i = 0; i < FF_COUNT; i++) {
   const ffMat = new THREE.MeshBasicMaterial({
-    color: 0xffdd77, transparent: true, opacity: 1.0,
+    color: 0xffffff, transparent: true, opacity: 1.0,
     blending: THREE.AdditiveBlending, depthWrite: false,
   });
   const sprite = new THREE.Mesh(ffGlowGeo, ffMat);
@@ -67,7 +67,7 @@ for (let i = 0; i < FF_COUNT; i++) {
 
   let light = null;
   if (i < FF_LIGHT_COUNT) {
-    light = new THREE.PointLight(0xffdd77, 4.0, 40);
+    light = new THREE.PointLight(0xffffff, 4.0, 40);
     light.position.copy(sprite.position);
     scene.add(light);
   }

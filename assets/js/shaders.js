@@ -13,7 +13,7 @@ export const GodRaysShader = {
     density: { value: 1.45 },
     weight: { value: 0.05 },
     samples: { value: 120 },
-    godRayColor: { value: new THREE.Vector3(1.0, 0.92, 0.7) },
+    godRayColor: { value: new THREE.Vector3(1.0, 1.0, 1.0) },
   },
   vertexShader: `varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
   fragmentShader: `
@@ -55,7 +55,7 @@ export const GodRaysShader = {
 export const VignetteShader = {
   uniforms: {
     tDiffuse: { value: null }, darkness: { value: 0.8 },
-    offset: { value: 1.2 }, tintColor: { value: new THREE.Vector3(0.08, 0.04, 0.02) },
+    offset: { value: 1.2 }, tintColor: { value: new THREE.Vector3(0.02, 0.02, 0.06) },
   },
   vertexShader: `varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
   fragmentShader: `
@@ -121,9 +121,9 @@ export const FilmGrainShader = {
 export const ColorGradeShader = {
   uniforms: {
     tDiffuse: { value: null },
-    saturation: { value: 0.65 },
-    contrast: { value: 1.2 },
-    brightness: { value: 0.12 },
+    saturation: { value: 0.85 },
+    contrast: { value: 1.3 },
+    brightness: { value: 0.15 },
     tintR: { value: 1.1 },
     tintG: { value: 0.95 },
     tintB: { value: 0.78 },
@@ -369,13 +369,13 @@ export const backdropFogFrag = `
   varying vec2 vUv;
 
   void main(){
-    // Vertical gradient — strongest at bottom half, fading up
-    float vFade = 1.0 - smoothstep(0.0, 0.85, vUv.y);
+    // Vertical gradient — soft bell curve, strongest in middle
+    float vCenter = smoothstep(0.0, 0.4, vUv.y) * (1.0 - smoothstep(0.6, 1.0, vUv.y));
     // Horizontal fade at edges
-    float hFade = smoothstep(0.0, 0.15, vUv.x) * (1.0 - smoothstep(0.85, 1.0, vUv.x));
+    float hFade = smoothstep(0.0, 0.25, vUv.x) * (1.0 - smoothstep(0.75, 1.0, vUv.x));
     // Subtle shimmer
     float shimmer = 0.95 + 0.05 * sin(vUv.x * 8.0 + time * 0.3) * sin(vUv.y * 4.0 + time * 0.2);
-    float alpha = vFade * hFade * shimmer;
+    float alpha = vCenter * hFade * shimmer;
     gl_FragColor = vec4(fogColor, alpha * opacity);
   }
 `;

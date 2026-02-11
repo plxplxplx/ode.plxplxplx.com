@@ -99,13 +99,13 @@ export const params = {
   perspFar: 300,
   sunLocked: true,
   buildMode: true,
-  buildOffset: 1,
+  buildOffset: 4,
   // Particles
   // Stage atmosphere
   stageGlowEnabled: false,
   stageGlowIntensity: 0,
-  backdropEnabled: true,
-  backdropIntensity: 1.2,
+  backdropEnabled: false,
+  backdropIntensity: 0,
   shroudEnabled: true,
   stageFloorsVisible: false,
   floorOpacity: 1.0,

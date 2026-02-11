@@ -734,10 +734,10 @@ gltfLoader.load('assets/models/ancient_pillars.glb', (gltf) => {
 // STAGE GLOW FLOORS — large radial gradient planes extending far out
 // =====================================================
 const STAGE_GLOW_COLORS = [
-  new THREE.Color(0x4a3520),  // GROUND — warm amber
-  new THREE.Color(0x253045),  // SECOND — cool blue-grey
-  new THREE.Color(0x5a3a18),  // THIRD — golden hour
-  new THREE.Color(0x6a4a20),  // SUMMIT — deep gold
+  new THREE.Color(0x406a00),  // GROUND — lime glow
+  new THREE.Color(0x6a1438),  // SECOND — magenta glow
+  new THREE.Color(0x005a6a),  // THIRD — cyan glow
+  new THREE.Color(0x35206a),  // SUMMIT — violet glow
 ];
 
 export const stageGlowPlanes = [];
@@ -774,17 +774,17 @@ for (let si = 0; si < STAGES.length; si++) {
 // DISTANT BACKDROP PANELS — vertical fog walls in a ring
 // =====================================================
 const BACKDROP_COLORS = [
-  new THREE.Color(0x3a2515),  // GROUND — earthy warm
-  new THREE.Color(0x1a2535),  // SECOND — dusky blue
-  new THREE.Color(0x4a3010),  // THIRD — amber haze
-  new THREE.Color(0x55380d),  // SUMMIT — sunset glow
+  new THREE.Color(0x243808),  // GROUND — lime mist
+  new THREE.Color(0x381025),  // SECOND — magenta mist
+  new THREE.Color(0x082535),  // THIRD — cyan mist
+  new THREE.Color(0x1e1038),  // SUMMIT — violet mist
 ];
 
 export const backdropPanels = [];
 
-const BACKDROP_SEGMENTS = 8;    // panels per stage ring
-const BACKDROP_RADIUS = 55;     // distance from center
-const BACKDROP_HEIGHT = 25;     // height of each panel
+const BACKDROP_SEGMENTS = 12;   // panels per stage ring
+const BACKDROP_RADIUS = 40;     // distance from center (closer = more visible)
+const BACKDROP_HEIGHT = 45;     // height of each panel (tall for smooth overlap)
 const BACKDROP_ARC = (Math.PI * 2) / BACKDROP_SEGMENTS;
 
 for (let si = 0; si < STAGES.length; si++) {

@@ -66,21 +66,21 @@ export function applyMarbleTextures(enabled) {
 // MATERIALS — one palette per stage (start without textures)
 // =====================================================
 export const STAGE_MATS = [
-  { // GROUND — warm patina
-    steel: new THREE.MeshStandardMaterial({ color: 0x8a7a68, metalness: 0.75, roughness: 0.4 }),
-    deck:  new THREE.MeshStandardMaterial({ color: 0x7a6a58, metalness: 0.25, roughness: 0.65 }),
+  { // GROUND — olive-tinged metal
+    steel: new THREE.MeshStandardMaterial({ color: 0x6a7a60, metalness: 0.85, roughness: 0.35 }),
+    deck:  new THREE.MeshStandardMaterial({ color: 0x5a6a50, metalness: 0.3, roughness: 0.55 }),
   },
-  { // SECOND — oxidised blue-grey
-    steel: new THREE.MeshStandardMaterial({ color: 0x6a7a88, metalness: 0.8, roughness: 0.3 }),
-    deck:  new THREE.MeshStandardMaterial({ color: 0x5a6a78, metalness: 0.3, roughness: 0.55 }),
+  { // SECOND — mauve-tinged metal
+    steel: new THREE.MeshStandardMaterial({ color: 0x7a6070, metalness: 0.88, roughness: 0.3 }),
+    deck:  new THREE.MeshStandardMaterial({ color: 0x6a5060, metalness: 0.35, roughness: 0.5 }),
   },
-  { // THIRD — dark bronze / copper
-    steel: new THREE.MeshStandardMaterial({ color: 0x9a7a5a, metalness: 0.85, roughness: 0.28 }),
-    deck:  new THREE.MeshStandardMaterial({ color: 0x8a6a4a, metalness: 0.35, roughness: 0.5 }),
+  { // THIRD — blue-tinged metal
+    steel: new THREE.MeshStandardMaterial({ color: 0x607a80, metalness: 0.9, roughness: 0.25 }),
+    deck:  new THREE.MeshStandardMaterial({ color: 0x506a70, metalness: 0.35, roughness: 0.45 }),
   },
-  { // SUMMIT — pale silver
-    steel: new THREE.MeshStandardMaterial({ color: 0xb0aca8, metalness: 0.9, roughness: 0.2 }),
-    deck:  new THREE.MeshStandardMaterial({ color: 0xa09c98, metalness: 0.3, roughness: 0.45 }),
+  { // SUMMIT — violet-tinged silver
+    steel: new THREE.MeshStandardMaterial({ color: 0x7a7088, metalness: 0.95, roughness: 0.2 }),
+    deck:  new THREE.MeshStandardMaterial({ color: 0x6a6078, metalness: 0.35, roughness: 0.4 }),
   },
 ];
 
