@@ -31,7 +31,7 @@ import { updateTape } from './tape.js';
 import { gx, gz } from './config.js';
 
 // Camera & scroll
-import { controls, scrollCurrent, updateCam, wrapFogBoost, panelZoomed, startPanelZoom, exitPanelZoom } from './camera.js';
+import { controls, scrollCurrent, updateCam, wrapFogBoost, panelZoomed, startPanelZoom, exitPanelZoom, navigatePanelZoom } from './camera.js';
 
 // Audio
 import { updateAudio } from './audio.js';
@@ -53,6 +53,19 @@ import { canvas } from './scene.js';
 // =====================================================
 const _panelRC = new THREE.Raycaster();
 const _panelPtr = new THREE.Vector2();
+let _currentPanelIdx = -1;
+
+function getImagePanels() {
+  return glassPanels.filter(m => m.userData.imageMode);
+}
+
+function navigatePanel(dir) {
+  if (!panelZoomed) return;
+  const panels = getImagePanels();
+  if (panels.length === 0) return;
+  _currentPanelIdx = ((_currentPanelIdx + dir) % panels.length + panels.length) % panels.length;
+  navigatePanelZoom(panels[_currentPanelIdx]);
+}
 
 canvas.addEventListener('click', (e) => {
   if (panelZoomed) { exitPanelZoom(); return; }
@@ -62,12 +75,16 @@ canvas.addEventListener('click', (e) => {
   _panelRC.setFromCamera(_panelPtr, sceneModule.camera);
   const hits = _panelRC.intersectObjects(glassPanels, false);
   if (hits.length > 0 && hits[0].object.userData.imageMode) {
+    const panels = getImagePanels();
+    _currentPanelIdx = panels.indexOf(hits[0].object);
     startPanelZoom(hits[0].object);
   }
 });
 
 window.addEventListener('keydown', (e) => {
   if (e.code === 'Escape' && panelZoomed) exitPanelZoom();
+  if (e.code === 'ArrowLeft' && panelZoomed) { e.preventDefault(); navigatePanel(-1); }
+  if (e.code === 'ArrowRight' && panelZoomed) { e.preventDefault(); navigatePanel(1); }
 });
 
 const _closeBtn = document.getElementById('panel-close');
@@ -75,6 +92,11 @@ if (_closeBtn) _closeBtn.addEventListener('click', (e) => {
   e.stopPropagation();
   exitPanelZoom();
 });
+
+const _prevBtn = document.getElementById('panel-prev');
+const _nextBtn = document.getElementById('panel-next');
+if (_prevBtn) _prevBtn.addEventListener('click', (e) => { e.stopPropagation(); navigatePanel(-1); });
+if (_nextBtn) _nextBtn.addEventListener('click', (e) => { e.stopPropagation(); navigatePanel(1); });
 
 // =====================================================
 // GAME LOOP

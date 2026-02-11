@@ -62,10 +62,15 @@ export let wrapFogBoost = 0;
 export let panelZoomed = false;
 let _panelZoomGoal = 0;     // 0 = normal, 1 = zoomed
 let _panelZoomLerp = 0;     // smoothed interpolation factor
-let _panelSavedFrustum = FRUSTUM;
+let _panelImgFile = '';      // current panel's filename for caption
+let _panelCaptionShown = false;
 const PANEL_ZOOM_FRUSTUM = 3.5; // tight ortho zoom on the panel
-const _panelSavedCamPos = new THREE.Vector3();
-const _panelSavedTarget = new THREE.Vector3();
+const _panelFromCamPos = new THREE.Vector3();  // animation "from" position (changes on navigate)
+const _panelFromTarget = new THREE.Vector3();
+let _panelFromFrustum = FRUSTUM;
+const _panelOriginCamPos = new THREE.Vector3(); // original orbit view (for exit)
+const _panelOriginTarget = new THREE.Vector3();
+let _panelOriginFrustum = FRUSTUM;
 const _panelTargetCamPos = new THREE.Vector3();
 const _panelTargetLookAt = new THREE.Vector3();
 
@@ -134,9 +139,12 @@ export function startPanelZoom(panelMesh) {
   if (panelZoomed) return;
 
   const cam = sceneModule.camera;
-  _panelSavedCamPos.copy(cam.position);
-  _panelSavedTarget.copy(controls.target);
-  _panelSavedFrustum = (cam.top - cam.bottom) || FRUSTUM;
+  _panelOriginCamPos.copy(cam.position);
+  _panelOriginTarget.copy(controls.target);
+  _panelOriginFrustum = (cam.top - cam.bottom) || FRUSTUM;
+  _panelFromCamPos.copy(cam.position);
+  _panelFromTarget.copy(controls.target);
+  _panelFromFrustum = _panelOriginFrustum;
 
   // Panel center in world space
   const panelWorldPos = new THREE.Vector3();
@@ -155,15 +163,65 @@ export function startPanelZoom(panelMesh) {
   _panelZoomGoal = 1;
   panelZoomed = true;
 
-  const btn = document.getElementById('panel-close');
-  if (btn) btn.style.display = 'block';
+  _showPanelUI(panelMesh);
+}
+
+export function navigatePanelZoom(panelMesh) {
+  if (!panelZoomed) return;
+
+  // Current position becomes the new "from" (origin stays unchanged)
+  const cam = sceneModule.camera;
+  _panelFromCamPos.copy(cam.position);
+  _panelFromTarget.copy(controls.target);
+  _panelFromFrustum = PANEL_ZOOM_FRUSTUM;
+
+  const panelWorldPos = new THREE.Vector3();
+  panelMesh.getWorldPosition(panelWorldPos);
+  _panelTargetLookAt.copy(panelWorldPos);
+
+  _panelNormal.set(0, 0, 1).applyQuaternion(panelMesh.quaternion);
+  _camToPanel.subVectors(cam.position, panelWorldPos);
+  if (_camToPanel.dot(_panelNormal) < 0) _panelNormal.negate();
+
+  _panelTargetCamPos.copy(panelWorldPos).addScaledVector(_panelNormal, ORBIT_RADIUS);
+
+  _panelZoomLerp = 0;
+  _panelZoomGoal = 1;
+
+  _showPanelUI(panelMesh);
+}
+
+function _showPanelUI(panelMesh) {
+  for (const id of ['panel-close', 'panel-prev', 'panel-next']) {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'block';
+  }
+  // Hide caption until zoom animation settles
+  _panelImgFile = (panelMesh.userData.imgFile || '');
+  _panelCaptionShown = false;
+  const cap = document.getElementById('panel-caption');
+  if (cap) cap.style.display = 'none';
+}
+
+function _hidePanelUI() {
+  for (const id of ['panel-close', 'panel-prev', 'panel-next', 'panel-caption']) {
+    const el = document.getElementById(id);
+    if (el) el.style.display = 'none';
+  }
 }
 
 export function exitPanelZoom() {
   if (!panelZoomed || _panelZoomGoal === 0) return;
+  // Animate from current position back to original orbit view
+  const cam = sceneModule.camera;
+  _panelFromCamPos.copy(cam.position);
+  _panelFromTarget.copy(controls.target);
+  _panelFromFrustum = PANEL_ZOOM_FRUSTUM;
+  _panelTargetCamPos.copy(_panelOriginCamPos);
+  _panelTargetLookAt.copy(_panelOriginTarget);
+  _panelZoomLerp = 0;
   _panelZoomGoal = 0;
-  const btn = document.getElementById('panel-close');
-  if (btn) btn.style.display = 'none';
+  _hidePanelUI();
 }
 
 // =====================================================
@@ -202,22 +260,24 @@ export function updateCam(dt) {
     return;
   }
 
-  // Panel zoom — smooth fly-in to clicked image
+  // Panel zoom — smooth fly-in / navigate / fly-out
   if (panelZoomed) {
     const speed = 4;
-    _panelZoomLerp += (_panelZoomGoal - _panelZoomLerp) * (1 - Math.exp(-speed * dt));
+    const target = 1; // always animate toward 1 (fully arrived)
+    _panelZoomLerp += (target - _panelZoomLerp) * (1 - Math.exp(-speed * dt));
 
-    let finished = false;
-    if (_panelZoomGoal === 0 && Math.abs(_panelZoomLerp) < 0.002) {
-      _panelZoomLerp = 0;
-      finished = true;
+    let arrived = false;
+    if (_panelZoomLerp > 0.998) {
+      _panelZoomLerp = 1;
+      arrived = true;
     }
 
-    cam.position.lerpVectors(_panelSavedCamPos, _panelTargetCamPos, _panelZoomLerp);
-    controls.target.lerpVectors(_panelSavedTarget, _panelTargetLookAt, _panelZoomLerp);
+    cam.position.lerpVectors(_panelFromCamPos, _panelTargetCamPos, _panelZoomLerp);
+    controls.target.lerpVectors(_panelFromTarget, _panelTargetLookAt, _panelZoomLerp);
 
-    // Animate ortho frustum for zoom effect
-    const f = THREE.MathUtils.lerp(_panelSavedFrustum, PANEL_ZOOM_FRUSTUM, _panelZoomLerp);
+    // Animate ortho frustum
+    const targetFrustum = _panelZoomGoal === 0 ? _panelOriginFrustum : PANEL_ZOOM_FRUSTUM;
+    const f = THREE.MathUtils.lerp(_panelFromFrustum, targetFrustum, _panelZoomLerp);
     const a = window.innerWidth / window.innerHeight;
     cam.left = -f * a / 2; cam.right = f * a / 2;
     cam.top = f / 2; cam.bottom = -f / 2;
@@ -225,7 +285,17 @@ export function updateCam(dt) {
 
     controls.update();
 
-    if (finished) {
+    // Show caption only once zoom-in has settled
+    if (arrived && _panelZoomGoal === 1 && !_panelCaptionShown && _panelImgFile) {
+      _panelCaptionShown = true;
+      const cap = document.getElementById('panel-caption');
+      if (cap) {
+        cap.textContent = _panelImgFile.replace(/-\d+\.jpeg$/, '');
+        cap.style.display = 'block';
+      }
+    }
+
+    if (arrived && _panelZoomGoal === 0) {
       panelZoomed = false;
     }
     return;

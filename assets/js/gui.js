@@ -392,6 +392,7 @@ function applyGlassImages() {
     if (!mesh.userData.origMat) mesh.userData.origMat = mesh.material;
     mesh.material = glassImageMats[idx % glassImageMats.length];
     mesh.userData.imageMode = true;
+    mesh.userData.imgFile = IMG_FILES[idx % IMG_FILES.length];
   });
 }
 function removeGlassImages() {
