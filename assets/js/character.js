@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import { MOVE_SPEED, JUMP_VEL, GRAVITY, STEP_UP, TOTAL_W, TOTAL_D, cellCx, cellCz } from './config.js';
+import { MOVE_SPEED, JUMP_VEL, GRAVITY, STEP_UP, TOTAL_W, TOTAL_D, cellCx, cellCz, LEVEL_H, TOP_H, MARGIN, gx } from './config.js';
 import { scene } from './scene.js';
-import { collidables } from './scaffold.js';
+import { collidables, stairPath } from './scaffold.js';
 
 // =====================================================
 // CHARACTER (floating light orb)
@@ -45,6 +45,84 @@ charGroup.position.set(cellCx(0), 0.05, cellCz(0));
 scene.add(charGroup);
 
 // =====================================================
+// STAIRCASE WALKER (autonomous + WASD in FPV)
+// =====================================================
+const totalLevels = Math.ceil(TOP_H / LEVEL_H);
+export let fpvMode = false;
+export const walkerPos = new THREE.Vector3();
+export const walkerLookDir = new THREE.Vector3();
+
+const walker = { t: 0, dir: 1 };    // t = 0..totalLevels (fractional)
+const AUTO_SPEED = 0.25;             // levels per second (meditative)
+const WASD_SPEED = 0.4;             // slightly faster under manual control
+const LANDING_T = 0.25;             // fraction of each level spent walking across platform
+let smoothDir = 1;                   // smoothed direction for organic look
+
+export function updateWalker(dt) {
+  if (fpvMode) {
+    const moving = inp.fwd || inp.back;
+    if (inp.fwd)  walker.dir = 1;
+    if (inp.back) walker.dir = -1;
+    if (moving) walker.t += dt * WASD_SPEED * walker.dir;
+  } else {
+    walker.t += dt * AUTO_SPEED * walker.dir;
+  }
+
+  if (walker.t >= totalLevels) { walker.t = totalLevels; walker.dir = -1; }
+  if (walker.t <= 0)           { walker.t = 0;           walker.dir = 1;  }
+
+  smoothDir += (walker.dir - smoothDir) * Math.min(1, dt * 3);
+
+  const level = THREE.MathUtils.clamp(Math.floor(walker.t), 0, totalLevels - 1);
+  const frac = THREE.MathUtils.clamp(walker.t - level, 0, 1);
+
+  // current + previous stair bay from the exported path
+  const sp = stairPath[level] || stairPath[stairPath.length - 1];
+  const prev = level > 0 ? stairPath[level - 1] : sp;
+  const hasBridge = prev.i !== sp.i || prev.j !== sp.j;
+
+  const sx0 = gx(sp.i) + MARGIN;
+  const sx1 = gx(sp.i + 1) - MARGIN;
+  const sz = cellCz(sp.j);
+  const baseY = level * LEVEL_H;
+  const topY = Math.min((level + 1) * LEVEL_H, TOP_H);
+  const flip = level % 2 === 0;
+  const fx0 = flip ? sx0 : sx1;
+  const fx1 = flip ? sx1 : sx0;
+
+  if (frac < LANDING_T && level > 0 && hasBridge) {
+    // Walk across connecting platform from previous bay to current bay
+    const lt = frac / LANDING_T;
+    const fromX = cellCx(prev.i);
+    const fromZ = cellCz(prev.j);
+    const toX = cellCx(sp.i);
+    const toZ = cellCz(sp.j);
+    walkerPos.set(
+      THREE.MathUtils.lerp(fromX, toX, lt),
+      baseY,
+      THREE.MathUtils.lerp(fromZ, toZ, lt)
+    );
+    const dx = toX - fromX, dz = toZ - fromZ;
+    const dl = Math.sqrt(dx * dx + dz * dz) || 1;
+    walkerLookDir.set((dx / dl) * smoothDir, 0, (dz / dl) * smoothDir);
+  } else {
+    // Climb the flight
+    const st = (level > 0 && hasBridge)
+      ? (frac - LANDING_T) / (1 - LANDING_T)
+      : frac;
+    walkerPos.set(
+      THREE.MathUtils.lerp(fx0, fx1, st),
+      THREE.MathUtils.lerp(baseY, topY, st),
+      sz
+    );
+    const lookX = fx1 - fx0;
+    const lookY = topY - baseY;
+    const len = Math.sqrt(lookX * lookX + lookY * lookY) || 1;
+    walkerLookDir.set((lookX / len) * smoothDir, (lookY / len) * smoothDir, 0);
+  }
+}
+
+// =====================================================
 // INPUT
 // =====================================================
 export const inp = { left: false, right: false, fwd: false, back: false, jump: false };
@@ -58,6 +136,7 @@ window.addEventListener('keydown', e => {
     case 'ArrowUp': case 'KeyW': inp.fwd = true; break;
     case 'ArrowDown': case 'KeyS': inp.back = true; break;
     case 'Space': if (!inp.jump) jp.jump = true; inp.jump = true; break;
+    case 'KeyC': fpvMode = !fpvMode; break;
   }
 });
 window.addEventListener('keyup', e => {

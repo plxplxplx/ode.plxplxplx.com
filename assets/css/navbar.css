@@ -69,3 +69,32 @@
 .footer-link:hover {
   color: rgba(255,255,255,0.75);
 }
+
+/* ── Mobile: single-column menu under title ── */
+@media (max-width: 600px) {
+  #footer-bar {
+    flex-direction: column;
+    height: auto;
+    gap: 6px;
+    padding: 14px 24px 16px;
+    border-radius: 20px;
+    white-space: normal;
+    text-align: center;
+  }
+  .footer-logo {
+    order: -1;
+    font-size: 20px;
+    letter-spacing: 6px;
+    margin-bottom: 4px;
+  }
+  .footer-link {
+    font-size: 11px;
+    padding: 4px 0;
+  }
+  #date-bar {
+    top: auto;
+    bottom: 16px;
+    font-size: 11px;
+    letter-spacing: 3px;
+  }
+}

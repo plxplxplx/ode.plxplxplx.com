@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PLX ODE</title>
+  <link rel="icon" href="data:,">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,600;1,300&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="assets/css/styles.min.css">
+</head>
+<body>
+  <div id="loader"><div id="loader-pct">0%</div></div>
+  <canvas id="viewport"></canvas>
+  <div id="scroll-fade"></div>
+  <button id="panel-close" aria-label="Close">&times;</button>
+
+  <nav id="footer-bar">
+    <a href="https://billetto.se/e/plx-ode-joy-biljetter-1856579" target="_blank" rel="noopener" class="footer-link">Biljetter</a>
+    <a href="#" class="footer-link">Lineup</a>
+    <a href="#" class="footer-logo">PLX ODE</a>
+    <a href="https://instagram.com/plxplxplx" target="_blank" rel="noopener" class="footer-link">Instagram</a>
+    <a href="mailto:info@plxplxplx.com" class="footer-link">Kontakt</a>
+  </nav>
+
+  <div id="date-bar">15–16 Maj</div>
+
+  <script type="importmap">
+  { "imports": {
+    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.js",
+    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+    "lil-gui": "https://cdn.jsdelivr.net/npm/lil-gui@0.19.2/dist/lil-gui.esm.min.js"
+  }}
+  </script>
+
+  <script type="module" src="assets/js/main.min.js"></script>
+</body>
+</html>

@@ -9,7 +9,8 @@ import { cards, CARD_OPTS, rebuildCards } from './cards.js';
 import { ZONES, sideTexts, rebuildRibbons } from './zones.js';
 import { vineGroup, shrubGroup, flowerLight, stageGlowPlanes, backdropPanels, shroudPlanes } from './environment.js';
 import { gridLights, fireflies, FF_COUNT } from './effects.js';
-import { scaffold, floorMats } from './scaffold.js';
+import { scaffold, floorMats, glassPanels } from './scaffold.js';
+import { IMG_FILES } from './cards.js';
 import { bloom, bokehPass, godRaysPass, chromaPass, colorGradePass, grainPass, setPostCamera } from './postprocessing.js';
 import { bgMusic, audioCtx, masterGain } from './audio.js';
 import { setControlsCamera } from './camera.js';
@@ -98,7 +99,7 @@ export const params = {
   perspNear: 0.1,
   perspFar: 300,
   sunLocked: true,
-  buildMode: true,
+  buildMode: false,
   buildOffset: 4,
   // Particles
   // Stage atmosphere
@@ -117,6 +118,11 @@ export const params = {
   texRepeatV: 0.5,
   texEnabled: false,
   normalScale: 1.0,
+  // Glass Panels
+  glassPanelVisible: true,
+  glassPanelOpacity: 0.42,
+  glassPanelImages: true,
+  glassPanelImageOpacity: 0.7,
   // Caution Tape
   tapeVisible: TAPE_OPTS.visible,
   tapeColor: TAPE_OPTS.color,
@@ -178,6 +184,7 @@ camFolder.add(params, 'sunLocked').name('Lock Sun to View');
 camFolder.add(params, 'buildMode').name('Build Mode').onChange(v => {
   if (!v) buildPlane.constant = 99999; // disable clipping
 });
+if (!params.buildMode) buildPlane.constant = 99999; // start unclamped
 camFolder.add(params, 'buildOffset', 0, 40, 1).name('Build Offset');
 
 const bloomFolder = gui.addFolder('Bloom');
@@ -353,6 +360,68 @@ matFolder.add(params, 'flowersVisible').name('Flowers').onChange(v => {
 matFolder.add(params, 'flowerLightIntensity', 0, 5, 0.1).name('Flower Light').onChange(v => {
   flowerLight.intensity = v;
 });
+
+// ---- Glass Panels ----
+const glassFolder = gui.addFolder('Glass Panels');
+const glassTexLoader = new THREE.TextureLoader();
+const glassTexCache = new Map();
+let glassImageMats = null; // cached image materials
+
+function applyGlassImages() {
+  if (!glassImageMats) {
+    glassImageMats = IMG_FILES.map(file => {
+      const path = `assets/img/${file}`;
+      if (!glassTexCache.has(path)) {
+        const tex = glassTexLoader.load(path);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        glassTexCache.set(path, tex);
+      }
+      return new THREE.MeshStandardMaterial({
+        map: glassTexCache.get(path),
+        transparent: true,
+        opacity: params.glassPanelImageOpacity,
+        roughness: 0.1,
+        metalness: 0.05,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+        clippingPlanes: [buildPlane],
+      });
+    });
+  }
+  glassPanels.forEach((mesh, idx) => {
+    if (!mesh.userData.origMat) mesh.userData.origMat = mesh.material;
+    mesh.material = glassImageMats[idx % glassImageMats.length];
+    mesh.userData.imageMode = true;
+  });
+}
+function removeGlassImages() {
+  glassPanels.forEach(mesh => {
+    if (mesh.userData.origMat) {
+      mesh.material = mesh.userData.origMat;
+      mesh.material.opacity = params.glassPanelOpacity;
+    }
+    mesh.userData.imageMode = false;
+  });
+}
+
+glassFolder.add(params, 'glassPanelVisible').name('Visible').onChange(v => {
+  glassPanels.forEach(m => { m.visible = v; });
+});
+glassFolder.add(params, 'glassPanelOpacity', 0, 1, 0.01).name('Color Opacity').onChange(v => {
+  glassPanels.forEach(m => {
+    if (!m.userData.imageMode) m.material.opacity = v;
+  });
+});
+glassFolder.add(params, 'glassPanelImages').name('Show Images').onChange(v => {
+  if (v) applyGlassImages();
+  else removeGlassImages();
+});
+glassFolder.add(params, 'glassPanelImageOpacity', 0, 1, 0.01).name('Image Opacity').onChange(v => {
+  if (glassImageMats) glassImageMats.forEach(m => { m.opacity = v; });
+});
+
+// apply images at startup since they're on by default
+if (params.glassPanelImages) applyGlassImages();
 
 const texFolder = gui.addFolder('Texture');
 texFolder.add(params, 'texEnabled').name('Marble Texture').onChange(v => {

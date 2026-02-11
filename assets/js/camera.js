@@ -4,6 +4,7 @@ import { CAM_DIST, TOP_H, FRUSTUM } from './config.js';
 import { camera, canvas } from './scene.js';
 import * as sceneModule from './scene.js';
 import { audioCtx, bgMusic } from './audio.js';
+import { setPostCamera } from './postprocessing.js';
 
 // Start music on any user interaction
 let _musicStarted = false;
@@ -57,8 +58,20 @@ let lastRawScroll = 0;
 export const SCROLL_SENSITIVITY = 0.7;
 export let wrapFogBoost = 0;
 
+// Panel zoom state
+export let panelZoomed = false;
+let _panelZoomGoal = 0;     // 0 = normal, 1 = zoomed
+let _panelZoomLerp = 0;     // smoothed interpolation factor
+let _panelSavedFrustum = FRUSTUM;
+const PANEL_ZOOM_FRUSTUM = 3.5; // tight ortho zoom on the panel
+const _panelSavedCamPos = new THREE.Vector3();
+const _panelSavedTarget = new THREE.Vector3();
+const _panelTargetCamPos = new THREE.Vector3();
+const _panelTargetLookAt = new THREE.Vector3();
+
 export function onScroll() {
   startMusic();
+  if (panelZoomed) { exitPanelZoom(); return; }
   const maxScroll = document.body.scrollHeight - window.innerHeight;
   const rawScroll = window.scrollY;
   const rawFrac = rawScroll / maxScroll;
@@ -96,6 +109,7 @@ canvas.addEventListener('touchstart', (e) => {
 }, { passive: true });
 
 canvas.addEventListener('touchmove', (e) => {
+  if (panelZoomed) { exitPanelZoom(); return; }
   if (e.touches.length === 1 && lastTouchY !== null) {
     const touchY = e.touches[0].clientY;
     const deltaPixels = lastTouchY - touchY;
@@ -109,6 +123,48 @@ canvas.addEventListener('touchmove', (e) => {
 }, { passive: true });
 
 canvas.addEventListener('touchend', () => { lastTouchY = null; }, { passive: true });
+
+// =====================================================
+// PANEL ZOOM (click image → fly in)
+// =====================================================
+const _panelNormal = new THREE.Vector3();
+const _camToPanel = new THREE.Vector3();
+
+export function startPanelZoom(panelMesh) {
+  if (panelZoomed) return;
+
+  const cam = sceneModule.camera;
+  _panelSavedCamPos.copy(cam.position);
+  _panelSavedTarget.copy(controls.target);
+  _panelSavedFrustum = (cam.top - cam.bottom) || FRUSTUM;
+
+  // Panel center in world space
+  const panelWorldPos = new THREE.Vector3();
+  panelMesh.getWorldPosition(panelWorldPos);
+  _panelTargetLookAt.copy(panelWorldPos);
+
+  // Get outward-facing normal (plane default normal is +Z)
+  _panelNormal.set(0, 0, 1).applyQuaternion(panelMesh.quaternion);
+  _camToPanel.subVectors(cam.position, panelWorldPos);
+  if (_camToPanel.dot(_panelNormal) < 0) _panelNormal.negate();
+
+  // Place camera along the normal, at the same orbit radius
+  _panelTargetCamPos.copy(panelWorldPos).addScaledVector(_panelNormal, ORBIT_RADIUS);
+
+  _panelZoomLerp = 0;
+  _panelZoomGoal = 1;
+  panelZoomed = true;
+
+  const btn = document.getElementById('panel-close');
+  if (btn) btn.style.display = 'block';
+}
+
+export function exitPanelZoom() {
+  if (!panelZoomed || _panelZoomGoal === 0) return;
+  _panelZoomGoal = 0;
+  const btn = document.getElementById('panel-close');
+  if (btn) btn.style.display = 'none';
+}
 
 // =====================================================
 // CAMERA UPDATE (scroll-driven orbit)
@@ -146,6 +202,36 @@ export function updateCam(dt) {
     return;
   }
 
+  // Panel zoom — smooth fly-in to clicked image
+  if (panelZoomed) {
+    const speed = 4;
+    _panelZoomLerp += (_panelZoomGoal - _panelZoomLerp) * (1 - Math.exp(-speed * dt));
+
+    let finished = false;
+    if (_panelZoomGoal === 0 && Math.abs(_panelZoomLerp) < 0.002) {
+      _panelZoomLerp = 0;
+      finished = true;
+    }
+
+    cam.position.lerpVectors(_panelSavedCamPos, _panelTargetCamPos, _panelZoomLerp);
+    controls.target.lerpVectors(_panelSavedTarget, _panelTargetLookAt, _panelZoomLerp);
+
+    // Animate ortho frustum for zoom effect
+    const f = THREE.MathUtils.lerp(_panelSavedFrustum, PANEL_ZOOM_FRUSTUM, _panelZoomLerp);
+    const a = window.innerWidth / window.innerHeight;
+    cam.left = -f * a / 2; cam.right = f * a / 2;
+    cam.top = f / 2; cam.bottom = -f / 2;
+    cam.updateProjectionMatrix();
+
+    controls.update();
+
+    if (finished) {
+      panelZoomed = false;
+    }
+    return;
+  }
+
+  // Normal scroll-orbit camera
   const smooth = 1 - Math.exp(-SCROLL_LERP * 60 * dt);
   let dy = scrollTarget.y - scrollCurrent.y;
   if (dy > TOP_H / 2) dy -= TOP_H;

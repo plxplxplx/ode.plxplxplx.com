@@ -4,3 +4,29 @@
   z-index: 2; pointer-events: none; letter-spacing: 2px; text-align: center;
   text-transform: lowercase;
 }
+
+/* Panel zoom close button */
+#panel-close {
+  display: none;
+  position: fixed;
+  top: 80px;
+  right: 24px;
+  z-index: 20;
+  background: rgba(8,8,12,0.6);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.15);
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  color: rgba(255,255,255,0.6);
+  font-size: 24px;
+  line-height: 44px;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.3s, color 0.3s;
+}
+#panel-close:hover {
+  background: rgba(8,8,12,0.85);
+  color: rgba(255,255,255,0.9);
+}

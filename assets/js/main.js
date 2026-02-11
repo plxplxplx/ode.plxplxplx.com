@@ -11,7 +11,7 @@ import * as sceneModule from './scene.js';
 import './materials.js';
 
 // Structure
-import './scaffold.js';
+import { glassPanels } from './scaffold.js';
 
 // Environment (fog, floor, vines, shrubs, stage glow)
 import { transitionPlanes, shroudPlanes, vineGroup, stageGlowPlanes, backdropPanels } from './environment.js';
@@ -22,8 +22,6 @@ import { ZONES, sideTexts, ribbonOverlayScene } from './zones.js';
 // Floating cards
 import { cards, CARD_OPTS, cardGroup, cardRaycaster, cardPointer, hoveredCard, setHoveredCard, IMG_FILES } from './cards.js';
 
-// Character
-import { charGroup, orbCore, orbGlow, halo, charLight, updateChar } from './character.js';
 
 // Effects (grid lights, particles, fireflies)
 import { gridLights, pickLightTarget, fireflies, FF_STAGE_COLORS } from './effects.js';
@@ -33,7 +31,7 @@ import { updateTape } from './tape.js';
 import { gx, gz } from './config.js';
 
 // Camera & scroll
-import { controls, scrollCurrent, updateCam, wrapFogBoost } from './camera.js';
+import { controls, scrollCurrent, updateCam, wrapFogBoost, panelZoomed, startPanelZoom, exitPanelZoom } from './camera.js';
 
 // Audio
 import { updateAudio } from './audio.js';
@@ -49,6 +47,34 @@ import { loaderReady } from './loader.js';
 
 // Canvas ref for cursor
 import { canvas } from './scene.js';
+
+// =====================================================
+// PANEL ZOOM — click image to fly in, click/esc to exit
+// =====================================================
+const _panelRC = new THREE.Raycaster();
+const _panelPtr = new THREE.Vector2();
+
+canvas.addEventListener('click', (e) => {
+  if (panelZoomed) { exitPanelZoom(); return; }
+  if (!params.glassPanelImages) return;
+  _panelPtr.x = (e.clientX / window.innerWidth) * 2 - 1;
+  _panelPtr.y = -(e.clientY / window.innerHeight) * 2 + 1;
+  _panelRC.setFromCamera(_panelPtr, sceneModule.camera);
+  const hits = _panelRC.intersectObjects(glassPanels, false);
+  if (hits.length > 0 && hits[0].object.userData.imageMode) {
+    startPanelZoom(hits[0].object);
+  }
+});
+
+window.addEventListener('keydown', (e) => {
+  if (e.code === 'Escape' && panelZoomed) exitPanelZoom();
+});
+
+const _closeBtn = document.getElementById('panel-close');
+if (_closeBtn) _closeBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  exitPanelZoom();
+});
 
 // =====================================================
 // GAME LOOP
@@ -194,16 +220,6 @@ function animate() {
   keyLight.position.set(params.keyLightX, scrollCurrent.y + params.keyLightY, params.keyLightZ);
   keyLight.target.position.set(0, scrollCurrent.y, 0);
   keyLight.target.updateMatrixWorld();
-
-  // Character orb animation
-  const bob = Math.sin(t * 2.5) * 0.06;
-  orbCore.position.y = 0.35 + bob;
-  orbGlow.position.y = 0.35 + bob;
-  orbGlow.scale.setScalar(1.0 + Math.sin(t * 3) * 0.15);
-  halo.position.y = 0.35 + bob;
-  halo.rotation.x = t * 0.8; halo.rotation.z = t * 0.5;
-  charLight.position.y = 0.35 + bob;
-  charLight.intensity = 1.3 + Math.sin(t * 2) * 0.3;
 
   // Traveling grid lights
   for (const gl of gridLights) {
