@@ -11,7 +11,7 @@ export const loaderReady = new Promise((resolve) => {
 
   manager.onProgress = (_url, loaded, total) => {
     const p = Math.round((loaded / total) * 100);
-    if (pct) pct.textContent = `Loading ${p}%`;
+    if (pct) pct.textContent = `${p}%`;
   };
 
   manager.onLoad = done;
