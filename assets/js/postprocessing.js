@@ -58,17 +58,14 @@ export function setPostCamera(cam) {
   bokehPass.camera = cam;
 }
 
-// Resize handler (debounced to avoid RT reallocation storms)
-let _resizeTimer;
-window.addEventListener('resize', () => {
-  clearTimeout(_resizeTimer);
-  _resizeTimer = setTimeout(() => {
-    renderer.setSize(window.innerWidth, window.innerHeight);
-    composer.setSize(window.innerWidth, window.innerHeight);
-    bloom.resolution.set(window.innerWidth, window.innerHeight);
-    bokehPass.setSize(window.innerWidth, window.innerHeight);
-    occRT.setSize(Math.floor(window.innerWidth / 2), Math.floor(window.innerHeight / 2));
-    occBlurRT.setSize(Math.floor(window.innerWidth / 2), Math.floor(window.innerHeight / 2));
-    setOrtho();
-  }, 100);
-});
+// Resize handler — update projection immediately, defer expensive RT resizes
+function onResize() {
+  setOrtho();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  composer.setSize(window.innerWidth, window.innerHeight);
+  bloom.resolution.set(window.innerWidth, window.innerHeight);
+  bokehPass.setSize(window.innerWidth, window.innerHeight);
+  occRT.setSize(Math.floor(window.innerWidth / 2), Math.floor(window.innerHeight / 2));
+  occBlurRT.setSize(Math.floor(window.innerWidth / 2), Math.floor(window.innerHeight / 2));
+}
+window.addEventListener('resize', onResize);
