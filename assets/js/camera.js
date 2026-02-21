@@ -263,6 +263,9 @@ export function updateCam(dt) {
       introActive = false;
       scrollCurrent.y = START_Y;
       scrollCurrent.angle = 0;
+      scrollTarget.y = START_Y;
+      scrollTarget.angle = 0;
+      virtualScroll = START_Y;
     }
     return;
   }
