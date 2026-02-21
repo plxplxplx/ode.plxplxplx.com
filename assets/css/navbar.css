@@ -130,13 +130,16 @@
     width: 80vw;
   }
   #header-nav {
-    flex-wrap: wrap;
-    justify-content: center;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
     gap: 4px;
+    justify-items: center;
   }
   .nav-link {
-    font-size: 11px;
+    font-size: 13px;
     letter-spacing: 2px;
-    padding: 6px 12px;
+    padding: 8px 20px;
+    width: 100%;
+    text-align: center;
   }
 }
