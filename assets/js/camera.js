@@ -33,8 +33,9 @@ controls.autoRotate = false;
 
 // Scroll state — start above fade zone
 const START_Y = 20;
-export let scrollTarget = { y: START_Y, angle: 0 };
-export let scrollCurrent = { y: START_Y, angle: 0 };
+const INITIAL_ANGLE = Math.PI * 0.15;
+export let scrollTarget = { y: START_Y, angle: INITIAL_ANGLE };
+export let scrollCurrent = { y: START_Y, angle: INITIAL_ANGLE };
 export const ORBIT_RADIUS = 12;
 
 // Auto-scroll — gentle upward drift, stops on user interaction
@@ -42,8 +43,12 @@ const AUTO_SCROLL_SPEED = 0.1;   // units per second
 const AUTO_ANGLE_SPEED = 0.03;  // radians per second
 let autoScrollActive = true;
 
-// Start camera at orbit position (no intro animation — loader fade handles reveal)
-camera.position.set(ORBIT_RADIUS, START_Y + 4, 0);
+// Start camera at orbit position, angled slightly
+camera.position.set(
+  Math.cos(INITIAL_ANGLE) * ORBIT_RADIUS,
+  START_Y + 4,
+  Math.sin(INITIAL_ANGLE) * ORBIT_RADIUS
+);
 controls.target.set(0, START_Y + 1, 0);
 controls.update();
 export const SCROLL_LERP = 0.06;

@@ -2,20 +2,20 @@ import terser from '@rollup/plugin-terser';
 import copy from 'rollup-plugin-copy';
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 
-const CSS_FILES = [
-  'assets/css/reset.css',
-  'assets/css/canvas.css',
-  'assets/css/scroll-fade.css',
-  'assets/css/hud.css',
-  'assets/css/navbar.css',
-  'assets/css/loader.css',
-];
+const CSS_ENTRY = 'assets/css/styles.css';
 
 function cssPlugin() {
   return {
     name: 'css-bundle',
     writeBundle() {
-      let css = CSS_FILES.map(f => readFileSync(f, 'utf8')).join('\n');
+      const entry = readFileSync(CSS_ENTRY, 'utf8');
+      const dir = CSS_ENTRY.replace(/[^/]+$/, '');
+      const files = [];
+      for (const line of entry.split('\n')) {
+        const m = line.match(/@import\s+['"]([^'"]+)['"]/);
+        if (m) files.push(dir + m[1]);
+      }
+      let css = files.map(f => readFileSync(f, 'utf8')).join('\n');
       css = css
         .replace(/\/\*[\s\S]*?\*\//g, '')
         .replace(/\s+/g, ' ')

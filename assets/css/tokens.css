@@ -1,0 +1,51 @@
+:root {
+  /* ── Colors ── */
+  --color-black: #050505;
+  --color-black-warm: #0a0804;
+  --color-orange: 240, 91, 48;
+  --color-lime: 200, 204, 90;
+  --color-cream: 255, 240, 220;
+  --color-caption-bg: rgba(30, 16, 8, 0.75);
+
+  /* ── Typography ── */
+  --font-sans: 'NHaas Grotesk', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  --font-serif: 'Cormorant Garamond', Georgia, serif;
+  --font-size-label: 18px;
+  --font-size-label-mobile: 13px;
+  --font-size-caption: 14px;
+  --font-size-hud: 11px;
+  --font-weight-light: 300;
+  --font-weight-regular: 400;
+  --letter-spacing-wide: 3px;
+  --letter-spacing-tight: 2px;
+
+  /* ── Spacing ── */
+  --space-edge: 24px;
+  --space-gap: 4px;
+  --button-size: 44px;
+
+  /* ── Radii ── */
+  --radius-circle: 50%;
+  --radius-pill: 16px;
+  --radius-sm: 4px;
+
+  /* ── Blur ── */
+  --blur-ui: 12px;
+
+  /* ── Transitions ── */
+  --transition-fast: 0.2s;
+  --transition-normal: 0.3s;
+  --transition-slow: 0.8s;
+
+  /* ── Z-index scale ── */
+  --z-canvas: 1;
+  --z-hud: 2;
+  --z-fade: 5;
+  --z-header: 10;
+  --z-panel: 20;
+  --z-loader: 9999;
+
+  /* ── Focus ── */
+  --focus-outline: 2px solid rgba(var(--color-lime), 0.9);
+  --focus-offset: -3px;
+}

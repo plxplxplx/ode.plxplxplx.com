@@ -1,13 +1,13 @@
 #loader {
   position: fixed;
   inset: 0;
-  z-index: 9999;
-  background: #080808;
+  z-index: var(--z-loader);
+  background: var(--color-black);
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  transition: opacity 0.8s ease;
+  transition: opacity var(--transition-slow) ease;
   will-change: opacity;
 }
 
@@ -17,12 +17,12 @@
 }
 
 #loader-pct {
-  font-family: 'NHaas Grotesk', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-  font-weight: 400;
-  font-size: 18px;
-  letter-spacing: 3px;
+  font-family: var(--font-sans);
+  font-weight: var(--font-weight-regular);
+  font-size: var(--font-size-label);
+  letter-spacing: var(--letter-spacing-wide);
   text-transform: uppercase;
-  color: rgba(255, 240, 220, 0.35);
+  color: rgba(var(--color-cream), 0.35);
 }
 
 @media (prefers-reduced-motion: reduce) {
