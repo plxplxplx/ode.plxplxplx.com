@@ -37,6 +37,11 @@ export let scrollTarget = { y: START_Y, angle: 0 };
 export let scrollCurrent = { y: START_Y, angle: 0 };
 export const ORBIT_RADIUS = 12;
 
+// Auto-scroll — gentle upward drift, stops on user interaction
+const AUTO_SCROLL_SPEED = 1.5;  // units per second
+const AUTO_ANGLE_SPEED = 0.08;  // radians per second
+let autoScrollActive = true;
+
 // Intro animation — twirl around scaffold into position (skip if reduced motion)
 const INTRO_DURATION = prefersReducedMotion ? 0 : 1.5;
 const INTRO_START_Y = START_Y + 5;
@@ -76,6 +81,7 @@ const _panelTargetLookAt = new THREE.Vector3();
 
 export function onScroll() {
   startMusic();
+  autoScrollActive = false;
   if (panelZoomed) { exitPanelZoom(); return; }
   const maxScroll = document.body.scrollHeight - window.innerHeight;
   const rawScroll = window.scrollY;
@@ -110,6 +116,7 @@ let lastTouchY = null;
 
 canvas.addEventListener('touchstart', (e) => {
   startMusic();
+  autoScrollActive = false;
   if (e.touches.length === 1) lastTouchY = e.touches[0].clientY;
 }, { passive: true });
 
@@ -299,6 +306,14 @@ export function updateCam(dt) {
       panelZoomed = false;
     }
     return;
+  }
+
+  // Auto-scroll drift
+  if (autoScrollActive) {
+    scrollTarget.y += AUTO_SCROLL_SPEED * dt;
+    scrollTarget.y = ((scrollTarget.y % TOP_H) + TOP_H) % TOP_H;
+    scrollTarget.angle += AUTO_ANGLE_SPEED * dt;
+    virtualScroll = scrollTarget.y;
   }
 
   // Normal scroll-orbit camera
