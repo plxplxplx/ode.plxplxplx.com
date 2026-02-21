@@ -7,12 +7,12 @@ import { FRUSTUM, TOP_H, isMobile } from './config.js';
 // RENDERER + SCENE
 // =====================================================
 export const canvas = document.getElementById('viewport');
-export const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile });
-renderer.setPixelRatio(isMobile ? 1 : Math.min(window.devicePixelRatio, 2));
+export const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 1.8;
-renderer.shadowMap.enabled = !isMobile;
+renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.localClippingEnabled = true;
 
@@ -58,8 +58,8 @@ export function switchCamera(toPerspective) {
 scene.add(new THREE.AmbientLight(0x3a2a1a, 1.0));
 export const keyLight = new THREE.DirectionalLight(0xffe8d0, 5.0);
 keyLight.position.set(-5, 25, -12);
-keyLight.castShadow = !isMobile;
-keyLight.shadow.mapSize.set(isMobile ? 512 : 2048, isMobile ? 512 : 2048);
+keyLight.castShadow = true;
+keyLight.shadow.mapSize.set(isMobile ? 1024 : 2048, isMobile ? 1024 : 2048);
 keyLight.shadow.camera.left = -15; keyLight.shadow.camera.right = 15;
 keyLight.shadow.camera.top = 70; keyLight.shadow.camera.bottom = -5;
 keyLight.shadow.camera.far = 150;
