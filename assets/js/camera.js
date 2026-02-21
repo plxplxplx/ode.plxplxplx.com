@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { CAM_DIST, TOP_H, FRUSTUM, prefersReducedMotion } from './config.js';
+import { CAM_DIST, TOP_H, FRUSTUM } from './config.js';
 import { camera, canvas } from './scene.js';
 import * as sceneModule from './scene.js';
 import { audioCtx, bgMusic } from './audio.js';
@@ -38,23 +38,13 @@ export let scrollCurrent = { y: START_Y, angle: 0 };
 export const ORBIT_RADIUS = 12;
 
 // Auto-scroll — gentle upward drift, stops on user interaction
-const AUTO_SCROLL_SPEED = 1.5;  // units per second
-const AUTO_ANGLE_SPEED = 0.08;  // radians per second
+const AUTO_SCROLL_SPEED = 0.8;  // units per second
+const AUTO_ANGLE_SPEED = 0.04;  // radians per second
 let autoScrollActive = true;
 
-// Intro animation — twirl around scaffold into position (skip if reduced motion)
-const INTRO_DURATION = prefersReducedMotion ? 0 : 1.5;
-const INTRO_START_Y = START_Y + 5;
-const INTRO_START_ANGLE = -Math.PI * 0.75;
-let introElapsed = 0;
-let introActive = true;
-
-camera.position.set(
-  Math.cos(INTRO_START_ANGLE) * ORBIT_RADIUS,
-  INTRO_START_Y + 4,
-  Math.sin(INTRO_START_ANGLE) * ORBIT_RADIUS
-);
-controls.target.set(0, INTRO_START_Y + 1, 0);
+// Start camera at orbit position (no intro animation — loader fade handles reveal)
+camera.position.set(ORBIT_RADIUS, START_Y + 4, 0);
+controls.target.set(0, START_Y + 1, 0);
 controls.update();
 export const SCROLL_LERP = 0.06;
 
@@ -243,37 +233,8 @@ export function setControlsCamera(cam) {
   controls.object = cam;
 }
 
-// Ease-out cubic
-function easeOut(t) { return 1 - Math.pow(1 - t, 3); }
-
 export function updateCam(dt) {
   const cam = sceneModule.camera;
-
-  // Intro descent animation
-  if (introActive) {
-    introElapsed += dt;
-    const t = Math.min(introElapsed / INTRO_DURATION, 1);
-    const e = easeOut(t);
-
-    const introAngle = INTRO_START_ANGLE + e * (0 - INTRO_START_ANGLE);
-    const introY = INTRO_START_Y + e * (START_Y - INTRO_START_Y);
-    const cx = Math.cos(introAngle) * ORBIT_RADIUS;
-    const cz = Math.sin(introAngle) * ORBIT_RADIUS;
-
-    cam.position.set(cx, introY + 4, cz);
-    controls.target.set(0, introY + 1, 0);
-    controls.update();
-
-    if (t >= 1) {
-      introActive = false;
-      scrollCurrent.y = START_Y;
-      scrollCurrent.angle = 0;
-      scrollTarget.y = START_Y;
-      scrollTarget.angle = 0;
-      virtualScroll = START_Y;
-    }
-    return;
-  }
 
   // Panel zoom — smooth fly-in / navigate / fly-out
   if (panelZoomed) {
