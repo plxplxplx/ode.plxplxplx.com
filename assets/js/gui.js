@@ -48,7 +48,7 @@ export const params = {
   shrubsVisible: true,
   flowersVisible: true,
   flowerLightIntensity: 1.8,
-  textMaxOpacity: 0.63,
+  textMaxOpacity: 0,
   textBrightness: 4.3,
   textFadeRange: 30,
   textFadeOutMult: 4.8,
@@ -121,11 +121,11 @@ export const params = {
   // Glass Panels
   glassPanelVisible: true,
   glassPanelOpacity: 0.42,
-  glassPanelImages: true,
+  glassPanelImages: false,
   glassPanelImageOpacity: 0.7,
   // Caution Tape
   tapeVisible: TAPE_OPTS.visible,
-  tapeColor: TAPE_OPTS.color,
+  tapeColor: '#f05b30',
   tapeTextColor: TAPE_OPTS.textColor,
   tapeText: TAPE_OPTS.text,
   tapeOpacity: 0.5,

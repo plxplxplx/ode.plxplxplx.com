@@ -66,21 +66,21 @@ export function applyMarbleTextures(enabled) {
 // MATERIALS — one palette per stage (start without textures)
 // =====================================================
 export const STAGE_MATS = [
-  { // GROUND — olive-tinged metal
-    steel: new THREE.MeshStandardMaterial({ color: 0x6a7a60, metalness: 0.85, roughness: 0.35 }),
-    deck:  new THREE.MeshStandardMaterial({ color: 0x5a6a50, metalness: 0.3, roughness: 0.55 }),
+  { // GROUND — neutral gray steel
+    steel: new THREE.MeshStandardMaterial({ color: 0x8a8a8a, metalness: 0.85, roughness: 0.35 }),
+    deck:  new THREE.MeshStandardMaterial({ color: 0x7a7a7a, metalness: 0.3, roughness: 0.55 }),
   },
-  { // SECOND — mauve-tinged metal
-    steel: new THREE.MeshStandardMaterial({ color: 0x7a6070, metalness: 0.88, roughness: 0.3 }),
-    deck:  new THREE.MeshStandardMaterial({ color: 0x6a5060, metalness: 0.35, roughness: 0.5 }),
+  { // SECOND — neutral gray steel
+    steel: new THREE.MeshStandardMaterial({ color: 0x8a8a8a, metalness: 0.88, roughness: 0.3 }),
+    deck:  new THREE.MeshStandardMaterial({ color: 0x7a7a7a, metalness: 0.35, roughness: 0.5 }),
   },
-  { // THIRD — blue-tinged metal
-    steel: new THREE.MeshStandardMaterial({ color: 0x607a80, metalness: 0.9, roughness: 0.25 }),
-    deck:  new THREE.MeshStandardMaterial({ color: 0x506a70, metalness: 0.35, roughness: 0.45 }),
+  { // THIRD — neutral gray steel
+    steel: new THREE.MeshStandardMaterial({ color: 0x8a8a8a, metalness: 0.9, roughness: 0.25 }),
+    deck:  new THREE.MeshStandardMaterial({ color: 0x7a7a7a, metalness: 0.35, roughness: 0.45 }),
   },
-  { // SUMMIT — violet-tinged silver
-    steel: new THREE.MeshStandardMaterial({ color: 0x7a7088, metalness: 0.95, roughness: 0.2 }),
-    deck:  new THREE.MeshStandardMaterial({ color: 0x6a6078, metalness: 0.35, roughness: 0.4 }),
+  { // SUMMIT — neutral gray steel
+    steel: new THREE.MeshStandardMaterial({ color: 0x8a8a8a, metalness: 0.95, roughness: 0.2 }),
+    deck:  new THREE.MeshStandardMaterial({ color: 0x7a7a7a, metalness: 0.35, roughness: 0.4 }),
   },
 ];
 

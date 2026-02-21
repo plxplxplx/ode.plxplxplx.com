@@ -7,51 +7,20 @@ import { scene, buildPlane } from './scene.js';
 // CAUTION TAPE — "ODE" construction tape on scaffold
 // =====================================================
 
-/** Generate caution tape canvas texture */
-function makeTapeTexture(text = 'ODE', bgColor = '#FFD700', textColor = '#000000') {
-  const c = document.createElement('canvas');
-  c.width = 1024; c.height = 128;
-  const ctx = c.getContext('2d');
-
-  // Yellow base
-  ctx.fillStyle = bgColor;
-  ctx.fillRect(0, 0, 1024, 128);
-
-  // Diagonal stripes
-  ctx.save();
-  ctx.strokeStyle = textColor;
-  ctx.lineWidth = 18;
-  for (let x = -128; x < 1200; x += 64) {
-    ctx.beginPath();
-    ctx.moveTo(x, 0);
-    ctx.lineTo(x + 128, 128);
-    ctx.stroke();
-  }
-  ctx.restore();
-
-  // Text panels — clear rectangles with bold text
-  ctx.font = 'bold 60px Arial, Helvetica, sans-serif';
-  ctx.textAlign = 'center';
-  ctx.textBaseline = 'middle';
-  const tw = ctx.measureText(text).width;
-  const spacing = 256;
-  for (let x = spacing / 2; x < 1024; x += spacing) {
-    ctx.fillStyle = bgColor;
-    ctx.fillRect(x - tw / 2 - 16, 16, tw + 32, 96);
-    ctx.fillStyle = textColor;
-    ctx.fillText(text, x, 64);
-  }
-
-  const tex = new THREE.CanvasTexture(c);
+/** Load image tape texture */
+const texLoader = new THREE.TextureLoader();
+function makeTapeTexture() {
+  const tex = texLoader.load('assets/reference/plxodeTape.jpg');
   tex.wrapS = THREE.RepeatWrapping;
   tex.wrapT = THREE.ClampToEdgeWrapping;
+  tex.colorSpace = THREE.SRGBColorSpace;
   return tex;
 }
 
 // Tape options (exposed for GUI)
 export const TAPE_OPTS = {
-  visible: true,
-  color: '#FFD700',
+  visible: false,
+  color: '#f05b30',
   textColor: '#000000',
   text: 'ODE',
   opacity: 0.5,
@@ -106,7 +75,7 @@ export function buildTape(opts = TAPE_OPTS) {
 
   // Create texture
   if (tapeTexture) tapeTexture.dispose();
-  tapeTexture = makeTapeTexture(opts.text, opts.color, opts.textColor);
+  tapeTexture = makeTapeTexture();
 
   const stripDefs = getStripDefs();
   const repeatUnit = 2.0; // world units per texture repeat

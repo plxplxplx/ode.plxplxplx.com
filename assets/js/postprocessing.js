@@ -18,7 +18,7 @@ export const composer = new EffectComposer(renderer);
 composer.addPass(new RenderPass(scene, camera));
 
 export const bloom = new UnrealBloomPass(
-  new THREE.Vector2(window.innerWidth, window.innerHeight), 0.7, 0.5, 0.6
+  new THREE.Vector2(window.innerWidth, window.innerHeight), 0.3, 0.3, 0.75
 );
 bloom.enabled = !isMobile;
 composer.addPass(bloom);

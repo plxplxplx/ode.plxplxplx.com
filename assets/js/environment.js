@@ -671,6 +671,7 @@ scene.add(flowerGroup);
 // =====================================================
 // ANCIENT PILLARS — placed on THIRD stage (Y=60) — InstancedMesh
 // =====================================================
+/* HIDDEN FOR NOW
 gltfLoader.load('assets/models/ancient_pillars.glb', (gltf) => {
   _seed = 11235;
   const pillarsModel = gltf.scene;
@@ -729,15 +730,16 @@ gltfLoader.load('assets/models/ancient_pillars.glb', (gltf) => {
 
   createInstancedMeshes(pillarsModel, pillarTransforms, scene);
 }, undefined, (err) => console.warn('ancient_pillars.glb load error:', err));
+HIDDEN FOR NOW */
 
 // =====================================================
 // STAGE GLOW FLOORS — large radial gradient planes extending far out
 // =====================================================
 const STAGE_GLOW_COLORS = [
-  new THREE.Color(0x406a00),  // GROUND — lime glow
-  new THREE.Color(0x6a1438),  // SECOND — magenta glow
-  new THREE.Color(0x005a6a),  // THIRD — cyan glow
-  new THREE.Color(0x35206a),  // SUMMIT — violet glow
+  new THREE.Color(0x4a5a10),  // GROUND — lime glow
+  new THREE.Color(0x6a2810),  // SECOND — orange glow
+  new THREE.Color(0x5a3810),  // THIRD — amber glow
+  new THREE.Color(0x6a1e08),  // SUMMIT — deep orange glow
 ];
 
 export const stageGlowPlanes = [];
@@ -774,10 +776,10 @@ for (let si = 0; si < STAGES.length; si++) {
 // DISTANT BACKDROP PANELS — vertical fog walls in a ring
 // =====================================================
 const BACKDROP_COLORS = [
-  new THREE.Color(0x243808),  // GROUND — lime mist
-  new THREE.Color(0x381025),  // SECOND — magenta mist
-  new THREE.Color(0x082535),  // THIRD — cyan mist
-  new THREE.Color(0x1e1038),  // SUMMIT — violet mist
+  new THREE.Color(0x2a3008),  // GROUND — olive mist
+  new THREE.Color(0x38180a),  // SECOND — amber mist
+  new THREE.Color(0x2a1e0a),  // THIRD — warm mist
+  new THREE.Color(0x381008),  // SUMMIT — orange mist
 ];
 
 export const backdropPanels = [];

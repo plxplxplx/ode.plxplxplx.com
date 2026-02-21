@@ -10,7 +10,7 @@ export const renderer = new THREE.WebGLRenderer({ canvas, antialias: !isMobile }
 renderer.setPixelRatio(isMobile ? 1 : Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 2.4;
+renderer.toneMappingExposure = 1.8;
 renderer.shadowMap.enabled = !isMobile;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.localClippingEnabled = true;
@@ -20,8 +20,8 @@ renderer.localClippingEnabled = true;
 export const buildPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 99999);
 
 export const scene = new THREE.Scene();
-export const fogColor = 0x121220;
-scene.background = new THREE.Color(0x121220);
+export const fogColor = 0x140e08;
+scene.background = new THREE.Color(0x140e08);
 scene.fog = new THREE.FogExp2(fogColor, 0.04);
 
 const pmrem = new THREE.PMREMGenerator(renderer);
@@ -49,8 +49,8 @@ export function switchCamera(toPerspective) {
 // =====================================================
 // LIGHTS
 // =====================================================
-scene.add(new THREE.AmbientLight(0x2a2a3a, 1.0));
-export const keyLight = new THREE.DirectionalLight(0xfff0f0, 5.0);
+scene.add(new THREE.AmbientLight(0x3a2a1a, 1.0));
+export const keyLight = new THREE.DirectionalLight(0xffe8d0, 5.0);
 keyLight.position.set(-5, 25, -12);
 keyLight.castShadow = !isMobile;
 keyLight.shadow.mapSize.set(isMobile ? 512 : 2048, isMobile ? 512 : 2048);
@@ -60,14 +60,14 @@ keyLight.shadow.camera.far = 150;
 scene.add(keyLight);
 
 // Cool rim light from sun side
-export const rimLight = new THREE.DirectionalLight(0xe0e0ff, 0.8);
+export const rimLight = new THREE.DirectionalLight(0xffe0c0, 0.8);
 rimLight.position.set(-10, 20, -15);
 scene.add(rimLight);
-scene.add(new THREE.HemisphereLight(0xddeeff, 0x151520, 0.7));
+scene.add(new THREE.HemisphereLight(0xffddaa, 0x1a1008, 0.7));
 
 // Sun — behind the scaffold, above and off-screen for bird's-eye god rays
 export const sunPos = new THREE.Vector3(-3, 12, -20);
-export const sunLight = new THREE.DirectionalLight(0xfff0f0, 0.8);
+export const sunLight = new THREE.DirectionalLight(0xffe0b0, 0.8);
 sunLight.position.copy(sunPos);
 scene.add(sunLight);
 

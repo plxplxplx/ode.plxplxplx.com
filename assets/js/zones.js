@@ -6,16 +6,16 @@ import { ribbonVert, ribbonFrag } from './shaders.js';
 // ATMOSPHERE ZONES (different vibes as you ascend)
 // =====================================================
 export const ZONES = [
-  { name: 'GROUND',    y: STAGES[0].floorY, fogColor: 0x1a3008, fogDensity: 0.06,  tint: [0.9, 1.3, 0.7],
+  { name: 'GROUND',    y: STAGES[0].floorY, fogColor: 0x1a2808, fogDensity: 0.06,  tint: [1.1, 1.2, 0.7],
     title: '',
     text: 'Where raw material meets the earth.\nThe scaffolding begins here — steel\nrooted in stone, a structure rising\nfrom the silence of the ground.' },
-  { name: 'SECOND',    y: STAGES[1].floorY, fogColor: 0x2a0c20, fogDensity: 0.055, tint: [1.3, 0.75, 1.1],
+  { name: 'SECOND',    y: STAGES[1].floorY, fogColor: 0x2a1408, fogDensity: 0.055, tint: [1.3, 0.9, 0.6],
     title: '',
     text: 'Through the low mist, forms emerge\nand dissolve. Each level repeats\nthe one below — yet nothing here\nis ever truly the same twice.' },
-  { name: 'THIRD',     y: STAGES[2].floorY, fogColor: 0x081e2a, fogDensity: 0.05,  tint: [0.7, 1.1, 1.3],
+  { name: 'THIRD',     y: STAGES[2].floorY, fogColor: 0x221808, fogDensity: 0.05,  tint: [1.2, 0.95, 0.7],
     title: '',
     text: 'The golden hour stretches across\nthe framework. Light finds every gap\nbetween the poles, casting long\nshadows that reach back to the ground.' },
-  { name: 'SUMMIT',    y: STAGES[3].floorY, fogColor: 0x180e28, fogDensity: 0.04,  tint: [1.0, 0.85, 1.35],
+  { name: 'SUMMIT',    y: STAGES[3].floorY, fogColor: 0x1e1008, fogDensity: 0.04,  tint: [1.3, 0.85, 0.6],
     title: '',
     text: 'At the highest platform, the view\nexpands beyond the installation.\nThe scaffolding was never the point —\nit was always about the climb.' },
 ];

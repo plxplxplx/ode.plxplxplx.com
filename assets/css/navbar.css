@@ -1,100 +1,124 @@
-/* ── Floating top island ── */
-#footer-bar {
+/* ── Font faces ── */
+@font-face {
+  font-family: 'Miller Display';
+  src: url('../fonts/Miller-Display.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Miller Display';
+  src: url('../fonts/Miller-DisplayItalic.woff2') format('woff2');
+  font-weight: 400;
+  font-style: italic;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'NHaas Grotesk';
+  src: url('../fonts/NHaasGroteskDSPro-35XLt.woff2') format('woff2');
+  font-weight: 300;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'NHaas Grotesk';
+  src: url('../fonts/NHaasGroteskDSPro-55Rg.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'NHaas Grotesk';
+  src: url('../fonts/NHaasGroteskDSPro-75Bd.woff2') format('woff2');
+  font-weight: 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* ── Hide legacy elements ── */
+#footer-bar,
+#date-bar,
+.footer-logo {
+  display: none;
+}
+
+/* ── Header ── */
+#site-header {
   position: fixed;
-  top: 16px;
+  top: 20px;
   left: 50%;
   transform: translateX(-50%);
-  width: auto;
-  height: 56px;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  user-select: none;
+  pointer-events: none;
+}
+
+#heading-img {
+  width: min(40vw, 340px);
+  height: auto;
+  display: block;
+}
+
+/* ── Nav links — scattered under heading ── */
+#header-nav {
   display: flex;
   align-items: center;
-  gap: 24px;
-  padding: 0 28px;
-  z-index: 10;
-  background: rgba(8,8,12,0.7);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255,255,255,0.15);
-  border-radius: 28px;
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  user-select: none;
-  white-space: nowrap;
+  gap: 0;
+  margin-top: -8px;
+  pointer-events: auto;
 }
 
-.footer-logo {
-  font-size: 24px;
-  font-weight: 600;
-  letter-spacing: 8px;
-  color: rgba(255,255,255,0.92);
-  text-decoration: none;
-  text-transform: uppercase;
-  transition: color 0.4s ease;
-}
-
-#date-bar {
-  position: fixed;
-  top: 80px;
-  left: 50%;
-  transform: translateX(-50%);
-  padding: 6px 20px;
-  z-index: 10;
-  background: rgba(8,8,12,0.6);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255,255,255,0.08);
-  border-radius: 16px;
-  font-family: 'Cormorant Garamond', Georgia, serif;
-  font-size: 13px;
-  font-weight: 300;
-  letter-spacing: 4px;
-  color: rgba(255,255,255,0.5);
-  text-transform: uppercase;
-  user-select: none;
-  white-space: nowrap;
-}
-.footer-logo:hover {
-  color: rgba(255,255,255,1);
-}
-
-.footer-link {
-  font-size: 12px;
-  font-weight: 300;
+.nav-link {
+  font-family: 'NHaas Grotesk', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+  font-size: 18px;
+  font-weight: 400;
   letter-spacing: 3px;
-  color: rgba(255,255,255,0.35);
+  color: #000;
   text-decoration: none;
   text-transform: uppercase;
-  padding: 8px 0;
-  transition: color 0.4s ease;
-}
-.footer-link:hover {
-  color: rgba(255,255,255,0.75);
+  padding: 8px 28px;
+  background: rgba(240,91,48,0.92);
+  transition: background 0.2s;
+  white-space: nowrap;
+  clip-path: polygon(6% 0%, 94% 0%, 100% 50%, 94% 100%, 6% 100%, 0% 50%);
 }
 
-/* ── Mobile: single-column menu under title ── */
+.nav-link:nth-child(2) {
+  transform: rotate(-1.5deg) translateY(2px);
+}
+.nav-link:nth-child(3) {
+  transform: rotate(1deg) translateY(-1px);
+}
+.nav-link:nth-child(4) {
+  transform: rotate(-0.8deg) translateY(3px);
+}
+
+.nav-link:hover {
+  background: rgba(200,210,78,0.92);
+}
+
+.nav-link.disabled {
+  opacity: 0.35;
+  pointer-events: none;
+  cursor: default;
+}
+
+/* ── Mobile ── */
 @media (max-width: 600px) {
-  #footer-bar {
-    flex-direction: column;
-    height: auto;
-    gap: 6px;
-    padding: 14px 24px 16px;
-    border-radius: 20px;
-    white-space: normal;
-    text-align: center;
+  #heading-img {
+    width: 80vw;
   }
-  .footer-logo {
-    order: -1;
-    font-size: 20px;
-    letter-spacing: 6px;
-    margin-bottom: 4px;
+  #header-nav {
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 4px;
   }
-  .footer-link {
+  .nav-link {
     font-size: 11px;
-    padding: 4px 0;
-  }
-  #date-bar {
-    top: auto;
-    bottom: 16px;
-    font-size: 11px;
-    letter-spacing: 3px;
+    letter-spacing: 2px;
+    padding: 6px 12px;
   }
 }

@@ -6,7 +6,7 @@ import { scene } from './scene.js';
 // TRAVELING GRID LIGHTS
 // =====================================================
 export const gridLights = [];
-const lColors = [0x00ff88, 0xff2d9b, 0x00e5ff, 0xb388ff, 0xffff00, 0xff6600];
+const lColors = [0xf05b30, 0xC8CC5A, 0xFF8844, 0xFFCC44, 0xE8A030, 0xCC6622];
 const GRID_LIGHT_COUNT = isMobile ? 2 : 6;
 for (let n = 0; n < GRID_LIGHT_COUNT; n++) {
   const lt = new THREE.PointLight(lColors[n], 1.5, 25);
@@ -48,10 +48,10 @@ const ffGlowGeo = new THREE.SphereGeometry(0.06, 6, 4);
 const FF_LIGHT_COUNT = isMobile ? 0 : 4;
 
 export const FF_STAGE_COLORS = [
-  new THREE.Color(0xc8ff00), // GROUND — electric lime
-  new THREE.Color(0xff2d9b), // SECOND — hot pink
-  new THREE.Color(0x00e5ff), // THIRD — cyan
-  new THREE.Color(0xb388ff), // SUMMIT — violet
+  new THREE.Color(0xC8CC5A), // GROUND — poster lime
+  new THREE.Color(0xf05b30), // SECOND — poster orange
+  new THREE.Color(0xFFAA44), // THIRD — warm amber
+  new THREE.Color(0xFF6630), // SUMMIT — deep orange
 ];
 
 for (let i = 0; i < FF_COUNT; i++) {
