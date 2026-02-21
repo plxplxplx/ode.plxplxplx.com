@@ -370,9 +370,19 @@ gltfLoader.load('assets/models/Ivy 2.glb', (gltf) => {
 }, undefined, (err) => console.warn('Ivy 2.glb load error:', err));
 
 // =====================================================
-// SHRUB BILLBOARDS — InstancedMesh (KTX2 textures)
+// SHRUB BILLBOARDS — InstancedMesh
 // =====================================================
+const shrubTexLoader = new THREE.TextureLoader(manager);
+const shrubAlbedo = shrubTexLoader.load('assets/textures/shrub/TCom_Shrub_Blueberry01_512_albedo.png');
+const shrubAlpha = shrubTexLoader.load('assets/textures/shrub/TCom_Shrub_Blueberry01_512_alpha.png');
+const shrubNormal = shrubTexLoader.load('assets/textures/shrub/TCom_Shrub_Blueberry01_512_normal.png');
+const shrubRough = shrubTexLoader.load('assets/textures/shrub/TCom_Shrub_Blueberry01_512_roughness.png');
+
 const shrubMat = new THREE.MeshStandardMaterial({
+  map: shrubAlbedo,
+  alphaMap: shrubAlpha,
+  normalMap: shrubNormal,
+  roughnessMap: shrubRough,
   transparent: true,
   alphaTest: 0.3,
   side: THREE.DoubleSide,
@@ -380,20 +390,6 @@ const shrubMat = new THREE.MeshStandardMaterial({
   metalness: 0.0,
   roughness: 0.75,
 });
-
-// Load KTX2 shrub textures and assign to material
-const shrubTexPaths = [
-  ['map',          'assets/textures/shrub/TCom_Shrub_Blueberry01_512_albedo.ktx2'],
-  ['alphaMap',     'assets/textures/shrub/TCom_Shrub_Blueberry01_512_alpha.ktx2'],
-  ['normalMap',    'assets/textures/shrub/TCom_Shrub_Blueberry01_512_normal.ktx2'],
-  ['roughnessMap', 'assets/textures/shrub/TCom_Shrub_Blueberry01_512_roughness.ktx2'],
-];
-for (const [slot, path] of shrubTexPaths) {
-  ktx2Loader.load(path, (tex) => {
-    shrubMat[slot] = tex;
-    shrubMat.needsUpdate = true;
-  });
-}
 
 const shrubGeo = new THREE.PlaneGeometry(1.5, 1.5);
 export const shrubGroup = new THREE.Group();
