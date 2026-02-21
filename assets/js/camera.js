@@ -38,8 +38,8 @@ export let scrollCurrent = { y: START_Y, angle: 0 };
 export const ORBIT_RADIUS = 12;
 
 // Auto-scroll — gentle upward drift, stops on user interaction
-const AUTO_SCROLL_SPEED = 0.8;  // units per second
-const AUTO_ANGLE_SPEED = 0.04;  // radians per second
+const AUTO_SCROLL_SPEED = 0.35;  // units per second
+const AUTO_ANGLE_SPEED = 0.02;  // radians per second
 let autoScrollActive = true;
 
 // Start camera at orbit position (no intro animation — loader fade handles reveal)
