@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { TOP_H, LEVEL_H, STAGES, prefersReducedMotion } from './config.js';
 
 // Scene setup
-import { renderer, scene, keyLight, sunPos, sunMesh, sunOccMesh, sunLight, occlusionScene, occlusionMat, occRT, occBlurRT, buildPlane } from './scene.js';
+import { renderer, scene, keyLight, sunPos, sunMesh, sunOccMesh, sunLight, occlusionScene, occlusionMat, occRT, occBlurRT, buildPlane, buildPlaneBottom } from './scene.js';
 import * as sceneModule from './scene.js';
 
 // Materials (loaded by scaffold/environment)
@@ -157,9 +157,10 @@ function animate() {
 
   updateCam(dt);
 
-  // Build-as-you-scroll — update clipping plane
+  // Build-as-you-scroll — update clipping planes (top + bottom)
   if (params.buildMode) {
     buildPlane.constant = scrollCurrent.y + params.buildOffset;
+    buildPlaneBottom.constant = -(scrollCurrent.y - params.buildOffsetBottom);
   }
 
   // Zone blending — interpolate atmosphere on circular track (SUMMIT wraps to GROUND)
@@ -197,11 +198,6 @@ function animate() {
   scene.fog.color.copy(_colorA).lerp(_colorB, zoneFrac);
   scene.background.copy(scene.fog.color);
   scene.fog.density = THREE.MathUtils.lerp(zoneA.fogDensity, zoneB.fogDensity, zoneFrac) + wrapFogBoost;
-  // Lerp color grading tint
-  colorGradePass.uniforms.tintR.value = THREE.MathUtils.lerp(zoneA.tint[0], zoneB.tint[0], zoneFrac);
-  colorGradePass.uniforms.tintG.value = THREE.MathUtils.lerp(zoneA.tint[1], zoneB.tint[1], zoneFrac);
-  colorGradePass.uniforms.tintB.value = THREE.MathUtils.lerp(zoneA.tint[2], zoneB.tint[2], zoneFrac);
-
   // Dynamic audio
   updateAudio(camH);
 

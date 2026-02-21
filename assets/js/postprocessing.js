@@ -4,8 +4,9 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { BokehPass } from 'three/addons/postprocessing/BokehPass.js';
+import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import {
-  GodRaysShader, VignetteShader, ChromaticAberrationShader,
+  GodRaysShader, VignetteShader,
   FilmGrainShader, ColorGradeShader,
 } from './shaders.js';
 import { renderer, scene, camera, occRT, occBlurRT, setOrtho } from './scene.js';
@@ -39,16 +40,15 @@ composer.addPass(godRaysPass);
 const vignettePass = new ShaderPass(VignetteShader);
 composer.addPass(vignettePass);
 
-export const chromaPass = new ShaderPass(ChromaticAberrationShader);
-chromaPass.enabled = true;
-composer.addPass(chromaPass);
-
 export const colorGradePass = new ShaderPass(ColorGradeShader);
 composer.addPass(colorGradePass);
 
 export const grainPass = new ShaderPass(FilmGrainShader);
 grainPass.enabled = true;
 composer.addPass(grainPass);
+
+// OutputPass applies tone mapping + output color space to final render
+composer.addPass(new OutputPass());
 
 // Reference to the render pass for camera swap
 const renderPass = composer.passes[0];

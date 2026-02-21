@@ -47,7 +47,7 @@ export default {
     file: 'docs/assets/js/main.min.js',
     format: 'es',
   },
-  external: (id) => id === 'three' || id.startsWith('three/') || id === 'lil-gui',
+  external: (id) => id === 'three' || id.startsWith('three/') || id === 'tweakpane',
   plugins: [
     terser(),
     copy({

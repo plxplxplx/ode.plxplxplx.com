@@ -65,39 +65,13 @@ export const VignetteShader = {
 };
 
 // =====================================================
-// CHROMATIC ABERRATION SHADER
-// =====================================================
-export const ChromaticAberrationShader = {
-  uniforms: {
-    tDiffuse: { value: null },
-    amount: { value: 0.005 },
-  },
-  vertexShader: `varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
-  fragmentShader: `
-    uniform sampler2D tDiffuse;
-    uniform float amount;
-    varying vec2 vUv;
-    void main(){
-      vec2 dir = vUv - 0.5;
-      float d = length(dir);
-      float offset = amount * d * d;
-      float r = texture2D(tDiffuse, vUv + dir * offset).r;
-      float g = texture2D(tDiffuse, vUv).g;
-      float b = texture2D(tDiffuse, vUv - dir * offset).b;
-      float a = texture2D(tDiffuse, vUv).a;
-      gl_FragColor = vec4(r, g, b, a);
-    }
-  `,
-};
-
-// =====================================================
 // FILM GRAIN SHADER
 // =====================================================
 export const FilmGrainShader = {
   uniforms: {
     tDiffuse: { value: null },
     time: { value: 0 },
-    intensity: { value: 0.05 },
+    intensity: { value: 0.01 },
   },
   vertexShader: `varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
   fragmentShader: `
@@ -121,7 +95,7 @@ export const FilmGrainShader = {
 export const ColorGradeShader = {
   uniforms: {
     tDiffuse: { value: null },
-    saturation: { value: 0.85 },
+    saturation: { value: 1.0 },
     contrast: { value: 1.3 },
     brightness: { value: 0.15 },
     tintR: { value: 1.1 },

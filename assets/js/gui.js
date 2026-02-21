@@ -1,7 +1,7 @@
 import * as THREE from 'three';
-import GUI from 'lil-gui';
+import { Pane } from 'tweakpane';
 import { FRUSTUM, isMobile } from './config.js';
-import { renderer, scene, sunPos, sunMesh, sunOccMesh, keyLight, perspCamera, switchCamera, buildPlane } from './scene.js';
+import { renderer, scene, sunPos, sunMesh, sunOccMesh, keyLight, perspCamera, switchCamera, buildPlane, buildPlaneBottom } from './scene.js';
 import * as sceneModule from './scene.js';
 import { STAGE_MATS, matSteel, loadMarbleTextures, getMarbleTextures, applyMarbleTextures } from './materials.js';
 import { TAPE_OPTS, tapeGroup, buildTape } from './tape.js';
@@ -11,15 +11,16 @@ import { vineGroup, shrubGroup, flowerLight, stageGlowPlanes, backdropPanels, sh
 import { gridLights, fireflies, FF_COUNT } from './effects.js';
 import { scaffold, floorMats, glassPanels } from './scaffold.js';
 import { IMG_FILES } from './cards.js';
-import { bloom, bokehPass, godRaysPass, chromaPass, colorGradePass, grainPass, setPostCamera } from './postprocessing.js';
+import { bloom, bokehPass, godRaysPass, colorGradePass, grainPass, setPostCamera } from './postprocessing.js';
 import { bgMusic, audioCtx, masterGain } from './audio.js';
 import { setControlsCamera } from './camera.js';
 
 // =====================================================
-// LIL-GUI
+// TWEAKPANE
 // =====================================================
 export const params = {
   frustum: FRUSTUM,
+  bloomEnabled: false,
   bloomStrength: bloom.strength,
   bloomRadius: bloom.radius,
   bloomThreshold: bloom.threshold,
@@ -48,7 +49,7 @@ export const params = {
   shrubsVisible: true,
   flowersVisible: true,
   flowerLightIntensity: 1.8,
-  textMaxOpacity: 0,
+  textMaxOpacity: 1,
   textBrightness: 4.3,
   textFadeRange: 30,
   textFadeOutMult: 4.8,
@@ -74,14 +75,13 @@ export const params = {
   sunX: sunPos.x,
   sunY: sunPos.y,
   sunZ: sunPos.z,
-  chromaAmount: chromaPass.uniforms.amount.value,
+  tintR: colorGradePass.uniforms.tintR.value,
+  tintG: colorGradePass.uniforms.tintG.value,
+  tintB: colorGradePass.uniforms.tintB.value,
   grainIntensity: grainPass.uniforms.intensity.value,
   colorSaturation: colorGradePass.uniforms.saturation.value,
   colorContrast: colorGradePass.uniforms.contrast.value,
   colorBrightness: 0.12,
-  tintR: colorGradePass.uniforms.tintR.value,
-  tintG: colorGradePass.uniforms.tintG.value,
-  tintB: colorGradePass.uniforms.tintB.value,
   ffIntensity: 4.0,
   ffDistance: 40,
   ffRadius: 8,
@@ -100,8 +100,8 @@ export const params = {
   perspFar: 300,
   sunLocked: true,
   buildMode: false,
-  buildOffset: 4,
-  // Particles
+  buildOffset: 6,
+  buildOffsetBottom: 6,
   // Stage atmosphere
   stageGlowEnabled: false,
   stageGlowIntensity: 0,
@@ -134,12 +134,15 @@ export const params = {
   tapeFlipText: true,
 };
 
-export const gui = new GUI({ title: 'Installation Controls' });
-gui.domElement.style.setProperty('--left', '0');
-gui.domElement.style.position = 'fixed';
-gui.domElement.style.left = '0';
-gui.domElement.style.right = 'auto';
-gui.domElement.style.display = 'none';
+const pane = new Pane({ title: 'Installation Controls' });
+pane.element.style.position = 'fixed';
+pane.element.style.left = '0';
+pane.element.style.top = '0';
+pane.element.style.zIndex = '9000';
+pane.hidden = true;
+
+// Alias for export compat
+export const gui = pane;
 
 // FPS counter
 export const fpsEl = document.createElement('div');
@@ -155,64 +158,9 @@ export function updateFPS() {
   }
 }
 
-const camFolder = gui.addFolder('Camera');
-camFolder.add(params, 'usePerspective').name('Perspective').onChange(v => {
-  const cam = switchCamera(v);
-  setControlsCamera(cam);
-  setPostCamera(cam);
-});
-camFolder.add(params, 'frustum', 5, 50).name('Ortho Frustum').onChange(v => {
-  const { orthoCamera } = sceneModule;
-  const a = window.innerWidth / window.innerHeight;
-  orthoCamera.left = -v*a/2; orthoCamera.right = v*a/2;
-  orthoCamera.top = v/2; orthoCamera.bottom = -v/2;
-  orthoCamera.updateProjectionMatrix();
-});
-camFolder.add(params, 'perspFov', 20, 120, 1).name('FOV').onChange(v => {
-  perspCamera.fov = v;
-  perspCamera.updateProjectionMatrix();
-});
-camFolder.add(params, 'perspNear', 0.01, 5, 0.01).name('Near').onChange(v => {
-  perspCamera.near = v;
-  perspCamera.updateProjectionMatrix();
-});
-camFolder.add(params, 'perspFar', 50, 1000, 10).name('Far').onChange(v => {
-  perspCamera.far = v;
-  perspCamera.updateProjectionMatrix();
-});
-camFolder.add(params, 'sunLocked').name('Lock Sun to View');
-camFolder.add(params, 'buildMode').name('Build Mode').onChange(v => {
-  if (!v) buildPlane.constant = 99999; // disable clipping
-});
-if (!params.buildMode) buildPlane.constant = 99999; // start unclamped
-camFolder.add(params, 'buildOffset', 0, 40, 1).name('Build Offset');
-
-const bloomFolder = gui.addFolder('Bloom');
-bloomFolder.add(params, 'bloomStrength', 0, 3, 0.01).onChange(v => bloom.strength = v);
-bloomFolder.add(params, 'bloomRadius', 0, 2, 0.01).onChange(v => bloom.radius = v);
-bloomFolder.add(params, 'bloomThreshold', 0, 1, 0.01).onChange(v => bloom.threshold = v);
-
-const dofFolder = gui.addFolder('Depth of Field');
-dofFolder.add(params, 'dofEnabled').name('Enable').onChange(v => bokehPass.enabled = v);
-dofFolder.add(params, 'dofFocus', 0.1, 60, 0.1).name('Focus Distance').onChange(v => bokehPass.uniforms['focus'].value = v);
-dofFolder.add(params, 'dofAperture', 0, 0.01, 0.0001).name('Aperture').onChange(v => bokehPass.uniforms['aperture'].value = v);
-dofFolder.add(params, 'dofMaxBlur', 0, 0.1, 0.001).name('Max Blur').onChange(v => bokehPass.uniforms['maxblur'].value = v);
-
-const fogFolder = gui.addFolder('Fog');
-fogFolder.add(params, 'fogDensity', 0, 0.5, 0.005).onChange(v => scene.fog.density = v);
-
-const atmoFolder = gui.addFolder('Stage Atmosphere');
-atmoFolder.add(params, 'stageGlowEnabled').name('Stage Glow').onChange(v => {
-  stageGlowPlanes.forEach(sg => { sg.mesh.visible = v; });
-});
-atmoFolder.add(params, 'stageGlowIntensity', 0, 20, 0.1).name('Glow Intensity');
-atmoFolder.add(params, 'backdropEnabled').name('Backdrop').onChange(v => {
-  backdropPanels.forEach(bp => { bp.mesh.visible = v; });
-});
-atmoFolder.add(params, 'backdropIntensity', 0, 20, 0.1).name('Backdrop Intensity');
-atmoFolder.add(params, 'shroudEnabled').name('Shroud').onChange(v => {
-  shroudPlanes.forEach(sp => { sp.mesh.visible = v; });
-});
+// =====================================================
+// HELPERS
+// =====================================================
 const setFloorsVisible = v => {
   scaffold.traverse(child => {
     if (child.isMesh && child.userData.componentType) {
@@ -223,120 +171,7 @@ const setFloorsVisible = v => {
     }
   });
 };
-atmoFolder.add(params, 'stageFloorsVisible').name('Stage Floors').onChange(setFloorsVisible);
-setFloorsVisible(params.stageFloorsVisible);
-// Apply initial visibility
-stageGlowPlanes.forEach(sg => { sg.mesh.visible = params.stageGlowEnabled; });
-atmoFolder.add(params, 'floorOpacity', 0, 1, 0.01).name('Floor Opacity').onChange(v => {
-  floorMats.forEach(m => { m.opacity = v; });
-});
-atmoFolder.add(params, 'floorMetalness', 0, 1, 0.01).name('Floor Metalness').onChange(v => {
-  floorMats.forEach(m => { m.metalness = v; });
-});
-atmoFolder.add(params, 'floorRoughness', 0, 1, 0.01).name('Floor Roughness').onChange(v => {
-  floorMats.forEach(m => { m.roughness = v; });
-});
-atmoFolder.add(params, 'floorSlabSize', 10, 500, 5).name('Slab Size').onChange(v => {
-  scaffold.traverse(child => {
-    if (child.isMesh && child.userData.componentType === 'transitionSlab') {
-      child.geometry.dispose();
-      child.geometry = new THREE.BoxGeometry(v, 0.12, v);
-    }
-  });
-});
 
-const lightFolder = gui.addFolder('Lights');
-lightFolder.add(params, 'gridLightIntensity', 0, 10, 0.1).onChange(v => {
-  gridLights.forEach(gl => gl.light.intensity = v);
-});
-lightFolder.add(params, 'gridLightDistance', 1, 80, 1).onChange(v => {
-  gridLights.forEach(gl => gl.light.distance = v);
-});
-lightFolder.add(params, 'gridLightSpeed', 0.01, 2, 0.01).onChange(v => {
-  gridLights.forEach(gl => gl.speed = v);
-});
-lightFolder.add(params, 'keyLightIntensity', 0, 20, 0.1).onChange(v => keyLight.intensity = v);
-lightFolder.add(params, 'keyLightX', -30, 30, 0.5).name('Key X').onChange(v => keyLight.position.x = v);
-lightFolder.add(params, 'keyLightY', 0, 50, 0.5).name('Key Y offset');
-lightFolder.add(params, 'keyLightZ', -30, 30, 0.5).name('Key Z').onChange(v => keyLight.position.z = v);
-lightFolder.add(params, 'exposure', 0.1, 3, 0.05).onChange(v => renderer.toneMappingExposure = v);
-
-const cardFolder = gui.addFolder('Image Cards');
-cardFolder.add(params, 'cardsVisible').name('Visible').onChange(v => {
-  cards.forEach(c => c.mesh.visible = v);
-});
-cardFolder.add(params, 'cardOpacity', 0, 1, 0.01).name('Opacity').onChange(v => {
-  cards.forEach(c => c.mat.uniforms.opacity.value = v);
-});
-cardFolder.add(params, 'cardRadius', 3, 20, 0.5).name('Radius').onChange(() => rebuildCards(params));
-cardFolder.add(params, 'cardH', 1, 15, 0.5).name('Height').onChange(() => rebuildCards(params));
-cardFolder.add(params, 'cardRise', 0, 30, 0.5).name('Rise').onChange(() => rebuildCards(params));
-cardFolder.add(params, 'cardWaveAmp', 0, 3, 0.05).name('Wave Amp').onChange(() => rebuildCards(params));
-cardFolder.add(params, 'cardRadiusSpread', 0, 8, 0.5).name('Radius Spread').onChange(() => rebuildCards(params));
-cardFolder.add(params, 'cardOrbitSpeed', 0, 0.05, 0.001).name('Orbit Speed').onChange(v => {
-  CARD_OPTS.orbitSpeed = v;
-});
-
-const godRayFolder = gui.addFolder('God Rays');
-godRayFolder.add(params, 'godRaysEnabled').name('Enable').onChange(v => godRaysPass.enabled = v);
-godRayFolder.add(params, 'godRayExposure', 0, 1, 0.01).onChange(v => godRaysPass.uniforms.exposure.value = v);
-godRayFolder.add(params, 'godRayDecay', 0.8, 1, 0.005).onChange(v => godRaysPass.uniforms.decay.value = v);
-godRayFolder.add(params, 'godRayDensity', 0, 2, 0.05).onChange(v => godRaysPass.uniforms.density.value = v);
-godRayFolder.add(params, 'godRayWeight', 0, 2, 0.05).onChange(v => godRaysPass.uniforms.weight.value = v);
-const updateSun = () => {
-  sunPos.set(params.sunX, params.sunY, params.sunZ);
-  sunMesh.position.copy(sunPos);
-  sunOccMesh.position.copy(sunPos);
-};
-godRayFolder.add(params, 'sunX', -20, 20, 0.5).onChange(updateSun);
-godRayFolder.add(params, 'sunY', -10, 20, 0.5).onChange(updateSun);
-godRayFolder.add(params, 'sunZ', -20, 20, 0.5).onChange(updateSun);
-
-const fxFolder = gui.addFolder('Post FX');
-fxFolder.add(params, 'chromaAmount', 0, 0.02, 0.001).name('Chroma Aberr.').onChange(v => chromaPass.uniforms.amount.value = v);
-fxFolder.add(params, 'grainIntensity', 0, 0.3, 0.005).name('Film Grain').onChange(v => grainPass.uniforms.intensity.value = v);
-fxFolder.add(params, 'colorSaturation', 0, 2, 0.01).name('Saturation').onChange(v => colorGradePass.uniforms.saturation.value = v);
-fxFolder.add(params, 'colorContrast', 0.5, 2, 0.01).name('Contrast').onChange(v => colorGradePass.uniforms.contrast.value = v);
-fxFolder.add(params, 'colorBrightness', -0.3, 0.3, 0.01).name('Brightness').onChange(v => colorGradePass.uniforms.brightness.value = v);
-fxFolder.add(params, 'tintR', 0.5, 1.5, 0.01).name('Tint R').onChange(v => colorGradePass.uniforms.tintR.value = v);
-fxFolder.add(params, 'tintG', 0.5, 1.5, 0.01).name('Tint G').onChange(v => colorGradePass.uniforms.tintG.value = v);
-fxFolder.add(params, 'tintB', 0.5, 1.5, 0.01).name('Tint B').onChange(v => colorGradePass.uniforms.tintB.value = v);
-
-const ffFolder = gui.addFolder('Fireflies');
-ffFolder.add(params, 'ffIntensity', 0, 20, 0.1).name('Light Intensity').onChange(v => {
-  fireflies.forEach(ff => ff.baseIntensity = v);
-});
-ffFolder.add(params, 'ffDistance', 1, 100, 1).name('Light Distance').onChange(v => {
-  fireflies.forEach(ff => { if (ff.light) ff.light.distance = v; });
-});
-ffFolder.add(params, 'ffLightDecay', 0, 5, 0.1).name('Light Decay').onChange(v => {
-  fireflies.forEach(ff => { if (ff.light) ff.light.decay = v; });
-});
-ffFolder.add(params, 'ffGlowSize', 0.1, 5, 0.05).name('Glow Size').onChange(v => {
-  fireflies.forEach(ff => ff.sprite.geometry.dispose());
-  const newGeo = new THREE.SphereGeometry(0.06 * v, 6, 4);
-  fireflies.forEach(ff => { ff.sprite.geometry = newGeo; });
-});
-ffFolder.add(params, 'ffGlowOpacity', 0, 1, 0.01).name('Glow Opacity').onChange(v => {
-  fireflies.forEach(ff => ff.mat.opacity = v);
-});
-ffFolder.add(params, 'ffRadius', 1, 30, 0.5).name('Spread Radius').onChange(v => {
-  fireflies.forEach(ff => ff.radius = 1 + Math.random() * v);
-});
-ffFolder.add(params, 'ffPulseSpeed', 0.1, 8, 0.1).name('Pulse Speed').onChange(v => {
-  fireflies.forEach(ff => ff.pulseSpeed = (1.5 + Math.random() * 3) * v);
-});
-ffFolder.add(params, 'ffOrbitSpeed', 0, 5, 0.05).name('Orbit Speed').onChange(v => {
-  fireflies.forEach(ff => ff.speed = (0.2 + Math.random() * 0.5) * v);
-});
-ffFolder.add(params, 'ffVerticalSpeed', 0, 5, 0.05).name('Vertical Speed').onChange(v => {
-  fireflies.forEach(ff => ff.ySpeed = (0.1 + Math.random() * 0.3) * v);
-});
-ffFolder.add(params, 'ffVerticalRange', 1, 40, 1).name('Vertical Range').onChange(v => {
-  fireflies.forEach(ff => ff.yOffset = THREE.MathUtils.clamp(ff.yOffset, -v, v));
-});
-
-const matFolder = gui.addFolder('Materials');
 const applyPoleThickness = v => {
   scaffold.traverse(child => {
     if (child.isMesh && child.geometry.type === 'CylinderGeometry') {
@@ -344,28 +179,10 @@ const applyPoleThickness = v => {
     }
   });
 };
-matFolder.add(params, 'poleThickness', 0.5, 10, 0.1).name('Pole Thickness').onChange(applyPoleThickness);
-applyPoleThickness(params.poleThickness);
-matFolder.add(params, 'steelMetalness', 0, 1, 0.01).onChange(v => {
-  STAGE_MATS.forEach(sm => sm.steel.metalness = v);
-});
-matFolder.add(params, 'steelRoughness', 0, 1, 0.01).onChange(v => {
-  STAGE_MATS.forEach(sm => sm.steel.roughness = v);
-});
-matFolder.add(params, 'vinesVisible').name('Vines').onChange(v => vineGroup.visible = v);
-matFolder.add(params, 'shrubsVisible').name('Shrubs').onChange(v => shrubGroup.visible = v);
-matFolder.add(params, 'flowersVisible').name('Flowers').onChange(v => {
-  scene.traverse(o => { if (o.name === 'flowers') o.visible = v; });
-});
-matFolder.add(params, 'flowerLightIntensity', 0, 5, 0.1).name('Flower Light').onChange(v => {
-  flowerLight.intensity = v;
-});
 
-// ---- Glass Panels ----
-const glassFolder = gui.addFolder('Glass Panels');
 const glassTexLoader = new THREE.TextureLoader();
 const glassTexCache = new Map();
-let glassImageMats = null; // cached image materials
+let glassImageMats = null;
 
 function applyGlassImages() {
   if (!glassImageMats) {
@@ -384,7 +201,7 @@ function applyGlassImages() {
         metalness: 0.05,
         side: THREE.DoubleSide,
         depthWrite: false,
-        clippingPlanes: [buildPlane],
+        clippingPlanes: [buildPlane, buildPlaneBottom],
       });
     });
   }
@@ -405,118 +222,367 @@ function removeGlassImages() {
   });
 }
 
-glassFolder.add(params, 'glassPanelVisible').name('Visible').onChange(v => {
-  glassPanels.forEach(m => { m.visible = v; });
+const updateSun = () => {
+  sunPos.set(params.sunX, params.sunY, params.sunZ);
+  sunMesh.position.copy(sunPos);
+  sunOccMesh.position.copy(sunPos);
+};
+
+// =====================================================
+// TABS
+// =====================================================
+const tab = pane.addTab({
+  pages: [
+    { title: 'Rendering' },
+    { title: 'Scene' },
+    { title: 'Objects' },
+    { title: 'Audio' },
+  ],
 });
-glassFolder.add(params, 'glassPanelOpacity', 0, 1, 0.01).name('Color Opacity').onChange(v => {
-  glassPanels.forEach(m => {
-    if (!m.userData.imageMode) m.material.opacity = v;
+
+const renderPage = tab.pages[0];
+const scenePage = tab.pages[1];
+const objectsPage = tab.pages[2];
+const audioPage = tab.pages[3];
+
+// =====================================================
+// RENDERING TAB
+// =====================================================
+
+// -- Camera --
+const camFolder = renderPage.addFolder({ title: 'Camera', expanded: false });
+camFolder.addBinding(params, 'usePerspective', { label: 'Perspective' }).on('change', ev => {
+  const cam = switchCamera(ev.value);
+  setControlsCamera(cam);
+  setPostCamera(cam);
+});
+camFolder.addBinding(params, 'frustum', { label: 'Ortho Frustum', min: 5, max: 50 }).on('change', ev => {
+  const v = ev.value;
+  const { orthoCamera } = sceneModule;
+  const a = window.innerWidth / window.innerHeight;
+  orthoCamera.left = -v*a/2; orthoCamera.right = v*a/2;
+  orthoCamera.top = v/2; orthoCamera.bottom = -v/2;
+  orthoCamera.updateProjectionMatrix();
+});
+camFolder.addBinding(params, 'perspFov', { label: 'FOV', min: 20, max: 120, step: 1 }).on('change', ev => {
+  perspCamera.fov = ev.value;
+  perspCamera.updateProjectionMatrix();
+});
+camFolder.addBinding(params, 'perspNear', { label: 'Near', min: 0.01, max: 5, step: 0.01 }).on('change', ev => {
+  perspCamera.near = ev.value;
+  perspCamera.updateProjectionMatrix();
+});
+camFolder.addBinding(params, 'perspFar', { label: 'Far', min: 50, max: 1000, step: 10 }).on('change', ev => {
+  perspCamera.far = ev.value;
+  perspCamera.updateProjectionMatrix();
+});
+camFolder.addBinding(params, 'sunLocked', { label: 'Lock Sun to View' });
+camFolder.addBinding(params, 'buildMode', { label: 'Build Mode' }).on('change', ev => {
+  if (!ev.value) { buildPlane.constant = 99999; buildPlaneBottom.constant = 99999; }
+});
+if (!params.buildMode) { buildPlane.constant = 99999; buildPlaneBottom.constant = 99999; }
+camFolder.addBinding(params, 'buildOffset', { label: 'Top Offset', min: 0, max: 40, step: 1 });
+camFolder.addBinding(params, 'buildOffsetBottom', { label: 'Bottom Offset', min: 0, max: 40, step: 1 });
+
+// -- Bloom --
+const bloomFolder = renderPage.addFolder({ title: 'Bloom', expanded: false });
+bloomFolder.addBinding(params, 'bloomEnabled', { label: 'Enable' }).on('change', ev => bloom.enabled = ev.value);
+bloom.enabled = params.bloomEnabled;
+bloomFolder.addBinding(params, 'bloomStrength', { label: 'Strength', min: 0, max: 3, step: 0.01 }).on('change', ev => bloom.strength = ev.value);
+bloomFolder.addBinding(params, 'bloomRadius', { label: 'Radius', min: 0, max: 2, step: 0.01 }).on('change', ev => bloom.radius = ev.value);
+bloomFolder.addBinding(params, 'bloomThreshold', { label: 'Threshold', min: 0, max: 1, step: 0.01 }).on('change', ev => bloom.threshold = ev.value);
+
+// -- Depth of Field --
+const dofFolder = renderPage.addFolder({ title: 'Depth of Field', expanded: false });
+dofFolder.addBinding(params, 'dofEnabled', { label: 'Enable' }).on('change', ev => bokehPass.enabled = ev.value);
+dofFolder.addBinding(params, 'dofFocus', { label: 'Focus Distance', min: 0.1, max: 60, step: 0.1 }).on('change', ev => bokehPass.uniforms['focus'].value = ev.value);
+dofFolder.addBinding(params, 'dofAperture', { label: 'Aperture', min: 0, max: 0.01, step: 0.0001 }).on('change', ev => bokehPass.uniforms['aperture'].value = ev.value);
+dofFolder.addBinding(params, 'dofMaxBlur', { label: 'Max Blur', min: 0, max: 0.1, step: 0.001 }).on('change', ev => bokehPass.uniforms['maxblur'].value = ev.value);
+
+// -- Fog --
+const fogFolder = renderPage.addFolder({ title: 'Fog', expanded: false });
+fogFolder.addBinding(params, 'fogDensity', { label: 'Density', min: 0, max: 0.5, step: 0.005 }).on('change', ev => scene.fog.density = ev.value);
+
+// -- God Rays --
+const godRayFolder = renderPage.addFolder({ title: 'God Rays', expanded: false });
+godRayFolder.addBinding(params, 'godRaysEnabled', { label: 'Enable' }).on('change', ev => godRaysPass.enabled = ev.value);
+godRayFolder.addBinding(params, 'godRayExposure', { label: 'Exposure', min: 0, max: 1, step: 0.01 }).on('change', ev => godRaysPass.uniforms.exposure.value = ev.value);
+godRayFolder.addBinding(params, 'godRayDecay', { label: 'Decay', min: 0.8, max: 1, step: 0.005 }).on('change', ev => godRaysPass.uniforms.decay.value = ev.value);
+godRayFolder.addBinding(params, 'godRayDensity', { label: 'Density', min: 0, max: 2, step: 0.05 }).on('change', ev => godRaysPass.uniforms.density.value = ev.value);
+godRayFolder.addBinding(params, 'godRayWeight', { label: 'Weight', min: 0, max: 2, step: 0.05 }).on('change', ev => godRaysPass.uniforms.weight.value = ev.value);
+const sunFolder = godRayFolder.addFolder({ title: 'Sun Position', expanded: false });
+sunFolder.addBinding(params, 'sunX', { label: 'X', min: -20, max: 20, step: 0.5 }).on('change', updateSun);
+sunFolder.addBinding(params, 'sunY', { label: 'Y', min: -10, max: 20, step: 0.5 }).on('change', updateSun);
+sunFolder.addBinding(params, 'sunZ', { label: 'Z', min: -20, max: 20, step: 0.5 }).on('change', updateSun);
+
+// -- Post FX --
+const fxFolder = renderPage.addFolder({ title: 'Post FX', expanded: false });
+fxFolder.addBinding(params, 'grainIntensity', { label: 'Film Grain', min: 0, max: 0.3, step: 0.005 }).on('change', ev => grainPass.uniforms.intensity.value = ev.value);
+fxFolder.addBinding(params, 'colorSaturation', { label: 'Saturation', min: 0, max: 2, step: 0.01 }).on('change', ev => colorGradePass.uniforms.saturation.value = ev.value);
+fxFolder.addBinding(params, 'colorContrast', { label: 'Contrast', min: 0.5, max: 2, step: 0.01 }).on('change', ev => colorGradePass.uniforms.contrast.value = ev.value);
+fxFolder.addBinding(params, 'colorBrightness', { label: 'Brightness', min: -0.3, max: 0.3, step: 0.01 }).on('change', ev => colorGradePass.uniforms.brightness.value = ev.value);
+const tintFolder = fxFolder.addFolder({ title: 'Color Tint', expanded: false });
+tintFolder.addBinding(params, 'tintR', { label: 'R', min: 0.5, max: 1.5, step: 0.01 }).on('change', ev => colorGradePass.uniforms.tintR.value = ev.value);
+tintFolder.addBinding(params, 'tintG', { label: 'G', min: 0.5, max: 1.5, step: 0.01 }).on('change', ev => colorGradePass.uniforms.tintG.value = ev.value);
+tintFolder.addBinding(params, 'tintB', { label: 'B', min: 0.5, max: 1.5, step: 0.01 }).on('change', ev => colorGradePass.uniforms.tintB.value = ev.value);
+
+// -- Tone Mapping --
+const toneFolder = renderPage.addFolder({ title: 'Tone Mapping Exposure', expanded: false });
+toneFolder.addBinding(params, 'exposure', { label: 'Exposure', min: 0.1, max: 3, step: 0.05 }).on('change', ev => renderer.toneMappingExposure = ev.value);
+
+// =====================================================
+// SCENE TAB
+// =====================================================
+
+// -- Stage Atmosphere --
+const atmoFolder = scenePage.addFolder({ title: 'Stage Atmosphere', expanded: false });
+atmoFolder.addBinding(params, 'stageGlowEnabled', { label: 'Stage Glow' }).on('change', ev => {
+  stageGlowPlanes.forEach(sg => { sg.mesh.visible = ev.value; });
+});
+atmoFolder.addBinding(params, 'stageGlowIntensity', { label: 'Glow Intensity', min: 0, max: 20, step: 0.1 });
+atmoFolder.addBinding(params, 'backdropEnabled', { label: 'Backdrop' }).on('change', ev => {
+  backdropPanels.forEach(bp => { bp.mesh.visible = ev.value; });
+});
+atmoFolder.addBinding(params, 'backdropIntensity', { label: 'Backdrop Intensity', min: 0, max: 20, step: 0.1 });
+atmoFolder.addBinding(params, 'shroudEnabled', { label: 'Shroud' }).on('change', ev => {
+  shroudPlanes.forEach(sp => { sp.mesh.visible = ev.value; });
+});
+const floorsFolder = atmoFolder.addFolder({ title: 'Floors', expanded: false });
+floorsFolder.addBinding(params, 'stageFloorsVisible', { label: 'Stage Floors' }).on('change', ev => setFloorsVisible(ev.value));
+setFloorsVisible(params.stageFloorsVisible);
+stageGlowPlanes.forEach(sg => { sg.mesh.visible = params.stageGlowEnabled; });
+floorsFolder.addBinding(params, 'floorOpacity', { label: 'Opacity', min: 0, max: 1, step: 0.01 }).on('change', ev => {
+  floorMats.forEach(m => { m.opacity = ev.value; });
+});
+floorsFolder.addBinding(params, 'floorMetalness', { label: 'Metalness', min: 0, max: 1, step: 0.01 }).on('change', ev => {
+  floorMats.forEach(m => { m.metalness = ev.value; });
+});
+floorsFolder.addBinding(params, 'floorRoughness', { label: 'Roughness', min: 0, max: 1, step: 0.01 }).on('change', ev => {
+  floorMats.forEach(m => { m.roughness = ev.value; });
+});
+floorsFolder.addBinding(params, 'floorSlabSize', { label: 'Slab Size', min: 10, max: 500, step: 5 }).on('change', ev => {
+  scaffold.traverse(child => {
+    if (child.isMesh && child.userData.componentType === 'transitionSlab') {
+      child.geometry.dispose();
+      child.geometry = new THREE.BoxGeometry(ev.value, 0.12, ev.value);
+    }
   });
 });
-glassFolder.add(params, 'glassPanelImages').name('Show Images').onChange(v => {
-  if (v) applyGlassImages();
+
+// -- Lights --
+const lightFolder = scenePage.addFolder({ title: 'Lights', expanded: false });
+lightFolder.addBinding(params, 'gridLightIntensity', { label: 'Grid Intensity', min: 0, max: 10, step: 0.1 }).on('change', ev => {
+  gridLights.forEach(gl => gl.light.intensity = ev.value);
+});
+lightFolder.addBinding(params, 'gridLightDistance', { label: 'Grid Distance', min: 1, max: 80, step: 1 }).on('change', ev => {
+  gridLights.forEach(gl => gl.light.distance = ev.value);
+});
+lightFolder.addBinding(params, 'gridLightSpeed', { label: 'Grid Speed', min: 0.01, max: 2, step: 0.01 }).on('change', ev => {
+  gridLights.forEach(gl => gl.speed = ev.value);
+});
+lightFolder.addBinding(params, 'keyLightIntensity', { label: 'Key Intensity', min: 0, max: 20, step: 0.1 }).on('change', ev => keyLight.intensity = ev.value);
+lightFolder.addBinding(params, 'keyLightX', { label: 'Key X', min: -30, max: 30, step: 0.5 }).on('change', ev => keyLight.position.x = ev.value);
+lightFolder.addBinding(params, 'keyLightY', { label: 'Key Y offset', min: 0, max: 50, step: 0.5 });
+lightFolder.addBinding(params, 'keyLightZ', { label: 'Key Z', min: -30, max: 30, step: 0.5 }).on('change', ev => keyLight.position.z = ev.value);
+
+// -- Materials --
+const matFolder = scenePage.addFolder({ title: 'Materials', expanded: false });
+matFolder.addBinding(params, 'poleThickness', { label: 'Pole Thickness', min: 0.5, max: 10, step: 0.1 }).on('change', ev => applyPoleThickness(ev.value));
+applyPoleThickness(params.poleThickness);
+matFolder.addBinding(params, 'steelMetalness', { label: 'Steel Metalness', min: 0, max: 1, step: 0.01 }).on('change', ev => {
+  STAGE_MATS.forEach(sm => sm.steel.metalness = ev.value);
+});
+matFolder.addBinding(params, 'steelRoughness', { label: 'Steel Roughness', min: 0, max: 1, step: 0.01 }).on('change', ev => {
+  STAGE_MATS.forEach(sm => sm.steel.roughness = ev.value);
+});
+const vegFolder = matFolder.addFolder({ title: 'Vegetation', expanded: false });
+vegFolder.addBinding(params, 'vinesVisible', { label: 'Vines' }).on('change', ev => vineGroup.visible = ev.value);
+vegFolder.addBinding(params, 'shrubsVisible', { label: 'Shrubs' }).on('change', ev => shrubGroup.visible = ev.value);
+vegFolder.addBinding(params, 'flowersVisible', { label: 'Flowers' }).on('change', ev => {
+  scene.traverse(o => { if (o.name === 'flowers') o.visible = ev.value; });
+});
+vegFolder.addBinding(params, 'flowerLightIntensity', { label: 'Flower Light', min: 0, max: 5, step: 0.1 }).on('change', ev => {
+  flowerLight.intensity = ev.value;
+});
+
+// -- Glass Panels --
+const glassFolder = scenePage.addFolder({ title: 'Glass Panels', expanded: false });
+glassFolder.addBinding(params, 'glassPanelVisible', { label: 'Visible' }).on('change', ev => {
+  glassPanels.forEach(m => { m.visible = ev.value; });
+});
+glassFolder.addBinding(params, 'glassPanelOpacity', { label: 'Color Opacity', min: 0, max: 1, step: 0.01 }).on('change', ev => {
+  glassPanels.forEach(m => {
+    if (!m.userData.imageMode) m.material.opacity = ev.value;
+  });
+});
+glassFolder.addBinding(params, 'glassPanelImages', { label: 'Show Images' }).on('change', ev => {
+  if (ev.value) applyGlassImages();
   else removeGlassImages();
 });
-glassFolder.add(params, 'glassPanelImageOpacity', 0, 1, 0.01).name('Image Opacity').onChange(v => {
-  if (glassImageMats) glassImageMats.forEach(m => { m.opacity = v; });
+glassFolder.addBinding(params, 'glassPanelImageOpacity', { label: 'Image Opacity', min: 0, max: 1, step: 0.01 }).on('change', ev => {
+  if (glassImageMats) glassImageMats.forEach(m => { m.opacity = ev.value; });
 });
-
-// apply images at startup since they're on by default
 if (params.glassPanelImages) applyGlassImages();
 
-const texFolder = gui.addFolder('Texture');
-texFolder.add(params, 'texEnabled').name('Marble Texture').onChange(v => {
-  if (v) {
+// -- Texture --
+const texFolder = scenePage.addFolder({ title: 'Texture', expanded: false });
+texFolder.addBinding(params, 'texEnabled', { label: 'Marble Texture' }).on('change', ev => {
+  if (ev.value) {
     loadMarbleTextures().then(() => applyMarbleTextures(true));
   } else {
     applyMarbleTextures(false);
   }
 });
-texFolder.add(params, 'texRepeatU', 0.1, 10, 0.1).name('Repeat U').onChange(v => {
+texFolder.addBinding(params, 'texRepeatU', { label: 'Repeat U', min: 0.1, max: 10, step: 0.1 }).on('change', ev => {
   const tex = getMarbleTextures();
-  if (tex) Object.values(tex).forEach(t => { t.repeat.x = v; });
+  if (tex) Object.values(tex).forEach(t => { t.repeat.x = ev.value; });
 });
-texFolder.add(params, 'texRepeatV', 0.1, 10, 0.1).name('Repeat V').onChange(v => {
+texFolder.addBinding(params, 'texRepeatV', { label: 'Repeat V', min: 0.1, max: 10, step: 0.1 }).on('change', ev => {
   const tex = getMarbleTextures();
-  if (tex) Object.values(tex).forEach(t => { t.repeat.y = v; });
+  if (tex) Object.values(tex).forEach(t => { t.repeat.y = ev.value; });
 });
-texFolder.add(params, 'normalScale', 0, 3, 0.05).name('Normal Strength').onChange(v => {
+texFolder.addBinding(params, 'normalScale', { label: 'Normal Strength', min: 0, max: 3, step: 0.05 }).on('change', ev => {
   STAGE_MATS.forEach(sm => {
-    sm.steel.normalScale.set(v, v);
-    sm.deck.normalScale.set(v, v);
+    sm.steel.normalScale.set(ev.value, ev.value);
+    sm.deck.normalScale.set(ev.value, ev.value);
   });
 });
 
-const tapeFolder = gui.addFolder('Caution Tape');
-tapeFolder.add(params, 'tapeVisible').name('Visible').onChange(v => { tapeGroup.visible = v; });
-tapeFolder.addColor(params, 'tapeColor').name('Tape Color').onChange(v => {
-  TAPE_OPTS.color = v; buildTape(TAPE_OPTS);
+// =====================================================
+// OBJECTS TAB
+// =====================================================
+
+// -- Image Cards --
+const cardFolder = objectsPage.addFolder({ title: 'Image Cards', expanded: false });
+cardFolder.addBinding(params, 'cardsVisible', { label: 'Visible' }).on('change', ev => {
+  cards.forEach(c => c.mesh.visible = ev.value);
 });
-tapeFolder.addColor(params, 'tapeTextColor').name('Text Color').onChange(v => {
-  TAPE_OPTS.textColor = v; buildTape(TAPE_OPTS);
+cardFolder.addBinding(params, 'cardOpacity', { label: 'Opacity', min: 0, max: 1, step: 0.01 }).on('change', ev => {
+  cards.forEach(c => c.mat.uniforms.opacity.value = ev.value);
 });
-tapeFolder.add(params, 'tapeText').name('Text').onChange(v => {
-  TAPE_OPTS.text = v; buildTape(TAPE_OPTS);
-});
-tapeFolder.add(params, 'tapeOpacity', 0, 1, 0.01).name('Opacity').onChange(v => {
-  tapeGroup.children.forEach(m => { m.material.uniforms.opacity.value = v; });
-});
-tapeFolder.add(params, 'tapeWidth', 0.1, 2, 0.05).name('Width').onChange(v => {
-  TAPE_OPTS.width = v; buildTape(TAPE_OPTS);
-});
-tapeFolder.add(params, 'tapeWaveAmount', 0, 3, 0.05).name('Flutter').onChange(v => {
-  tapeGroup.children.forEach(m => { m.material.uniforms.waveAmount.value = v; });
-});
-tapeFolder.add(params, 'tapeFlipText').name('Flip Text').onChange(v => {
-  tapeGroup.children.forEach(m => { m.material.uniforms.flipU.value = v ? 1.0 : 0.0; });
+cardFolder.addBinding(params, 'cardRadius', { label: 'Radius', min: 3, max: 20, step: 0.5 }).on('change', () => rebuildCards(params));
+cardFolder.addBinding(params, 'cardH', { label: 'Height', min: 1, max: 15, step: 0.5 }).on('change', () => rebuildCards(params));
+cardFolder.addBinding(params, 'cardRise', { label: 'Rise', min: 0, max: 30, step: 0.5 }).on('change', () => rebuildCards(params));
+cardFolder.addBinding(params, 'cardWaveAmp', { label: 'Wave Amp', min: 0, max: 3, step: 0.05 }).on('change', () => rebuildCards(params));
+cardFolder.addBinding(params, 'cardRadiusSpread', { label: 'Radius Spread', min: 0, max: 8, step: 0.5 }).on('change', () => rebuildCards(params));
+cardFolder.addBinding(params, 'cardOrbitSpeed', { label: 'Orbit Speed', min: 0, max: 0.05, step: 0.001 }).on('change', ev => {
+  CARD_OPTS.orbitSpeed = ev.value;
 });
 
-const textFolder = gui.addFolder('Typography');
-textFolder.add(params, 'textMaxOpacity', 0, 1, 0.01).name('Max Opacity');
-textFolder.add(params, 'textBrightness', 0.5, 5, 0.1).name('Brightness').onChange(v => {
-  sideTexts.forEach(st => st.mat.uniforms.brightness.value = v);
+// -- Caution Tape --
+const tapeFolder = objectsPage.addFolder({ title: 'Caution Tape', expanded: false });
+tapeFolder.addBinding(params, 'tapeVisible', { label: 'Visible' }).on('change', ev => { tapeGroup.visible = ev.value; });
+tapeFolder.addBinding(params, 'tapeColor', { label: 'Tape Color' }).on('change', ev => {
+  TAPE_OPTS.color = ev.value; buildTape(TAPE_OPTS);
 });
-textFolder.add(params, 'textFadeRange', 2, 30, 0.5).name('Fade In Range');
-textFolder.add(params, 'textFadeOutMult', 1, 5, 0.1).name('Fade Out Mult');
-textFolder.add(params, 'textRadius', 3, 25, 0.5).name('Radius').onChange(() => rebuildRibbons(params));
-textFolder.add(params, 'textArc', 30, 360, 5).name('Arc (deg)').onChange(() => rebuildRibbons(params));
-textFolder.add(params, 'textHeight', 1, 15, 0.5).name('Height').onChange(() => rebuildRibbons(params));
-textFolder.add(params, 'textRise', 0, 30, 0.5).name('Rise').onChange(() => rebuildRibbons(params));
-textFolder.add(params, 'textYOffset', 0, 20, 0.5).name('Y Offset').onChange(() => rebuildRibbons(params));
-textFolder.add(params, 'textRotY', -180, 180, 5).name('Rotation Y').onChange(() => rebuildRibbons(params));
-textFolder.add(params, 'textStartAngleOffset', -180, 180, 5).name('Start Angle').onChange(() => rebuildRibbons(params));
-textFolder.add(params, 'textFlipX', false).name('Flip X').onChange(v => {
-  sideTexts.forEach(st => st.mesh.scale.x = v ? -1 : 1);
+tapeFolder.addBinding(params, 'tapeTextColor', { label: 'Text Color' }).on('change', ev => {
+  TAPE_OPTS.textColor = ev.value; buildTape(TAPE_OPTS);
 });
-textFolder.add(params, 'textFlipY', false).name('Flip Y').onChange(v => {
-  sideTexts.forEach(st => st.mesh.scale.y = v ? -1 : 1);
+tapeFolder.addBinding(params, 'tapeText', { label: 'Text' }).on('change', ev => {
+  TAPE_OPTS.text = ev.value; buildTape(TAPE_OPTS);
 });
-textFolder.add(params, 'textFlipZ', false).name('Flip Z').onChange(v => {
-  sideTexts.forEach(st => st.mesh.scale.z = v ? -1 : 1);
+tapeFolder.addBinding(params, 'tapeOpacity', { label: 'Opacity', min: 0, max: 1, step: 0.01 }).on('change', ev => {
+  tapeGroup.children.forEach(m => { m.material.uniforms.opacity.value = ev.value; });
 });
-
-const audioFolder = gui.addFolder('Audio');
-audioFolder.add({ play() { audioCtx.resume(); bgMusic.play().catch(() => {}); } }, 'play').name('Play Music');
-audioFolder.add({ pause() { bgMusic.pause(); } }, 'pause').name('Pause');
-audioFolder.add(params, 'musicVolume', 0, 1, 0.01).name('Volume').onChange(v => {
-  masterGain.gain.setTargetAtTime(v, audioCtx.currentTime, 0.05);
+tapeFolder.addBinding(params, 'tapeWidth', { label: 'Width', min: 0.1, max: 2, step: 0.05 }).on('change', ev => {
+  TAPE_OPTS.width = ev.value; buildTape(TAPE_OPTS);
+});
+tapeFolder.addBinding(params, 'tapeWaveAmount', { label: 'Flutter', min: 0, max: 3, step: 0.05 }).on('change', ev => {
+  tapeGroup.children.forEach(m => { m.material.uniforms.waveAmount.value = ev.value; });
+});
+tapeFolder.addBinding(params, 'tapeFlipText', { label: 'Flip Text' }).on('change', ev => {
+  tapeGroup.children.forEach(m => { m.material.uniforms.flipU.value = ev.value ? 1.0 : 0.0; });
 });
 
-// Apply initial flips
+// -- Typography --
+const textFolder = objectsPage.addFolder({ title: 'Typography', expanded: false });
+textFolder.addBinding(params, 'textMaxOpacity', { label: 'Max Opacity', min: 0, max: 1, step: 0.01 });
+textFolder.addBinding(params, 'textBrightness', { label: 'Brightness', min: 0.5, max: 5, step: 0.1 }).on('change', ev => {
+  sideTexts.forEach(st => st.mat.uniforms.brightness.value = ev.value);
+});
+textFolder.addBinding(params, 'textFadeRange', { label: 'Fade In Range', min: 2, max: 30, step: 0.5 });
+textFolder.addBinding(params, 'textFadeOutMult', { label: 'Fade Out Mult', min: 1, max: 5, step: 0.1 });
+const layoutFolder = textFolder.addFolder({ title: 'Layout', expanded: false });
+layoutFolder.addBinding(params, 'textRadius', { label: 'Radius', min: 3, max: 25, step: 0.5 }).on('change', () => rebuildRibbons(params));
+layoutFolder.addBinding(params, 'textArc', { label: 'Arc (deg)', min: 30, max: 360, step: 5 }).on('change', () => rebuildRibbons(params));
+layoutFolder.addBinding(params, 'textHeight', { label: 'Height', min: 1, max: 15, step: 0.5 }).on('change', () => rebuildRibbons(params));
+layoutFolder.addBinding(params, 'textRise', { label: 'Rise', min: 0, max: 30, step: 0.5 }).on('change', () => rebuildRibbons(params));
+layoutFolder.addBinding(params, 'textYOffset', { label: 'Y Offset', min: 0, max: 20, step: 0.5 }).on('change', () => rebuildRibbons(params));
+layoutFolder.addBinding(params, 'textRotY', { label: 'Rotation Y', min: -180, max: 180, step: 5 }).on('change', () => rebuildRibbons(params));
+layoutFolder.addBinding(params, 'textStartAngleOffset', { label: 'Start Angle', min: -180, max: 180, step: 5 }).on('change', () => rebuildRibbons(params));
+const flipFolder = textFolder.addFolder({ title: 'Flip Axes', expanded: false });
+flipFolder.addBinding(params, 'textFlipX', { label: 'Flip X' }).on('change', ev => {
+  sideTexts.forEach(st => st.mesh.scale.x = ev.value ? -1 : 1);
+});
+flipFolder.addBinding(params, 'textFlipY', { label: 'Flip Y' }).on('change', ev => {
+  sideTexts.forEach(st => st.mesh.scale.y = ev.value ? -1 : 1);
+});
+flipFolder.addBinding(params, 'textFlipZ', { label: 'Flip Z' }).on('change', ev => {
+  sideTexts.forEach(st => st.mesh.scale.z = ev.value ? -1 : 1);
+});
+
+// -- Fireflies --
+const ffFolder = objectsPage.addFolder({ title: 'Fireflies', expanded: false });
+ffFolder.addBinding(params, 'ffIntensity', { label: 'Light Intensity', min: 0, max: 20, step: 0.1 }).on('change', ev => {
+  fireflies.forEach(ff => ff.baseIntensity = ev.value);
+});
+ffFolder.addBinding(params, 'ffDistance', { label: 'Light Distance', min: 1, max: 100, step: 1 }).on('change', ev => {
+  fireflies.forEach(ff => { if (ff.light) ff.light.distance = ev.value; });
+});
+ffFolder.addBinding(params, 'ffLightDecay', { label: 'Light Decay', min: 0, max: 5, step: 0.1 }).on('change', ev => {
+  fireflies.forEach(ff => { if (ff.light) ff.light.decay = ev.value; });
+});
+ffFolder.addBinding(params, 'ffGlowSize', { label: 'Glow Size', min: 0.1, max: 5, step: 0.05 }).on('change', ev => {
+  fireflies.forEach(ff => ff.sprite.geometry.dispose());
+  const newGeo = new THREE.SphereGeometry(0.06 * ev.value, 6, 4);
+  fireflies.forEach(ff => { ff.sprite.geometry = newGeo; });
+});
+ffFolder.addBinding(params, 'ffGlowOpacity', { label: 'Glow Opacity', min: 0, max: 1, step: 0.01 }).on('change', ev => {
+  fireflies.forEach(ff => ff.mat.opacity = ev.value);
+});
+ffFolder.addBinding(params, 'ffRadius', { label: 'Spread Radius', min: 1, max: 30, step: 0.5 }).on('change', ev => {
+  fireflies.forEach(ff => ff.radius = 1 + Math.random() * ev.value);
+});
+const ffSpeedFolder = ffFolder.addFolder({ title: 'Animation Speeds', expanded: false });
+ffSpeedFolder.addBinding(params, 'ffPulseSpeed', { label: 'Pulse Speed', min: 0.1, max: 8, step: 0.1 }).on('change', ev => {
+  fireflies.forEach(ff => ff.pulseSpeed = (1.5 + Math.random() * 3) * ev.value);
+});
+ffSpeedFolder.addBinding(params, 'ffOrbitSpeed', { label: 'Orbit Speed', min: 0, max: 5, step: 0.05 }).on('change', ev => {
+  fireflies.forEach(ff => ff.speed = (0.2 + Math.random() * 0.5) * ev.value);
+});
+ffSpeedFolder.addBinding(params, 'ffVerticalSpeed', { label: 'Vertical Speed', min: 0, max: 5, step: 0.05 }).on('change', ev => {
+  fireflies.forEach(ff => ff.ySpeed = (0.1 + Math.random() * 0.3) * ev.value);
+});
+ffSpeedFolder.addBinding(params, 'ffVerticalRange', { label: 'Vertical Range', min: 1, max: 40, step: 1 }).on('change', ev => {
+  fireflies.forEach(ff => ff.yOffset = THREE.MathUtils.clamp(ff.yOffset, -ev.value, ev.value));
+});
+
+// =====================================================
+// AUDIO TAB
+// =====================================================
+audioPage.addButton({ title: 'Play Music' }).on('click', () => {
+  audioCtx.resume(); bgMusic.play().catch(() => {});
+});
+audioPage.addButton({ title: 'Pause' }).on('click', () => {
+  bgMusic.pause();
+});
+audioPage.addBinding(params, 'musicVolume', { label: 'Volume', min: 0, max: 1, step: 0.01 }).on('change', ev => {
+  masterGain.gain.setTargetAtTime(ev.value, audioCtx.currentTime, 0.05);
+});
+
+// =====================================================
+// INITIAL STATE
+// =====================================================
 sideTexts.forEach(st => {
   st.mesh.scale.x = params.textFlipX ? -1 : 1;
   st.mesh.scale.z = params.textFlipZ ? -1 : 1;
 });
 
-// Close all folders by default
-gui.children.forEach(c => { if (c.close) c.close(); });
-
 // Cmd+G to toggle GUI
 window.addEventListener('keydown', e => {
   if ((e.metaKey || e.ctrlKey) && e.code === 'KeyG') {
     e.preventDefault();
-    const hidden = gui.domElement.style.display === 'none';
-    gui.domElement.style.display = hidden ? '' : 'none';
-    fpsEl.style.display = hidden ? '' : 'none';
+    pane.hidden = !pane.hidden;
+    fpsEl.style.display = pane.hidden ? 'none' : '';
   }
 });

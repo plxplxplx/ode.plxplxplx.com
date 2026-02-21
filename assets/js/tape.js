@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { TOTAL_W, TOTAL_D, STAGES } from './config.js';
 import { tapeVert, tapeFrag } from './shaders.js';
-import { scene, buildPlane } from './scene.js';
+import { scene, buildPlane, buildPlaneBottom } from './scene.js';
 
 // =====================================================
 // CAUTION TAPE — "ODE" construction tape on scaffold
@@ -102,7 +102,7 @@ export function buildTape(opts = TAPE_OPTS) {
       depthWrite: false,
       clipping: true,
     });
-    mat.clippingPlanes = [buildPlane];
+    mat.clippingPlanes = [buildPlane, buildPlaneBottom];
 
     const mesh = new THREE.Mesh(geo, mat);
     mesh.position.set(def.x, def.y, def.z);

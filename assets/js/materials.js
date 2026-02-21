@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { STAGES } from './config.js';
-import { buildPlane, ktx2Loader } from './scene.js';
+import { buildPlane, buildPlaneBottom, ktx2Loader } from './scene.js';
 
 // =====================================================
 // MARBLE TEXTURES for scaffolding (lazy-loaded, KTX2)
@@ -83,7 +83,7 @@ export const STAGE_MATS = [
 ];
 
 // Attach build clipping plane to all scaffold materials
-const clipPlanes = [buildPlane];
+const clipPlanes = [buildPlane, buildPlaneBottom];
 STAGE_MATS.forEach(sm => {
   sm.steel.clippingPlanes = clipPlanes;
   sm.deck.clippingPlanes = clipPlanes;

@@ -11,7 +11,7 @@ export const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 1.8;
+renderer.toneMappingExposure = 0.8;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.localClippingEnabled = true;
@@ -21,9 +21,10 @@ export const ktx2Loader = new KTX2Loader();
 ktx2Loader.setTranscoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/basis/');
 ktx2Loader.detectSupport(renderer);
 
-// Build clipping plane — clips everything above (normal points down)
-// Starts disabled (constant far above tower)
+// Build clipping planes — clip above and below camera for "under construction" look
+// Starts disabled (constants far from tower)
 export const buildPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 99999);
+export const buildPlaneBottom = new THREE.Plane(new THREE.Vector3(0, 1, 0), 99999);
 
 export const scene = new THREE.Scene();
 export const fogColor = 0x140e08;

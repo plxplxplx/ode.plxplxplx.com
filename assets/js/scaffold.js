@@ -5,7 +5,7 @@ import {
   MARGIN, N_TREADS,
 } from './config.js';
 import { STAGE_MATS, steelAt, deckAt, tube, box } from './materials.js';
-import { scene, buildPlane } from './scene.js';
+import { scene, buildPlane, buildPlaneBottom } from './scene.js';
 
 // =====================================================
 // BUILD 4-STAGE TOWER
@@ -163,7 +163,7 @@ export const stairPath = []; // { i, j } per level
     connMat.transparent = true;
     connMat.opacity = 1.0;
     connMat.side = THREE.DoubleSide;
-    connMat.clippingPlanes = [buildPlane];
+    connMat.clippingPlanes = [buildPlane, buildPlaneBottom];
     floorMats.push(connMat);
 
     const minI = Math.min(prev.i, curr.i);
@@ -200,7 +200,7 @@ for (let si = 0; si < STAGES.length; si++) {
     floorDm.transparent = true;
     floorDm.opacity = 1.0;
     floorDm.side = THREE.DoubleSide;
-    floorDm.clippingPlanes = [buildPlane];
+    floorDm.clippingPlanes = [buildPlane, buildPlaneBottom];
     floorMats.push(floorDm);
     for (let bi = 0; bi < BAYS_X; bi++) {
       for (let bj = 0; bj < BAYS_Z; bj++) {
@@ -220,7 +220,7 @@ for (let si = 0; si < STAGES.length; si++) {
     const slabMat = new THREE.MeshStandardMaterial({
       color: dm.color, metalness: dm.metalness * 0.8, roughness: dm.roughness * 1.2,
       transparent: true, opacity: 0.85, side: THREE.DoubleSide,
-      clippingPlanes: [buildPlane],
+      clippingPlanes: [buildPlane, buildPlaneBottom],
     });
     floorMats.push(slabMat);
     const slab = box(0, y, 0, slabW, slabH, slabD, slabMat);
@@ -273,7 +273,7 @@ for (let si = 0; si < STAGES.length; si++) {
     platDm.transparent = true;
     platDm.opacity = 1.0;
     platDm.side = THREE.DoubleSide;
-    platDm.clippingPlanes = [buildPlane];
+    platDm.clippingPlanes = [buildPlane, buildPlaneBottom];
     floorMats.push(platDm);
 
     // random subset of bays get platforms at this level
@@ -389,7 +389,7 @@ for (const lo of LOOKOUTS) {
   loDeck.transparent = true;
   loDeck.opacity = 1.0;
   loDeck.side = THREE.DoubleSide;
-  loDeck.clippingPlanes = [buildPlane];
+  loDeck.clippingPlanes = [buildPlane, buildPlaneBottom];
   floorMats.push(loDeck);
 
   const startX = dx > 0 ? gx(BAYS_X) : dx < 0 ? gx(0) : 0;
@@ -485,7 +485,7 @@ export const glassPanels = [];
     color: 0xffffff, transparent: true, opacity: 0.42,
     roughness: 0.05, metalness: 0.1,
     side: THREE.DoubleSide, depthWrite: false,
-    clippingPlanes: [buildPlane],
+    clippingPlanes: [buildPlane, buildPlaneBottom],
   });
 
   // cached rect geometries (slightly inset from scaffold frame)
