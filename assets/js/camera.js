@@ -79,9 +79,12 @@ let _panelOriginFrustum = FRUSTUM;
 const _panelTargetCamPos = new THREE.Vector3();
 const _panelTargetLookAt = new THREE.Vector3();
 
+let _userScrolled = false;
 export function onScroll() {
-  startMusic();
-  autoScrollActive = false;
+  if (_userScrolled) {
+    startMusic();
+    autoScrollActive = false;
+  }
   if (panelZoomed) { exitPanelZoom(); return; }
   const maxScroll = document.body.scrollHeight - window.innerHeight;
   const rawScroll = window.scrollY;
@@ -109,6 +112,7 @@ if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 window.scrollTo({ top: (document.body.scrollHeight - window.innerHeight) * 0.5, behavior: 'instant' });
 lastRawScroll = window.scrollY;
 onScroll();
+_userScrolled = true;
 
 // Touch-based scroll for mobile (OrbitControls eats touch → native scroll never fires)
 controls.touches = { ONE: null, TWO: null }; // disable OrbitControls touch
