@@ -59,6 +59,7 @@ export default {
         { src: 'assets/fonts', dest: 'docs/assets' },
         { src: 'assets/reference', dest: 'docs/assets' },
         { src: 'CNAME', dest: 'docs' },
+        { src: '.nojekyll', dest: 'docs' },
       ],
     }),
     cssPlugin(),
