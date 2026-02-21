@@ -112,7 +112,8 @@ if ('scrollRestoration' in history) history.scrollRestoration = 'manual';
 window.scrollTo({ top: (document.body.scrollHeight - window.innerHeight) * 0.5, behavior: 'instant' });
 lastRawScroll = window.scrollY;
 onScroll();
-_userScrolled = true;
+// Delay flag so async scroll events from scrollTo don't kill auto-scroll
+requestAnimationFrame(() => { _userScrolled = true; });
 
 // Touch-based scroll for mobile (OrbitControls eats touch → native scroll never fires)
 controls.touches = { ONE: null, TWO: null }; // disable OrbitControls touch
