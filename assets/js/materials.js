@@ -1,19 +1,17 @@
 import * as THREE from 'three';
 import { STAGES } from './config.js';
-import { buildPlane } from './scene.js';
+import { buildPlane, ktx2Loader } from './scene.js';
 
 // =====================================================
-// MARBLE TEXTURES for scaffolding (lazy-loaded)
+// MARBLE TEXTURES for scaffolding (lazy-loaded, KTX2)
 // =====================================================
-const texLoader = new THREE.TextureLoader();
-
 const TEXTURE_PATHS = {
-  lightColor:     'assets/textures/Marble001_1K-JPG/Marble001_1K-JPG_Color.jpg',
-  lightNormal:    'assets/textures/Marble001_1K-JPG/Marble001_1K-JPG_NormalGL.jpg',
-  lightRoughness: 'assets/textures/Marble001_1K-JPG/Marble001_1K-JPG_Roughness.jpg',
-  darkColor:      'assets/textures/Marble016_1K-JPG/Marble016_1K-JPG_Color.jpg',
-  darkNormal:     'assets/textures/Marble016_1K-JPG/Marble016_1K-JPG_NormalGL.jpg',
-  darkRoughness:  'assets/textures/Marble016_1K-JPG/Marble016_1K-JPG_Roughness.jpg',
+  lightColor:     'assets/textures/Marble001_1K-JPG/Marble001_1K-JPG_Color.ktx2',
+  lightNormal:    'assets/textures/Marble001_1K-JPG/Marble001_1K-JPG_NormalGL.ktx2',
+  lightRoughness: 'assets/textures/Marble001_1K-JPG/Marble001_1K-JPG_Roughness.ktx2',
+  darkColor:      'assets/textures/Marble016_1K-JPG/Marble016_1K-JPG_Color.ktx2',
+  darkNormal:     'assets/textures/Marble016_1K-JPG/Marble016_1K-JPG_NormalGL.ktx2',
+  darkRoughness:  'assets/textures/Marble016_1K-JPG/Marble016_1K-JPG_Roughness.ktx2',
 };
 
 let marbleTextures = null;
@@ -27,16 +25,16 @@ export function loadMarbleTextures() {
     let loaded = 0;
     const result = {};
     for (const [key, path] of entries) {
-      const tex = texLoader.load(path, () => {
+      ktx2Loader.load(path, (tex) => {
+        tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+        tex.repeat.set(0.5, 0.5);
+        result[key] = tex;
         loaded++;
         if (loaded === entries.length) {
           marbleTextures = result;
           resolve(result);
         }
       });
-      tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
-      tex.repeat.set(0.5, 0.5);
-      result[key] = tex;
     }
   });
   return loadPromise;

@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { TOP_H, STAGES } from './config.js';
+import { TOP_H, STAGES, prefersReducedMotion } from './config.js';
 import { cardArcVert, cardArcFrag } from './shaders.js';
 import { scene, canvas } from './scene.js';
 import { manager } from './loader.js';
@@ -28,7 +28,7 @@ export const CARD_OPTS = {
   radiusSpread: 4,      // spread across 3 radius bands
   cardH: 2,             // vertical height of each card
   cardRise: 2.5,        // vertical rise across the arc
-  waveAmp: 3,
+  waveAmp: prefersReducedMotion ? 0 : 3,
   sizeVariation: 0.2,
   orbitSpeed: 0.008,    // slow rotation of the whole ring
 };

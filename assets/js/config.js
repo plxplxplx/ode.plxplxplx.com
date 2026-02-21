@@ -22,7 +22,12 @@ export const cellCx = i => gx(i) + BAY_W / 2;
 export const cellCz = j => gz(j) + BAY_D / 2;
 
 // Mobile detection + quality tier
-export const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent) || window.innerWidth < 768;
+export const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
+  || (navigator.maxTouchPoints > 1 && window.innerWidth < 1024)
+  || window.innerWidth < 768;
+
+// Reduced motion preference (WCAG 2.3.3)
+export const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // Character + camera config
 export const MOVE_SPEED = 4.0, JUMP_VEL = 7.2, GRAVITY = -20, STEP_UP = 0.35;

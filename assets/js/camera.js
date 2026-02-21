@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { CAM_DIST, TOP_H, FRUSTUM } from './config.js';
+import { CAM_DIST, TOP_H, FRUSTUM, prefersReducedMotion } from './config.js';
 import { camera, canvas } from './scene.js';
 import * as sceneModule from './scene.js';
 import { audioCtx, bgMusic } from './audio.js';
@@ -37,8 +37,8 @@ export let scrollTarget = { y: START_Y, angle: 0 };
 export let scrollCurrent = { y: START_Y, angle: 0 };
 export const ORBIT_RADIUS = 12;
 
-// Intro animation — twirl around scaffold into position
-const INTRO_DURATION = 1.5;
+// Intro animation — twirl around scaffold into position (skip if reduced motion)
+const INTRO_DURATION = prefersReducedMotion ? 0 : 1.5;
 const INTRO_START_Y = START_Y + 5;
 const INTRO_START_ANGLE = -Math.PI * 0.75;
 let introElapsed = 0;

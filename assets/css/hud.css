@@ -30,6 +30,10 @@
   background: rgba(240,91,48,0.9);
   color: rgba(0,0,0,0.95);
 }
+#panel-close:focus-visible {
+  outline: 2px solid rgba(200,204,90,0.9);
+  outline-offset: -3px;
+}
 
 /* Panel zoom nav arrows */
 #panel-prev, #panel-next {
@@ -58,12 +62,20 @@
   background: rgba(240,91,48,0.9);
   color: rgba(0,0,0,0.95);
 }
+#panel-prev:focus-visible, #panel-next:focus-visible {
+  outline: 2px solid rgba(200,204,90,0.9);
+  outline-offset: -3px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #panel-close, #panel-prev, #panel-next { transition: none; }
+}
 
 /* Panel zoom caption */
 #panel-caption {
   display: none;
   position: fixed;
-  bottom: 32px;
+  bottom: 48px;
   left: 50%;
   transform: translateX(-50%);
   z-index: 20;

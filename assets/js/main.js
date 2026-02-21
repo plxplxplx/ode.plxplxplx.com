@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 // Config (must be first)
-import { TOP_H, LEVEL_H, STAGES } from './config.js';
+import { TOP_H, LEVEL_H, STAGES, prefersReducedMotion } from './config.js';
 
 // Scene setup
 import { renderer, scene, keyLight, sunPos, sunMesh, sunOccMesh, sunLight, occlusionScene, occlusionMat, occRT, occBlurRT, buildPlane } from './scene.js';
@@ -278,8 +278,8 @@ function animate() {
     card.mat.uniforms.time.value = t;
   }
 
-  // Caution tape flutter
-  updateTape(t);
+  // Caution tape flutter (frozen when reduced motion)
+  updateTape(prefersReducedMotion ? 0 : t);
 
   // Fireflies
   for (const ff of fireflies) {

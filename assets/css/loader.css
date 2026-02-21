@@ -17,9 +17,14 @@
 }
 
 #loader-pct {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: 'NHaas Grotesk', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   font-weight: 300;
-  font-size: 0.9rem;
-  letter-spacing: 0.15em;
-  color: rgba(255, 255, 255, 0.5);
+  font-size: 11px;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255, 240, 220, 0.35);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #loader { transition: none; }
 }

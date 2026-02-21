@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
 import { FRUSTUM, TOP_H, isMobile } from './config.js';
 
 // =====================================================
@@ -14,6 +15,11 @@ renderer.toneMappingExposure = 1.8;
 renderer.shadowMap.enabled = !isMobile;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.localClippingEnabled = true;
+
+// KTX2 loader — GPU-compressed textures (BasisU transcoder)
+export const ktx2Loader = new KTX2Loader();
+ktx2Loader.setTranscoderPath('https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/libs/basis/');
+ktx2Loader.detectSupport(renderer);
 
 // Build clipping plane — clips everything above (normal points down)
 // Starts disabled (constant far above tower)
