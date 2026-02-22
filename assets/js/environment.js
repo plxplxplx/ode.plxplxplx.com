@@ -130,9 +130,10 @@ scene.add(vineGroup);
 const gltfLoader = new GLTFLoader(manager);
 
 // On mobile, defer heavy model loads so scaffold init isn't starved
-const deferLoad = isMobile
-  ? (fn) => requestIdleCallback(fn, { timeout: 5000 })
-  : (fn) => fn();
+const rIC = typeof requestIdleCallback === 'function'
+  ? requestIdleCallback
+  : (fn, opts) => setTimeout(fn, opts?.timeout ?? 0);
+const deferLoad = isMobile ? (fn) => rIC(fn, { timeout: 5000 }) : (fn) => fn();
 
 deferLoad(() => gltfLoader.load('assets/models/vine.glb', (gltf) => {
   _seed = 54321;

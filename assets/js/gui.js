@@ -9,7 +9,7 @@ import { cards, CARD_OPTS, rebuildCards } from './cards.js';
 import { ZONES, sideTexts, rebuildRibbons } from './zones.js';
 import { vineGroup, shrubGroup, flowerLight, stageGlowPlanes, backdropPanels, shroudPlanes } from './environment.js';
 import { gridLights, fireflies, FF_COUNT } from './effects.js';
-import { scaffold, floorMats, glassPanels } from './scaffold.js';
+import { scaffold, floorMats, glassPanels, scaffoldReady } from './scaffold.js';
 import { IMG_FILES } from './cards.js';
 import { bloom, bokehPass, godRaysPass, colorGradePass, grainPass, setPostCamera } from './postprocessing.js';
 import { bgMusic, audioCtx, masterGain } from './audio.js';
@@ -350,6 +350,8 @@ atmoFolder.addBinding(params, 'shroudEnabled', { label: 'Shroud' }).on('change',
 const floorsFolder = atmoFolder.addFolder({ title: 'Floors', expanded: false });
 floorsFolder.addBinding(params, 'stageFloorsVisible', { label: 'Stage Floors' }).on('change', ev => setFloorsVisible(ev.value));
 setFloorsVisible(params.stageFloorsVisible);
+// Re-apply after async scaffold build completes (meshes don't exist yet at GUI init)
+scaffoldReady.then(() => setFloorsVisible(params.stageFloorsVisible));
 stageGlowPlanes.forEach(sg => { sg.mesh.visible = params.stageGlowEnabled; });
 floorsFolder.addBinding(params, 'floorOpacity', { label: 'Opacity', min: 0, max: 1, step: 0.01 }).on('change', ev => {
   floorMats.forEach(m => { m.opacity = ev.value; });
@@ -389,6 +391,8 @@ lightFolder.addBinding(params, 'keyLightZ', { label: 'Key Z', min: -30, max: 30,
 const matFolder = scenePage.addFolder({ title: 'Materials', expanded: false });
 matFolder.addBinding(params, 'poleThickness', { label: 'Pole Thickness', min: 0.5, max: 10, step: 0.1 }).on('change', ev => applyPoleThickness(ev.value));
 applyPoleThickness(params.poleThickness);
+// Re-apply after async scaffold build completes
+scaffoldReady.then(() => applyPoleThickness(params.poleThickness));
 matFolder.addBinding(params, 'steelMetalness', { label: 'Steel Metalness', min: 0, max: 1, step: 0.01 }).on('change', ev => {
   STAGE_MATS.forEach(sm => sm.steel.metalness = ev.value);
 });
