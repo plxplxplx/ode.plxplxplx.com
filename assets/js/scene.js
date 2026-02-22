@@ -8,7 +8,7 @@ import { FRUSTUM, TOP_H, isMobile } from './config.js';
 // =====================================================
 export const canvas = document.getElementById('viewport');
 export const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-renderer.setPixelRatio(isMobile ? 1 : Math.min(window.devicePixelRatio, 2));
+renderer.setPixelRatio(isMobile ? Math.min(window.devicePixelRatio, 1.5) : Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.8;

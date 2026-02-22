@@ -48,6 +48,13 @@ export const grainPass = new ShaderPass(FilmGrainShader);
 grainPass.enabled = !isMobile;
 composer.addPass(grainPass);
 
+// FXAA — cheap screen-space anti-aliasing (compensates for EffectComposer losing native MSAA)
+import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
+export const fxaaPass = new ShaderPass(FXAAShader);
+fxaaPass.uniforms.resolution.value.set(1 / window.innerWidth, 1 / window.innerHeight);
+fxaaPass.enabled = isMobile;
+composer.addPass(fxaaPass);
+
 // OutputPass applies tone mapping + output color space to final render
 composer.addPass(new OutputPass());
 
@@ -71,6 +78,7 @@ function onResize() {
     composer.setSize(window.innerWidth, window.innerHeight);
     bloom.resolution.set(window.innerWidth, window.innerHeight);
     bokehPass.setSize(window.innerWidth, window.innerHeight);
+    fxaaPass.uniforms.resolution.value.set(1 / window.innerWidth, 1 / window.innerHeight);
     occRT.setSize(Math.floor(window.innerWidth / 2), Math.floor(window.innerHeight / 2));
     occBlurRT.setSize(Math.floor(window.innerWidth / 2), Math.floor(window.innerHeight / 2));
   });

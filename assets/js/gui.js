@@ -11,7 +11,7 @@ import { vineGroup, shrubGroup, flowerLight, stageGlowPlanes, backdropPanels, sh
 import { gridLights, fireflies, FF_COUNT } from './effects.js';
 import { scaffold, floorMats, glassPanels, scaffoldReady } from './scaffold.js';
 import { IMG_FILES } from './cards.js';
-import { bloom, bokehPass, godRaysPass, colorGradePass, grainPass, setPostCamera } from './postprocessing.js';
+import { bloom, bokehPass, godRaysPass, colorGradePass, grainPass, fxaaPass, setPostCamera } from './postprocessing.js';
 import { bgMusic, audioCtx, masterGain } from './audio.js';
 import { setControlsCamera } from './camera.js';
 
@@ -68,6 +68,8 @@ export const params = {
   poleThickness: 1.5,
   steelMetalness: matSteel.metalness,
   steelRoughness: matSteel.roughness,
+  pixelRatio: renderer.getPixelRatio(),
+  fxaa: fxaaPass.enabled,
   exposure: renderer.toneMappingExposure,
   godRaysEnabled: false,
   godRayExposure: godRaysPass.uniforms.exposure.value,
@@ -331,6 +333,17 @@ tintFolder.addBinding(params, 'tintB', { label: 'B', min: 0.5, max: 1.5, step: 0
 // -- Tone Mapping --
 const toneFolder = renderPage.addFolder({ title: 'Tone Mapping Exposure', expanded: false });
 toneFolder.addBinding(params, 'exposure', { label: 'Exposure', min: 0.1, max: 3, step: 0.05 }).on('change', ev => renderer.toneMappingExposure = ev.value);
+
+// -- Quality --
+const qualityFolder = renderPage.addFolder({ title: 'Quality', expanded: false });
+qualityFolder.addBinding(params, 'pixelRatio', { label: 'Pixel Ratio', min: 0.5, max: Math.min(window.devicePixelRatio, 3), step: 0.25 }).on('change', ev => {
+  renderer.setPixelRatio(ev.value);
+  composer.setSize(window.innerWidth, window.innerHeight);
+  fxaaPass.uniforms.resolution.value.set(1 / window.innerWidth, 1 / window.innerHeight);
+});
+qualityFolder.addBinding(params, 'fxaa', { label: 'FXAA' }).on('change', ev => {
+  fxaaPass.enabled = ev.value;
+});
 
 // =====================================================
 // SCENE TAB
