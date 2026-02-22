@@ -65,7 +65,7 @@ export const params = {
   textYOffset: 3,
   textRotY: 0,
   textStartAngleOffset: 0,
-  poleThickness: 1.5,
+  poleThickness: 2.0,
   steelMetalness: matSteel.metalness,
   steelRoughness: matSteel.roughness,
   pixelRatio: renderer.getPixelRatio(),
