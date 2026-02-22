@@ -56,6 +56,7 @@ export const SCROLL_LERP = 0.06;
 export let virtualScroll = START_Y;
 let lastRawScroll = 0;
 export const SCROLL_SENSITIVITY = 0.7;
+const MAX_DELTA_FRAC = 0.04; // cap per-event scroll jump (prevents lag spikes from fast swipes)
 export let wrapFogBoost = 0;
 
 // Panel zoom state
@@ -85,7 +86,7 @@ export function onScroll() {
   const rawScroll = window.scrollY;
   const rawFrac = rawScroll / maxScroll;
 
-  const deltaFrac = rawFrac - lastRawScroll / maxScroll;
+  const deltaFrac = Math.max(-MAX_DELTA_FRAC, Math.min(MAX_DELTA_FRAC, rawFrac - lastRawScroll / maxScroll));
   lastRawScroll = rawScroll;
 
   virtualScroll += deltaFrac * TOP_H * SCROLL_SENSITIVITY;
@@ -126,7 +127,7 @@ canvas.addEventListener('touchmove', (e) => {
     const touchY = e.touches[0].clientY;
     const deltaPixels = lastTouchY - touchY;
     lastTouchY = touchY;
-    const deltaFrac = deltaPixels / window.innerHeight;
+    const deltaFrac = Math.max(-MAX_DELTA_FRAC, Math.min(MAX_DELTA_FRAC, deltaPixels / window.innerHeight));
     virtualScroll += deltaFrac * TOP_H * SCROLL_SENSITIVITY * 0.5;
     virtualScroll = ((virtualScroll % TOP_H) + TOP_H) % TOP_H;
     scrollTarget.y = virtualScroll;

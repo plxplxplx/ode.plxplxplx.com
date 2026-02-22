@@ -52,7 +52,7 @@ composer.addPass(grainPass);
 import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
 export const fxaaPass = new ShaderPass(FXAAShader);
 fxaaPass.uniforms.resolution.value.set(1 / window.innerWidth, 1 / window.innerHeight);
-fxaaPass.enabled = isMobile;
+fxaaPass.enabled = false;
 composer.addPass(fxaaPass);
 
 // OutputPass applies tone mapping + output color space to final render
