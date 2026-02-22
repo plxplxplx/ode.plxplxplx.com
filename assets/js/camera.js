@@ -208,6 +208,7 @@ function _showPanelUI(panelMesh) {
   _panelCaptionShown = false;
   const cap = document.getElementById('panel-caption');
   if (cap) cap.style.display = 'none';
+  document.getElementById('panel-close').focus();
 }
 
 function _hidePanelUI() {
@@ -229,6 +230,7 @@ export function exitPanelZoom() {
   _panelZoomLerp = 0;
   _panelZoomGoal = 0;
   _hidePanelUI();
+  document.getElementById('viewport').focus();
 }
 
 // =====================================================

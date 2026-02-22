@@ -1,35 +1,75 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="sv">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="description" content="PLX ODE — an interactive 3D art installation exploring scaffolding, nature, and the climb.">
+  <meta name="theme-color" content="#050505">
+  <link rel="canonical" href="https://ode.plxplxplx.com/">
   <title>PLX ODE</title>
   <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="stylesheet" href="assets/css/styles.css">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="PLX ODE — 15–16 maj, Malmö Konstmuseum">
+  <meta property="og:description" content="PLX ODE — an interactive 3D art installation exploring scaffolding, nature, and the climb.">
+  <meta property="og:image" content="https://ode.plxplxplx.com/assets/img/background.jpg">
+  <meta property="og:url" content="https://ode.plxplxplx.com/">
+  <meta property="og:type" content="website">
+  <meta property="og:locale" content="sv_SE">
+  <meta name="twitter:card" content="summary_large_image">
+
+  <!-- Structured data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Event",
+    "name": "PLX ODE",
+    "startDate": "2026-05-15",
+    "endDate": "2026-05-16",
+    "url": "https://ode.plxplxplx.com/",
+    "location": {
+      "@type": "Place",
+      "name": "Malmö Konstmuseum",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "Slottsgatan 33",
+        "addressLocality": "Malmö",
+        "addressRegion": "Kungsparken",
+        "addressCountry": "SE"
+      }
+    },
+    "offers": {
+      "@type": "Offer",
+      "url": "https://billetto.se/e/plx-ode-joy-biljetter-1856579"
+    }
+  }
+  </script>
 </head>
 <body>
   <div id="loader" role="status" aria-live="polite"><div id="loader-pct">0%</div></div>
 
+  <a href="#viewport" class="skip-link">Hoppa till innehåll</a>
+
+  <header id="site-header">
+    <h1><img src="assets/reference/heading.svg" alt="PLX ODE" id="heading-img"></h1>
+    <nav id="header-nav" aria-label="Site navigation">
+      <a href="https://billetto.se/e/plx-ode-joy-biljetter-1856579" target="_blank" rel="noopener" class="nav-link">Biljetter <span class="visually-hidden">(öppnas i ny flik)</span></a>
+      <span class="nav-link disabled">Lineup TBA</span>
+      <a href="https://instagram.com/plxplxplx" target="_blank" rel="noopener" class="nav-link">Instagram <span class="visually-hidden">(öppnas i ny flik)</span></a>
+      <a href="mailto:info@plxplxplx.com" class="nav-link">Kontakt</a>
+    </nav>
+  </header>
+
   <main id="main-content">
-    <canvas id="viewport" aria-label="Interactive 3D scaffolding tower — scroll to explore"></canvas>
-    <div id="scroll-fade"></div>
+    <canvas id="viewport" tabindex="-1" aria-label="Interactive 3D scaffolding tower — scroll to explore"></canvas>
+    <div id="scroll-fade" aria-hidden="true"></div>
     <button id="panel-close" aria-label="Close image viewer">&times;</button>
     <button id="panel-prev" aria-label="Previous image">&#8249;</button>
     <button id="panel-next" aria-label="Next image">&#8250;</button>
     <div id="panel-caption" aria-live="polite"></div>
   </main>
-
-  <header id="site-header">
-    <h1><img src="assets/reference/heading.svg" alt="PLX ODE" id="heading-img"></h1>
-    <nav id="header-nav" aria-label="Site navigation">
-      <a href="https://billetto.se/e/plx-ode-joy-biljetter-1856579" target="_blank" rel="noopener" class="nav-link">Biljetter</a>
-      <span class="nav-link disabled" aria-disabled="true">Lineup TBA</span>
-      <a href="https://instagram.com/plxplxplx" target="_blank" rel="noopener" class="nav-link">Instagram</a>
-      <a href="mailto:info@plxplxplx.com" class="nav-link">Kontakt</a>
-    </nav>
-  </header>
 
   <script type="importmap">
   { "imports": {

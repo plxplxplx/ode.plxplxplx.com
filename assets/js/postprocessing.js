@@ -58,14 +58,20 @@ export function setPostCamera(cam) {
   bokehPass.camera = cam;
 }
 
-// Resize handler — update projection immediately, defer expensive RT resizes
+// Resize handler — RAF-debounced to avoid redundant work
+let _resizePending = false;
 function onResize() {
-  setOrtho();
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  composer.setSize(window.innerWidth, window.innerHeight);
-  bloom.resolution.set(window.innerWidth, window.innerHeight);
-  bokehPass.setSize(window.innerWidth, window.innerHeight);
-  occRT.setSize(Math.floor(window.innerWidth / 2), Math.floor(window.innerHeight / 2));
-  occBlurRT.setSize(Math.floor(window.innerWidth / 2), Math.floor(window.innerHeight / 2));
+  if (_resizePending) return;
+  _resizePending = true;
+  requestAnimationFrame(() => {
+    _resizePending = false;
+    setOrtho();
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    composer.setSize(window.innerWidth, window.innerHeight);
+    bloom.resolution.set(window.innerWidth, window.innerHeight);
+    bokehPass.setSize(window.innerWidth, window.innerHeight);
+    occRT.setSize(Math.floor(window.innerWidth / 2), Math.floor(window.innerHeight / 2));
+    occBlurRT.setSize(Math.floor(window.innerWidth / 2), Math.floor(window.innerHeight / 2));
+  });
 }
 window.addEventListener('resize', onResize);

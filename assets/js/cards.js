@@ -163,10 +163,10 @@ export function setHoveredCard(card) {
   hoveredCard = card;
 }
 
-canvas.addEventListener('pointermove', e => {
+canvas.addEventListener('pointermove', (e) => {
   cardPointer.x = (e.clientX / window.innerWidth) * 2 - 1;
   cardPointer.y = -(e.clientY / window.innerHeight) * 2 + 1;
-});
+}, { passive: true });
 
 canvas.addEventListener('click', () => {
   if (hoveredCard) {

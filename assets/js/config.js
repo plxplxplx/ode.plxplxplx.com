@@ -26,8 +26,10 @@ export const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
   || (navigator.maxTouchPoints > 1 && window.innerWidth < 1024)
   || window.innerWidth < 768;
 
-// Reduced motion preference (WCAG 2.3.3)
-export const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+// Reduced motion preference (WCAG 2.3.3) — reactive
+const _motionMQ = window.matchMedia('(prefers-reduced-motion: reduce)');
+export let prefersReducedMotion = _motionMQ.matches;
+_motionMQ.addEventListener('change', (e) => { prefersReducedMotion = e.matches; });
 
 // Character + camera config
 export const MOVE_SPEED = 4.0, JUMP_VEL = 7.2, GRAVITY = -20, STEP_UP = 0.35;

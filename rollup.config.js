@@ -60,6 +60,8 @@ export default {
         { src: 'assets/reference', dest: 'docs/assets' },
         { src: 'CNAME', dest: 'docs' },
         { src: '.nojekyll', dest: 'docs' },
+        { src: 'robots.txt', dest: 'docs' },
+        { src: 'sitemap.xml', dest: 'docs' },
       ],
     }),
     cssPlugin(),
