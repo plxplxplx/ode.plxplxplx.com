@@ -11,7 +11,7 @@ import * as sceneModule from './scene.js';
 import './materials.js';
 
 // Structure
-import { glassPanels } from './scaffold.js';
+import { glassPanels, scaffoldReady } from './scaffold.js';
 
 // Environment (fog, floor, vines, shrubs, stage glow)
 import { transitionPlanes, shroudPlanes, vineGroup, stageGlowPlanes, backdropPanels } from './environment.js';
@@ -385,7 +385,7 @@ function animate() {
 // =====================================================
 // START
 // =====================================================
-loaderReady.then(() => {
+Promise.all([loaderReady, scaffoldReady]).then(() => {
   // Warm up GPU — compile all shaders and generate shadow maps behind the overlay
   renderer.compile(scene, sceneModule.camera);
   renderer.render(scene, sceneModule.camera);

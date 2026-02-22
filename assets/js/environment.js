@@ -60,7 +60,7 @@ function createInstancedMeshes(model, transforms, targetGroup) {
 // =====================================================
 export const transitionPlanes = [];
 const volFogGeo = new THREE.PlaneGeometry(60, 60);
-const VOL_FOG_LAYERS = 8;
+const VOL_FOG_LAYERS = isMobile ? 4 : 8;
 const VOL_FOG_SPREAD = 4;
 
 for (let si = 1; si < STAGES.length; si++) {
@@ -91,7 +91,7 @@ for (let si = 1; si < STAGES.length; si++) {
 }
 
 // Dark shroud at top and bottom of tower
-const SHROUD_LAYERS = 12;
+const SHROUD_LAYERS = isMobile ? 6 : 12;
 const SHROUD_DEPTH = 8;
 const shroudColor = new THREE.Color(0x020202);
 export const shroudPlanes = [];
@@ -128,7 +128,13 @@ scene.add(vineGroup);
 // VINE GLB MODEL — InstancedMesh
 // =====================================================
 const gltfLoader = new GLTFLoader(manager);
-gltfLoader.load('assets/models/vine.glb', (gltf) => {
+
+// On mobile, defer heavy model loads so scaffold init isn't starved
+const deferLoad = isMobile
+  ? (fn) => requestIdleCallback(fn, { timeout: 5000 })
+  : (fn) => fn();
+
+deferLoad(() => gltfLoader.load('assets/models/vine.glb', (gltf) => {
   _seed = 54321;
   const vineModel = gltf.scene;
   const vineTransforms = [];
@@ -221,12 +227,12 @@ gltfLoader.load('assets/models/vine.glb', (gltf) => {
   }
 
   createInstancedMeshes(vineModel, vineTransforms, vineGroup);
-}, undefined, (err) => console.warn('vine.glb load error:', err));
+}, undefined, (err) => console.warn('vine.glb load error:', err)));
 
 // =====================================================
 // IVY GLB MODEL — InstancedMesh
 // =====================================================
-gltfLoader.load('assets/models/Ivy.glb', (gltf) => {
+deferLoad(() => gltfLoader.load('assets/models/Ivy.glb', (gltf) => {
   _seed = 13579;
   const ivyModel = gltf.scene;
   const ivyTransforms = [];
@@ -306,12 +312,12 @@ gltfLoader.load('assets/models/Ivy.glb', (gltf) => {
   }
 
   createInstancedMeshes(ivyModel, ivyTransforms, vineGroup);
-}, undefined, (err) => console.warn('Ivy.glb load error:', err));
+}, undefined, (err) => console.warn('Ivy.glb load error:', err)));
 
 // =====================================================
 // IVY 2 GLB MODEL (denser variant) — InstancedMesh
 // =====================================================
-gltfLoader.load('assets/models/Ivy 2.glb', (gltf) => {
+deferLoad(() => gltfLoader.load('assets/models/Ivy 2.glb', (gltf) => {
   _seed = 24680;
   const ivy2Model = gltf.scene;
   const ivy2Transforms = [];
@@ -367,7 +373,7 @@ gltfLoader.load('assets/models/Ivy 2.glb', (gltf) => {
   }
 
   createInstancedMeshes(ivy2Model, ivy2Transforms, vineGroup);
-}, undefined, (err) => console.warn('Ivy 2.glb load error:', err));
+}, undefined, (err) => console.warn('Ivy 2.glb load error:', err)));
 
 // =====================================================
 // SHRUB BILLBOARDS — InstancedMesh
@@ -498,7 +504,7 @@ scene.add(shrubGroup);
 // FIGURE — standing in SUMMIT stage corner against railing
 // =====================================================
 const fbxLoader = new FBXLoader(manager);
-fbxLoader.load('assets/models/Male Standing Pose.fbx', (fbx) => {
+deferLoad(() => fbxLoader.load('assets/models/Male Standing Pose.fbx', (fbx) => {
   const boundingBox = new THREE.Box3().setFromObject(fbx);
   const height = boundingBox.max.y - boundingBox.min.y;
   const targetHeight = 1.8;
@@ -528,12 +534,12 @@ fbxLoader.load('assets/models/Male Standing Pose.fbx', (fbx) => {
   fbx.rotation.x = -0.05; // slight lean back against railing
 
   scene.add(fbx);
-}, undefined, (err) => console.warn('FBX load error:', err));
+}, undefined, (err) => console.warn('FBX load error:', err)));
 
 // =====================================================
 // VINES GLB MODEL (dense variant) — InstancedMesh
 // =====================================================
-gltfLoader.load('assets/models/Vines.glb', (gltf) => {
+deferLoad(() => gltfLoader.load('assets/models/Vines.glb', (gltf) => {
   _seed = 97531;
   const vinesModel = gltf.scene;
   const vinesTransforms = [];
@@ -585,7 +591,7 @@ gltfLoader.load('assets/models/Vines.glb', (gltf) => {
   }
 
   createInstancedMeshes(vinesModel, vinesTransforms, vineGroup);
-}, undefined, (err) => console.warn('Vines.glb load error:', err));
+}, undefined, (err) => console.warn('Vines.glb load error:', err)));
 
 // =====================================================
 // FLOWERS — scattered across GROUND stage scaffolding
@@ -607,7 +613,7 @@ scene.add(flowerLight.target);
 const flowerGroup = new THREE.Group();
 flowerGroup.name = 'flowers';
 
-gltfLoader.load('assets/models/Flowers.glb', (gltf) => {
+deferLoad(() => gltfLoader.load('assets/models/Flowers.glb', (gltf) => {
   _seed = 86420;
   const flowerModel = gltf.scene;
   const flowerTransforms = [];
@@ -664,7 +670,7 @@ gltfLoader.load('assets/models/Flowers.glb', (gltf) => {
   }
 
   createInstancedMeshes(flowerModel, flowerTransforms, flowerGroup);
-}, undefined, (err) => console.warn('Flowers.glb load error:', err));
+}, undefined, (err) => console.warn('Flowers.glb load error:', err)));
 
 scene.add(flowerGroup);
 
