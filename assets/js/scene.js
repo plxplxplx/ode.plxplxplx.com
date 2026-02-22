@@ -8,11 +8,11 @@ import { FRUSTUM, TOP_H, isMobile } from './config.js';
 // =====================================================
 export const canvas = document.getElementById('viewport');
 export const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+renderer.setPixelRatio(isMobile ? 1 : Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.8;
-renderer.shadowMap.enabled = true;
+renderer.shadowMap.enabled = !isMobile;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.localClippingEnabled = true;
 
@@ -31,9 +31,11 @@ export const fogColor = 0x140e08;
 scene.background = new THREE.Color(0x140e08);
 scene.fog = new THREE.FogExp2(fogColor, 0.04);
 
-const pmrem = new THREE.PMREMGenerator(renderer);
-scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
-pmrem.dispose();
+if (!isMobile) {
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  pmrem.dispose();
+}
 
 const aspect = window.innerWidth / window.innerHeight;
 export const orthoCamera = new THREE.OrthographicCamera(

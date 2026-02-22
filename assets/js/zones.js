@@ -36,13 +36,13 @@ function makeRibbonTex(title, body, width = 4096, height = 512) {
 
   if (title) {
     const titleSize = Math.floor(height * 0.4);
-    ctx.fillStyle = 'rgba(255,255,255,0.8)';
+    ctx.fillStyle = '#ffffff';
     ctx.font = `300 ${titleSize}px Georgia, serif`;
     ctx.textAlign = 'left'; ctx.textBaseline = 'top';
     ctx.fillText(title, pad, pad * 0.35);
 
     const titleW = ctx.measureText(title).width;
-    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+    ctx.strokeStyle = 'rgba(255,255,255,0.5)';
     ctx.lineWidth = 2;
     ctx.beginPath();
     ctx.moveTo(pad + titleW + 40, pad * 0.35 + titleSize * 0.5);
@@ -52,7 +52,7 @@ function makeRibbonTex(title, body, width = 4096, height = 512) {
   }
 
   const bodySize = Math.floor(height * 0.22);
-  ctx.fillStyle = 'rgba(255,255,255,0.6)';
+  ctx.fillStyle = 'rgba(255,255,255,0.85)';
   ctx.font = `300 ${bodySize}px Georgia, serif`;
   ctx.textAlign = 'left'; ctx.textBaseline = 'top';
   const lines = body.split('\n');
@@ -114,14 +114,14 @@ ZONES.forEach((zone, i) => {
       time: { value: 0 },
       phase: { value: i * 2.5 },
       opacity: { value: 0.0 },
-      brightness: { value: 4.3 },
+      brightness: { value: 1.0 },
     },
     vertexShader: ribbonVert,
     fragmentShader: ribbonFrag,
     transparent: true,
     depthWrite: false,
     side: THREE.DoubleSide,
-    blending: THREE.AdditiveBlending,
+    blending: THREE.NormalBlending,
   });
 
   const startAngle = i * Math.PI * 0.6;

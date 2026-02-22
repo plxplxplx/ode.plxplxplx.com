@@ -50,7 +50,9 @@ export const params = {
   flowersVisible: true,
   flowerLightIntensity: 1.8,
   textMaxOpacity: 1,
-  textBrightness: 4.3,
+  textBrightness: 1.0,
+  textBlending: 'Normal',
+  textDepthWrite: false,
   textFadeRange: 30,
   textFadeOutMult: 4.8,
   textFlipX: true,
@@ -501,8 +503,15 @@ tapeFolder.addBinding(params, 'tapeFlipText', { label: 'Flip Text' }).on('change
 // -- Typography --
 const textFolder = objectsPage.addFolder({ title: 'Typography', expanded: false });
 textFolder.addBinding(params, 'textMaxOpacity', { label: 'Max Opacity', min: 0, max: 1, step: 0.01 });
-textFolder.addBinding(params, 'textBrightness', { label: 'Brightness', min: 0.5, max: 5, step: 0.1 }).on('change', ev => {
+textFolder.addBinding(params, 'textBrightness', { label: 'Brightness', min: 0.5, max: 10, step: 0.1 }).on('change', ev => {
   sideTexts.forEach(st => st.mat.uniforms.brightness.value = ev.value);
+});
+const BLEND_MODES = { Normal: THREE.NormalBlending, Additive: THREE.AdditiveBlending, Multiply: THREE.MultiplyBlending, Subtractive: THREE.SubtractiveBlending };
+textFolder.addBinding(params, 'textBlending', { label: 'Blending', options: Object.keys(BLEND_MODES).map(k => ({ text: k, value: k })) }).on('change', ev => {
+  sideTexts.forEach(st => { st.mat.blending = BLEND_MODES[ev.value]; st.mat.needsUpdate = true; });
+});
+textFolder.addBinding(params, 'textDepthWrite', { label: 'Depth Write' }).on('change', ev => {
+  sideTexts.forEach(st => { st.mat.depthWrite = ev.value; st.mat.needsUpdate = true; });
 });
 textFolder.addBinding(params, 'textFadeRange', { label: 'Fade In Range', min: 2, max: 30, step: 0.5 });
 textFolder.addBinding(params, 'textFadeOutMult', { label: 'Fade Out Mult', min: 1, max: 5, step: 0.1 });

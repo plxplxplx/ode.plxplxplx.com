@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { STAGES } from './config.js';
+import { STAGES, isMobile } from './config.js';
 import { buildPlane, buildPlaneBottom, ktx2Loader } from './scene.js';
 
 // =====================================================
@@ -111,10 +111,11 @@ export const matDeck  = STAGE_MATS[0].deck;
 // GEOMETRY FACTORIES
 // =====================================================
 export const geoCache = new Map();
+const TUBE_SEGS = isMobile ? 4 : 8;
 export function cylGeo(r, l) {
   const k = `c${r.toFixed(4)}_${l.toFixed(4)}`;
   if (!geoCache.has(k)) {
-    const geo = new THREE.CylinderGeometry(r, r, l, 8, 1);
+    const geo = new THREE.CylinderGeometry(r, r, l, TUBE_SEGS, 1);
     // Scale UVs to world-space so marble tiles consistently
     const uv = geo.attributes.uv;
     const circ = 2 * Math.PI * r;
