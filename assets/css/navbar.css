@@ -135,8 +135,6 @@
     max-width: 280px;
   }
   .nav-link {
-    font-size: var(--font-size-label-mobile);
-    letter-spacing: var(--letter-spacing-tight);
     padding: 6px 10px;
   }
   .nav-link:nth-child(2),
