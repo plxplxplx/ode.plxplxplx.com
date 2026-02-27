@@ -83,4 +83,4 @@ function onResize() {
     occBlurRT.setSize(Math.floor(window.innerWidth / 2), Math.floor(window.innerHeight / 2));
   });
 }
-window.addEventListener('resize', onResize);
+window.addEventListener('resize', onResize, { passive: true });

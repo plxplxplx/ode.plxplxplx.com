@@ -1,19 +1,5 @@
 /* ── Font faces ── */
 @font-face {
-  font-family: 'Miller Display';
-  src: url('../fonts/Miller-Display.woff2') format('woff2');
-  font-weight: 400;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Miller Display';
-  src: url('../fonts/Miller-DisplayItalic.woff2') format('woff2');
-  font-weight: 400;
-  font-style: italic;
-  font-display: swap;
-}
-@font-face {
   font-family: 'NHaas Grotesk';
   src: url('../fonts/NHaasGroteskDSPro-35XLt.woff2') format('woff2');
   font-weight: 300;
@@ -33,13 +19,6 @@
   font-weight: 700;
   font-style: normal;
   font-display: swap;
-}
-
-/* ── Hide legacy elements ── */
-#footer-bar,
-#date-bar,
-.footer-logo {
-  display: none;
 }
 
 /* ── Header ── */

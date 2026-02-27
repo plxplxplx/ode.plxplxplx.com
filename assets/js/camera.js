@@ -142,6 +142,16 @@ canvas.addEventListener('touchend', () => { lastTouchY = null; }, { passive: tru
 // =====================================================
 const _panelNormal = new THREE.Vector3();
 const _camToPanel = new THREE.Vector3();
+const _panelWorldPos = new THREE.Vector3();
+
+function _computePanelGoal(panelMesh, cam) {
+  panelMesh.getWorldPosition(_panelWorldPos);
+  _panelTargetLookAt.copy(_panelWorldPos);
+  _panelNormal.set(0, 0, 1).applyQuaternion(panelMesh.quaternion);
+  _camToPanel.subVectors(cam.position, _panelWorldPos);
+  if (_camToPanel.dot(_panelNormal) < 0) _panelNormal.negate();
+  _panelTargetCamPos.copy(_panelWorldPos).addScaledVector(_panelNormal, ORBIT_RADIUS);
+}
 
 export function startPanelZoom(panelMesh) {
   if (panelZoomed) return;
@@ -154,18 +164,7 @@ export function startPanelZoom(panelMesh) {
   _panelFromTarget.copy(controls.target);
   _panelFromFrustum = _panelOriginFrustum;
 
-  // Panel center in world space
-  const panelWorldPos = new THREE.Vector3();
-  panelMesh.getWorldPosition(panelWorldPos);
-  _panelTargetLookAt.copy(panelWorldPos);
-
-  // Get outward-facing normal (plane default normal is +Z)
-  _panelNormal.set(0, 0, 1).applyQuaternion(panelMesh.quaternion);
-  _camToPanel.subVectors(cam.position, panelWorldPos);
-  if (_camToPanel.dot(_panelNormal) < 0) _panelNormal.negate();
-
-  // Place camera along the normal, at the same orbit radius
-  _panelTargetCamPos.copy(panelWorldPos).addScaledVector(_panelNormal, ORBIT_RADIUS);
+  _computePanelGoal(panelMesh, cam);
 
   _panelZoomLerp = 0;
   _panelZoomGoal = 1;
@@ -177,21 +176,12 @@ export function startPanelZoom(panelMesh) {
 export function navigatePanelZoom(panelMesh) {
   if (!panelZoomed) return;
 
-  // Current position becomes the new "from" (origin stays unchanged)
   const cam = sceneModule.camera;
   _panelFromCamPos.copy(cam.position);
   _panelFromTarget.copy(controls.target);
   _panelFromFrustum = PANEL_ZOOM_FRUSTUM;
 
-  const panelWorldPos = new THREE.Vector3();
-  panelMesh.getWorldPosition(panelWorldPos);
-  _panelTargetLookAt.copy(panelWorldPos);
-
-  _panelNormal.set(0, 0, 1).applyQuaternion(panelMesh.quaternion);
-  _camToPanel.subVectors(cam.position, panelWorldPos);
-  if (_camToPanel.dot(_panelNormal) < 0) _panelNormal.negate();
-
-  _panelTargetCamPos.copy(panelWorldPos).addScaledVector(_panelNormal, ORBIT_RADIUS);
+  _computePanelGoal(panelMesh, cam);
 
   _panelZoomLerp = 0;
   _panelZoomGoal = 1;

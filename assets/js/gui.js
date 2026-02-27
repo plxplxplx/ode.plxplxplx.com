@@ -12,7 +12,7 @@ import { gridLights, fireflies, FF_COUNT } from './effects.js';
 import { scaffold, floorMats, glassPanels, scaffoldReady } from './scaffold.js';
 import { IMG_FILES } from './cards.js';
 import { bloom, bokehPass, godRaysPass, colorGradePass, grainPass, fxaaPass, setPostCamera } from './postprocessing.js';
-import { bgMusic, audioCtx, masterGain } from './audio.js';
+import { bgMusic, audioCtx, masterGain, TRACKS, switchTrack } from './audio.js';
 import { setControlsCamera } from './camera.js';
 
 // =====================================================
@@ -97,6 +97,7 @@ export const params = {
   ffGlowOpacity: 1.0,
   ffLightDecay: 2,
   musicVolume: bgMusic.volume,
+  track: 'Martinaise',
   // Camera
   usePerspective: false,
   perspFov: 50,
@@ -151,6 +152,7 @@ export const gui = pane;
 // FPS counter
 export const fpsEl = document.createElement('div');
 fpsEl.style.cssText = 'position:fixed;top:12px;right:16px;color:rgba(255,240,220,0.35);font:11px monospace;z-index:20;pointer-events:none;display:none;';
+fpsEl.setAttribute('aria-hidden', 'true');
 document.body.appendChild(fpsEl);
 let fpsFrames = 0, fpsLast = performance.now();
 export function updateFPS() {
@@ -586,6 +588,9 @@ ffSpeedFolder.addBinding(params, 'ffVerticalRange', { label: 'Vertical Range', m
 // =====================================================
 // AUDIO TAB
 // =====================================================
+audioPage.addBinding(params, 'track', { label: 'Track', options: Object.fromEntries(Object.keys(TRACKS).map(k => [k, k])) }).on('change', ev => {
+  switchTrack(ev.value);
+});
 audioPage.addButton({ title: 'Play Music' }).on('click', () => {
   audioCtx.resume(); bgMusic.play().catch(() => {});
 });
