@@ -9,7 +9,10 @@
   <title>PLX ODE</title>
   <link rel="icon" type="image/svg+xml" href="assets/img/favicon.svg">
   <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-  <link rel="stylesheet" href="assets/css/styles.css">
+  <link rel="preload" href="assets/fonts/NHaasGroteskDSPro-55Rg.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/fonts/NHaasGroteskDSPro-35XLt.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="preload" href="assets/reference/heading.svg" as="image">
+  <link rel="stylesheet" href="assets/css/styles.css?v=2">
 
   <!-- Open Graph -->
   <meta property="og:title" content="PLX ODE — 15–16 maj, Malmö Konstmuseum">
@@ -26,6 +29,8 @@
     "@context": "https://schema.org",
     "@type": "Event",
     "name": "PLX ODE",
+    "description": "An interactive 3D art installation exploring scaffolding, nature, and the climb.",
+    "image": "https://ode.plxplxplx.com/assets/img/background.jpg",
     "startDate": "2026-05-15",
     "endDate": "2026-05-16",
     "url": "https://ode.plxplxplx.com/",
@@ -50,19 +55,19 @@
 <body>
   <div id="loader" role="status" aria-live="polite"><div id="loader-pct">0%</div></div>
 
-  <a href="#viewport" class="skip-link">Hoppa till innehåll</a>
+  <a href="#main-content" class="skip-link">Hoppa till innehåll</a>
 
   <header id="site-header">
     <h1><img src="assets/reference/heading.svg" alt="PLX ODE" id="heading-img" width="340" height="60"></h1>
     <nav id="header-nav" aria-label="Site navigation">
       <a href="https://billetto.se/e/plx-ode-joy-biljetter-1856579" target="_blank" rel="noopener" class="nav-link">Biljetter <span class="visually-hidden">(öppnas i ny flik)</span></a>
-      <span class="nav-link disabled">Lineup TBA</span>
+      <span class="nav-link disabled" aria-disabled="true">Lineup TBA</span>
       <a href="https://instagram.com/plxplxplx" target="_blank" rel="noopener" class="nav-link">Instagram <span class="visually-hidden">(öppnas i ny flik)</span></a>
       <a href="mailto:info@plxplxplx.com" class="nav-link">Kontakt</a>
     </nav>
   </header>
 
-  <main id="main-content">
+  <main id="main-content" tabindex="-1">
     <canvas id="viewport" width="960" height="540" tabindex="-1" aria-label="Interactive 3D scaffolding tower — scroll to explore"></canvas>
     <div id="scroll-fade" aria-hidden="true"></div>
     <button id="panel-close" aria-label="Close image viewer">&times;</button>
@@ -79,6 +84,6 @@
   }}
   </script>
 
-  <script type="module" src="assets/js/main.js"></script>
+  <script type="module" src="assets/js/main.js?v=2"></script>
 </body>
 </html>
