@@ -33,9 +33,9 @@ function htmlPlugin() {
     name: 'html-bundle',
     writeBundle() {
       let html = readFileSync('index.html', 'utf8');
-      html = html.replace(/\s*<link rel="stylesheet" href="assets\/css\/[^"]+\.css">/g, '');
+      html = html.replace(/\s*<link rel="stylesheet" href="assets\/css\/[^"]+\.css[^"]*">/g, '');
       html = html.replace('</head>', '  <link rel="stylesheet" href="assets/css/styles.min.css">\n</head>');
-      html = html.replace('src="assets/js/main.js"', 'src="assets/js/main.min.js"');
+      html = html.replace(/src="assets\/js\/main\.js[^"]*"/, 'src="assets/js/main.min.js"');
       writeFileSync('docs/index.html', html);
     },
   };
