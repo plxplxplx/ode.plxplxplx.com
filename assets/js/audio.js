@@ -19,7 +19,7 @@ export const TRACKS = {
   'The Story Continues': 'assets/audio/anton-ingvarsson-the-story-continues.mp3',
 };
 
-export const bgMusic = new Audio(TRACKS['Martinaise']);
+export const bgMusic = new Audio(TRACKS['PLX Freakzone']);
 bgMusic.loop = true;
 bgMusic.crossOrigin = 'anonymous';
 
@@ -67,11 +67,28 @@ delayFeedback.gain.value = 0.0;
 const delayGain = audioCtx.createGain();
 delayGain.gain.value = 0.0;
 
+// Analyser for audio-reactive visuals
+const analyser = audioCtx.createAnalyser();
+analyser.fftSize = 256;
+analyser.smoothingTimeConstant = 0.3;
+const _timeDomain = new Uint8Array(analyser.fftSize);
+
+export function getAmplitude() {
+  analyser.getByteTimeDomainData(_timeDomain);
+  let sum = 0;
+  for (let i = 0; i < _timeDomain.length; i++) {
+    const v = (_timeDomain[i] - 128) / 128;
+    sum += v * v;
+  }
+  return Math.sqrt(sum / _timeDomain.length);
+}
+
 // Signal chain
 sourceNode.connect(lpFilter);
 lpFilter.connect(hpFilter);
 hpFilter.connect(masterGain);
-masterGain.connect(audioCtx.destination);
+masterGain.connect(analyser);
+analyser.connect(audioCtx.destination);
 
 // Reverb send
 hpFilter.connect(convolver);

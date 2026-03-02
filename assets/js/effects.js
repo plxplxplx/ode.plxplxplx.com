@@ -63,7 +63,9 @@ for (let i = 0; i < FF_COUNT; i++) {
   const angle = Math.random() * Math.PI * 2;
   const r = 1 + Math.random() * 8;
   const yOffset = (Math.random() - 0.5) * 20;
+  const glowScale = 0.5 + Math.random() * 1.0; // varied glow sizes
   sprite.position.set(Math.cos(angle) * r, yOffset, Math.sin(angle) * r);
+  sprite.scale.setScalar(glowScale);
 
   let light = null;
   if (i < FF_LIGHT_COUNT) {
@@ -80,6 +82,7 @@ for (let i = 0; i < FF_COUNT; i++) {
     angle,
     radius: r,
     yOffset,
+    glowScale,
     speed: 0.2 + Math.random() * 0.5,
     ySpeed: 0.1 + Math.random() * 0.3,
     phase: Math.random() * Math.PI * 2,

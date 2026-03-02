@@ -17,7 +17,7 @@ import { glassPanels, scaffoldReady } from './scaffold.js';
 import { transitionPlanes, shroudPlanes, vineGroup, stageGlowPlanes, backdropPanels } from './environment.js';
 
 // Zones & typography
-import { ZONES, sideTexts, ribbonOverlayScene } from './zones.js';
+import { ZONES, sideTexts } from './zones.js';
 
 // Floating cards
 import { cards, CARD_OPTS, cardGroup, cardRaycaster, cardPointer, hoveredCard, setHoveredCard, IMG_FILES } from './cards.js';
@@ -34,19 +34,22 @@ import { gx, gz } from './config.js';
 import { controls, scrollCurrent, updateCam, wrapFogBoost, panelZoomed, startPanelZoom, exitPanelZoom, navigatePanelZoom } from './camera.js';
 
 // Audio
-import { updateAudio } from './audio.js';
+import { updateAudio, getAmplitude, bgMusic } from './audio.js';
 
 // Post-processing
 import { composer, colorGradePass, grainPass, godRaysPass } from './postprocessing.js';
 
 // GUI (must be last — reads from all modules)
-import { params, updateFPS } from './gui.js';
+import { params, updateFPS, updateTrackProgress } from './gui.js';
 
 // Loader
 import { loaderReady } from './loader.js';
 
 // Canvas ref for cursor
 import { canvas } from './scene.js';
+
+// Move ribbon text into the main scene so it gets depth-occluded by the scaffold
+for (const st of sideTexts) scene.add(st.mesh);
 
 // =====================================================
 // PANEL ZOOM — click image to fly in, click/esc to exit
@@ -102,6 +105,7 @@ if (_nextBtn) _nextBtn.addEventListener('click', (e) => { e.stopPropagation(); n
 // GAME LOOP
 // =====================================================
 const clock = new THREE.Clock();
+let _occFrame = 0;
 
 // Wrapped distance — accounts for scroll cycling through TOP_H
 function wDist(a, b) { const d = Math.abs(a - b); return Math.min(d, TOP_H - d); }
@@ -201,12 +205,13 @@ function animate() {
   // Dynamic audio
   updateAudio(camH);
 
-  // Fade side typography in/out + animate flag wave (wrap-aware)
+  // Fade side typography in/out + animate flag wave + orbit (wrap-aware)
   for (const st of sideTexts) {
     const dist = wDist(camH, st.zoneY);
     const range = params.textFadeRange * params.textFadeOutMult;
     st.mat.uniforms.opacity.value = Math.max(0, 1 - dist / range) * params.textMaxOpacity;
     st.mat.uniforms.time.value = t;
+    st.mesh.rotation.y += params.textOrbitSpeed * dt;
   }
 
   // Volumetric fog bands (wrap-aware)
@@ -277,7 +282,21 @@ function animate() {
   // Caution tape flutter (frozen when reduced motion)
   updateTape(prefersReducedMotion ? 0 : t);
 
-  // Fireflies
+  // Fireflies — BPM-synced beat pulse × amplitude
+  const amplitude = params.ffAudioReactive ? getAmplitude() : 0;
+  const audioReactive = params.ffAudioReactive && amplitude > 0.001;
+
+  // Beat-synced envelope: sharp attack at beat onset, exponential decay
+  // Squared amplitude exaggerates peaks — quiet stays dim, loud hits hard
+  let beatPulse = 0;
+  if (audioReactive) {
+    const amp2 = amplitude * amplitude;
+    const beatsPerSec = params.ffBpm / 60 * params.ffBeatDivision;
+    const beatPhase = (bgMusic.currentTime * beatsPerSec) % 1; // 0→1 per beat
+    const envelope = Math.exp(-params.ffBeatDecay * beatPhase);
+    beatPulse = envelope * amp2 * params.ffAudioSensitivity;
+  }
+
   for (const ff of fireflies) {
     ff.angle += ff.speed * dt * 0.15;
     ff.yOffset += Math.sin(t * ff.ySpeed + ff.phase) * 0.005;
@@ -289,7 +308,11 @@ function animate() {
     const fy = camH + ff.yOffset + Math.sin(t * ff.ySpeed + ff.phase) * 1.5;
     ff.sprite.position.set(fx, fy, fz);
     const pulse = Math.max(0, Math.sin(t * ff.pulseSpeed + ff.phase));
-    ff.sprite.scale.setScalar(0.6 + pulse * 2.0);
+    // Beat-synced pulse when audio is active; individual sine pulse as fallback
+    const scaleVal = audioReactive
+      ? 0.3 + beatPulse
+      : 0.6 + pulse * 2.0;
+    ff.sprite.scale.setScalar(scaleVal * ff.glowScale);
     _ffColor.copy(FF_STAGE_COLORS[0]);
     for (let si = STAGES.length - 1; si >= 0; si--) {
       if (fy >= STAGES[si].floorY) {
@@ -304,7 +327,10 @@ function animate() {
     if (ff.light) {
       ff.light.position.set(fx, fy, fz);
       ff.light.color.copy(_ffColor);
-      ff.light.intensity = ff.baseIntensity * (0.3 + pulse * pulse * 0.7);
+      const intensityVal = audioReactive
+        ? 0.3 + beatPulse * beatPulse
+        : 0.3 + pulse * pulse * 0.7;
+      ff.light.intensity = ff.baseIntensity * intensityVal;
     }
   }
 
@@ -334,8 +360,8 @@ function animate() {
     (_sunScreen.y + 1) * 0.5
   );
 
-  // Render occlusion pass + blur (only when god rays active)
-  if (godRaysPass.enabled) {
+  // Render occlusion pass + blur (only when god rays active, every 2nd frame)
+  if (godRaysPass.enabled && (++_occFrame & 1)) {
     const origBg = scene.background;
     const origFog = scene.fog;
     scene.background = _occBlack;
@@ -373,11 +399,8 @@ function animate() {
 
   composer.render();
 
-  // Render ribbon text on top
-  renderer.autoClear = false;
-  renderer.clearDepth();
-  renderer.render(ribbonOverlayScene, sceneModule.camera);
-  renderer.autoClear = true;
+  // Update audio timeline slider (~every 10 frames)
+  if (_occFrame % 10 === 0) updateTrackProgress();
 
   updateFPS();
 }

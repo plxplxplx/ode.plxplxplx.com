@@ -14,7 +14,7 @@ function startMusic() {
   audioCtx.resume();
   bgMusic.play().catch(() => {});
 }
-for (const evt of ['click', 'pointerdown', 'keydown', 'scroll', 'touchstart']) {
+for (const evt of ['click', 'pointerdown', 'keydown', 'touchstart', 'wheel']) {
   window.addEventListener(evt, startMusic, { once: true, passive: true });
 }
 
@@ -79,7 +79,6 @@ let _userScrolled = false;
 export function onScroll() {
   if (_userScrolled) {
     startMusic();
-    autoScrollActive = false;
   }
   if (panelZoomed) { exitPanelZoom(); return; }
   const maxScroll = document.body.scrollHeight - window.innerHeight;
@@ -117,7 +116,6 @@ let lastTouchY = null;
 
 canvas.addEventListener('touchstart', (e) => {
   startMusic();
-  autoScrollActive = false;
   if (e.touches.length === 1) lastTouchY = e.touches[0].clientY;
 }, { passive: true });
 

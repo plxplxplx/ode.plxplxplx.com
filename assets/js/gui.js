@@ -50,7 +50,11 @@ export const params = {
   flowersVisible: true,
   flowerLightIntensity: 1.8,
   textMaxOpacity: 1,
+  textOrbitSpeed: 0.1,
   textBrightness: 1.0,
+  textTintColor: '#ffffff',
+  textBgColor: '#000000',
+  textBgOpacity: 0,
   textBlending: 'Normal',
   textDepthWrite: false,
   textFadeRange: 30,
@@ -96,8 +100,14 @@ export const params = {
   ffGlowSize: 1.0,
   ffGlowOpacity: 1.0,
   ffLightDecay: 2,
+  ffAudioReactive: true,
+  ffAudioSensitivity: 12.0,
+  ffBpm: 122,
+  ffBeatDivision: 1,
+  ffBeatDecay: 8,
   musicVolume: bgMusic.volume,
-  track: 'Martinaise',
+  trackProgress: 0,
+  track: 'PLX Freakzone',
   // Camera
   usePerspective: false,
   perspFov: 50,
@@ -518,8 +528,20 @@ tapeFolder.addBinding(params, 'tapeFlipText', { label: 'Flip Text' }).on('change
 // -- Typography --
 const textFolder = objectsPage.addFolder({ title: 'Typography', expanded: false });
 textFolder.addBinding(params, 'textMaxOpacity', { label: 'Max Opacity', min: 0, max: 1, step: 0.01 });
+textFolder.addBinding(params, 'textOrbitSpeed', { label: 'Orbit Speed', min: 0, max: 2, step: 0.01 });
 textFolder.addBinding(params, 'textBrightness', { label: 'Brightness', min: 0.5, max: 10, step: 0.1 }).on('change', ev => {
   sideTexts.forEach(st => st.mat.uniforms.brightness.value = ev.value);
+});
+textFolder.addBinding(params, 'textTintColor', { label: 'Text Color' }).on('change', ev => {
+  const c = new THREE.Color(ev.value);
+  sideTexts.forEach(st => st.mat.uniforms.tintColor.value.copy(c));
+});
+textFolder.addBinding(params, 'textBgColor', { label: 'Fabric Color' }).on('change', ev => {
+  const c = new THREE.Color(ev.value);
+  sideTexts.forEach(st => st.mat.uniforms.bgColor.value.copy(c));
+});
+textFolder.addBinding(params, 'textBgOpacity', { label: 'Fabric Opacity', min: 0, max: 1, step: 0.01 }).on('change', ev => {
+  sideTexts.forEach(st => st.mat.uniforms.bgOpacity.value = ev.value);
 });
 const BLEND_MODES = { Normal: THREE.NormalBlending, Additive: THREE.AdditiveBlending, Multiply: THREE.MultiplyBlending, Subtractive: THREE.SubtractiveBlending };
 textFolder.addBinding(params, 'textBlending', { label: 'Blending', options: Object.keys(BLEND_MODES).map(k => ({ text: k, value: k })) }).on('change', ev => {
@@ -571,6 +593,11 @@ ffFolder.addBinding(params, 'ffGlowOpacity', { label: 'Glow Opacity', min: 0, ma
 ffFolder.addBinding(params, 'ffRadius', { label: 'Spread Radius', min: 1, max: 30, step: 0.5 }).on('change', ev => {
   fireflies.forEach(ff => ff.radius = 1 + Math.random() * ev.value);
 });
+ffFolder.addBinding(params, 'ffAudioReactive', { label: 'Audio Reactive' });
+ffFolder.addBinding(params, 'ffAudioSensitivity', { label: 'Audio Sensitivity', min: 0, max: 20, step: 0.1 });
+ffFolder.addBinding(params, 'ffBpm', { label: 'BPM', min: 20, max: 200, step: 1 });
+ffFolder.addBinding(params, 'ffBeatDivision', { label: 'Beat Division', options: { '1/1 Quarter': 1, '1/2 Eighth': 2, '1/4 Sixteenth': 4, '1/8 Thirty-second': 8 } });
+ffFolder.addBinding(params, 'ffBeatDecay', { label: 'Beat Decay', min: 1, max: 20, step: 0.5 });
 const ffSpeedFolder = ffFolder.addFolder({ title: 'Animation Speeds', expanded: false });
 ffSpeedFolder.addBinding(params, 'ffPulseSpeed', { label: 'Pulse Speed', min: 0.1, max: 8, step: 0.1 }).on('change', ev => {
   fireflies.forEach(ff => ff.pulseSpeed = (1.5 + Math.random() * 3) * ev.value);
@@ -600,6 +627,29 @@ audioPage.addButton({ title: 'Pause' }).on('click', () => {
 audioPage.addBinding(params, 'musicVolume', { label: 'Volume', min: 0, max: 1, step: 0.01 }).on('change', ev => {
   masterGain.gain.setTargetAtTime(ev.value, audioCtx.currentTime, 0.05);
 });
+
+// Timeline scrubber
+let _scrubbing = false;
+const progressBinding = audioPage.addBinding(params, 'trackProgress', { label: 'Timeline', min: 0, max: 1, step: 0.001 });
+progressBinding.on('change', ev => {
+  if (_scrubbing && isFinite(bgMusic.duration)) {
+    bgMusic.currentTime = ev.value * bgMusic.duration;
+  }
+});
+// Detect user drag vs programmatic refresh
+const progressEl = progressBinding.element;
+progressEl.addEventListener('pointerdown', () => { _scrubbing = true; });
+window.addEventListener('pointerup', () => { _scrubbing = false; });
+
+export function updateTrackProgress() {
+  if (_scrubbing) return;
+  if (isFinite(bgMusic.duration) && bgMusic.duration > 0) {
+    params.trackProgress = bgMusic.currentTime / bgMusic.duration;
+  } else {
+    params.trackProgress = 0;
+  }
+  progressBinding.refresh();
+}
 
 // =====================================================
 // INITIAL STATE
