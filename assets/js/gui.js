@@ -135,9 +135,10 @@ export const params = {
   normalScale: 1.0,
   // Glass Panels
   glassPanelVisible: true,
-  glassPanelOpacity: 0.42,
+  glassPanelOpacity: 1.0,
   glassPanelImages: true,
-  glassPanelImageOpacity: 0.7,
+  glassPanelImageOpacity: 1.0,
+  glassPanelFlipImages: false,
   // Caution Tape
   tapeVisible: TAPE_OPTS.visible,
   tapeColor: '#f05b30',
@@ -207,8 +208,12 @@ function applyGlassImages() {
       if (!glassTexCache.has(path)) {
         const tex = glassTexLoader.load(path);
         tex.colorSpace = THREE.SRGBColorSpace;
+        tex.wrapS = THREE.RepeatWrapping;
         glassTexCache.set(path, tex);
       }
+      const tex = glassTexCache.get(path);
+      tex.repeat.x = params.glassPanelFlipImages ? -1 : 1;
+      tex.offset.x = params.glassPanelFlipImages ? 1 : 0;
       return new THREE.MeshStandardMaterial({
         map: glassTexCache.get(path),
         transparent: true,
@@ -453,7 +458,14 @@ glassFolder.addBinding(params, 'glassPanelImages', { label: 'Show Images' }).on(
 glassFolder.addBinding(params, 'glassPanelImageOpacity', { label: 'Image Opacity', min: 0, max: 1, step: 0.01 }).on('change', ev => {
   if (glassImageMats) glassImageMats.forEach(m => { m.opacity = ev.value; });
 });
-if (params.glassPanelImages) applyGlassImages();
+glassFolder.addBinding(params, 'glassPanelFlipImages', { label: 'Flip Images' }).on('change', ev => {
+  for (const [, tex] of glassTexCache) {
+    tex.repeat.x = ev.value ? -1 : 1;
+    tex.offset.x = ev.value ? 1 : 0;
+  }
+});
+// Defer until scaffold is built (glassPanels are empty at GUI init)
+scaffoldReady.then(() => { if (params.glassPanelImages) applyGlassImages(); });
 
 // -- Texture --
 const texFolder = scenePage.addFolder({ title: 'Texture', expanded: false });

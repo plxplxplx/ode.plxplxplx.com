@@ -4,6 +4,7 @@ import { CAM_DIST, TOP_H, FRUSTUM } from './config.js';
 import { camera, canvas } from './scene.js';
 import * as sceneModule from './scene.js';
 import { audioCtx, bgMusic } from './audio.js';
+import { IMG_FILES, IMG_CREDITS } from './cards.js';
 import { setPostCamera } from './postprocessing.js';
 
 // Start music on any user interaction
@@ -142,13 +143,16 @@ const _panelNormal = new THREE.Vector3();
 const _camToPanel = new THREE.Vector3();
 const _panelWorldPos = new THREE.Vector3();
 
+const PANEL_Y_OFFSET = 0.8; // shift view up so image sits below the heading
 function _computePanelGoal(panelMesh, cam) {
   panelMesh.getWorldPosition(_panelWorldPos);
   _panelTargetLookAt.copy(_panelWorldPos);
+  _panelTargetLookAt.y += PANEL_Y_OFFSET;
   _panelNormal.set(0, 0, 1).applyQuaternion(panelMesh.quaternion);
   _camToPanel.subVectors(cam.position, _panelWorldPos);
   if (_camToPanel.dot(_panelNormal) < 0) _panelNormal.negate();
   _panelTargetCamPos.copy(_panelWorldPos).addScaledVector(_panelNormal, ORBIT_RADIUS);
+  _panelTargetCamPos.y += PANEL_Y_OFFSET;
 }
 
 export function startPanelZoom(panelMesh) {
@@ -188,16 +192,11 @@ export function navigatePanelZoom(panelMesh) {
 }
 
 function _showPanelUI(panelMesh) {
-  for (const id of ['panel-close', 'panel-prev', 'panel-next']) {
-    const el = document.getElementById(id);
-    if (el) el.style.display = 'block';
-  }
   // Hide caption until zoom animation settles
   _panelImgFile = (panelMesh.userData.imgFile || '');
   _panelCaptionShown = false;
   const cap = document.getElementById('panel-caption');
   if (cap) cap.style.display = 'none';
-  document.getElementById('panel-close').focus();
 }
 
 function _hidePanelUI() {
@@ -262,7 +261,35 @@ export function updateCam(dt) {
       _panelCaptionShown = true;
       const cap = document.getElementById('panel-caption');
       if (cap) {
-        cap.textContent = _panelImgFile.replace(/-\d+\.jpeg$/, '');
+        const idx = IMG_FILES.indexOf(_panelImgFile);
+        const credit = idx >= 0 ? IMG_CREDITS[idx] : null;
+        if (credit) {
+          cap.innerHTML = '';
+          const name = document.createElement('span');
+          name.textContent = credit.name;
+          cap.appendChild(name);
+          const links = document.createElement('span');
+          links.className = 'caption-links';
+          if (credit.url) {
+            const a = document.createElement('a');
+            a.href = credit.url;
+            a.target = '_blank';
+            a.rel = 'noopener';
+            a.textContent = 'Web';
+            links.appendChild(a);
+          }
+          if (credit.instagram) {
+            const a = document.createElement('a');
+            a.href = 'https://instagram.com/' + credit.instagram;
+            a.target = '_blank';
+            a.rel = 'noopener';
+            a.textContent = '@' + credit.instagram;
+            links.appendChild(a);
+          }
+          cap.appendChild(links);
+        } else {
+          cap.textContent = _panelImgFile;
+        }
         cap.style.display = 'block';
       }
     }

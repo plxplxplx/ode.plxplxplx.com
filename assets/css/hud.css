@@ -92,5 +92,17 @@
   color: rgba(var(--color-lime), 0.85);
   text-align: center;
   white-space: nowrap;
-  pointer-events: none;
+  pointer-events: auto;
+}
+#panel-caption .caption-links {
+  margin-left: 12px;
+}
+#panel-caption .caption-links a {
+  color: rgba(var(--color-orange), 0.85);
+  text-decoration: none;
+  margin-left: 8px;
+  transition: color var(--transition-fast);
+}
+#panel-caption .caption-links a:hover {
+  color: rgba(var(--color-lime), 1);
 }

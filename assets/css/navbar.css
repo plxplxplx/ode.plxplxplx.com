@@ -77,19 +77,13 @@
   display: block;
 }
 
-/* ── Nav links (above canvas — always clickable) ── */
+/* ── Nav links ── */
 #header-nav {
-  position: fixed;
-  /* heading top (48px) + heading height (width × 0.75 aspect ratio) + gap */
-  top: calc(48px + min(50vw, 500px) * 0.75 + 4px);
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: var(--z-header);
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0;
+  margin-top: 4px;
   pointer-events: auto;
-  user-select: none;
 }
 
 .nav-link {
@@ -144,7 +138,6 @@
     width: 80vw;
   }
   #header-nav {
-    top: calc(48px + 80vw * 0.75 + 4px);
     grid-template-columns: 1fr;
     justify-items: center;
     text-align: center;
