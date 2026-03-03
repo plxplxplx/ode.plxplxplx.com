@@ -150,7 +150,7 @@ function _computePanelGoal(panelMesh, cam) {
   panelMesh.getWorldPosition(_panelWorldPos);
   _panelTargetLookAt.copy(_panelWorldPos);
   _panelTargetLookAt.y += PANEL_Y_OFFSET;
-  _panelNormal.set(0, 0, 1).applyQuaternion(panelMesh.quaternion);
+  _panelNormal.set(0, 0, -1).applyQuaternion(panelMesh.quaternion);
   _panelTargetCamPos.copy(_panelWorldPos).addScaledVector(_panelNormal, ORBIT_RADIUS);
   _panelTargetCamPos.y += PANEL_Y_OFFSET;
 }
