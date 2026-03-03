@@ -26,29 +26,32 @@ export const bgMusic = new Audio(TRACKS['Dance Dunce ODE ♫']);
 bgMusic.loop = true;
 bgMusic.crossOrigin = 'anonymous';
 
-export const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-const sourceNode = audioCtx.createMediaElementSource(bgMusic);
-
-// Master gain
-export const masterGain = audioCtx.createGain();
-masterGain.gain.value = 0.4;
-
-// Low-pass filter
-const lpFilter = audioCtx.createBiquadFilter();
-lpFilter.type = 'lowpass';
-lpFilter.frequency.value = 800;
-lpFilter.Q.value = 1.0;
-
-// High-pass filter
-const hpFilter = audioCtx.createBiquadFilter();
-hpFilter.type = 'highpass';
-hpFilter.frequency.value = 20;
-hpFilter.Q.value = 0.5;
-
-// On mobile, skip expensive convolver + delay to save CPU
-let convolver, reverbGain, delay, delayFeedback, delayGain;
+// On mobile, skip the entire Web Audio API chain — Safari's implementation
+// causes scroll jank even with just filters. Use HTML5 Audio volume instead.
+export let audioCtx = null;
+export let masterGain = null;
+let lpFilter, hpFilter, reverbGain, delayGain, delayFeedback, delay;
 
 if (!isMobile) {
+  audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+  const sourceNode = audioCtx.createMediaElementSource(bgMusic);
+
+  // Master gain
+  masterGain = audioCtx.createGain();
+  masterGain.gain.value = 0.4;
+
+  // Low-pass filter
+  lpFilter = audioCtx.createBiquadFilter();
+  lpFilter.type = 'lowpass';
+  lpFilter.frequency.value = 800;
+  lpFilter.Q.value = 1.0;
+
+  // High-pass filter
+  hpFilter = audioCtx.createBiquadFilter();
+  hpFilter.type = 'highpass';
+  hpFilter.frequency.value = 20;
+  hpFilter.Q.value = 0.5;
+
   // Reverb via convolver
   function createImpulse(duration, decay) {
     const len = audioCtx.sampleRate * duration;
@@ -61,7 +64,7 @@ if (!isMobile) {
     }
     return impulse;
   }
-  convolver = audioCtx.createConvolver();
+  const convolver = audioCtx.createConvolver();
   convolver.buffer = createImpulse(3.0, 2.5);
   reverbGain = audioCtx.createGain();
   reverbGain.gain.value = 0.15;
@@ -73,15 +76,13 @@ if (!isMobile) {
   delayFeedback.gain.value = 0.0;
   delayGain = audioCtx.createGain();
   delayGain.gain.value = 0.0;
-}
 
-// Signal chain
-sourceNode.connect(lpFilter);
-lpFilter.connect(hpFilter);
-hpFilter.connect(masterGain);
-masterGain.connect(audioCtx.destination);
+  // Signal chain
+  sourceNode.connect(lpFilter);
+  lpFilter.connect(hpFilter);
+  hpFilter.connect(masterGain);
+  masterGain.connect(audioCtx.destination);
 
-if (!isMobile) {
   // Reverb send
   hpFilter.connect(convolver);
   convolver.connect(reverbGain);
@@ -93,6 +94,8 @@ if (!isMobile) {
   delayFeedback.connect(delay);
   delay.connect(delayGain);
   delayGain.connect(audioCtx.destination);
+} else {
+  bgMusic.volume = 0.4;
 }
 
 export function switchTrack(name) {
@@ -111,7 +114,8 @@ export const STAGE_AUDIO = [
   { lpFreq: 16000, hpFreq: 150, reverbWet: 0.55, delayWet: 0.3, delayFb: 0.4, delayTime: 0.55, playbackRate: 0.95 },
 ];
 
-export function updateAudio(camH) {
+// On mobile, no Web Audio nodes exist — nothing to modulate per frame
+export const updateAudio = isMobile ? () => {} : function(camH) {
   let aIdx = 0, bIdx = 0, frac = 0;
   for (let i = 0; i < STAGES.length - 1; i++) {
     if (camH >= STAGES[i].floorY && camH < STAGES[i + 1].floorY) {
@@ -127,12 +131,9 @@ export function updateAudio(camH) {
 
   lpFilter.frequency.setTargetAtTime(lerp(a.lpFreq, b.lpFreq, frac), now, 0.3);
   hpFilter.frequency.setTargetAtTime(lerp(a.hpFreq, b.hpFreq, frac), now, 0.3);
-
-  if (!isMobile) {
-    reverbGain.gain.setTargetAtTime(lerp(a.reverbWet, b.reverbWet, frac), now, 0.3);
-    delayGain.gain.setTargetAtTime(lerp(a.delayWet, b.delayWet, frac), now, 0.3);
-    delayFeedback.gain.setTargetAtTime(lerp(a.delayFb, b.delayFb, frac), now, 0.3);
-    delay.delayTime.setTargetAtTime(lerp(a.delayTime, b.delayTime, frac), now, 0.3);
-  }
+  reverbGain.gain.setTargetAtTime(lerp(a.reverbWet, b.reverbWet, frac), now, 0.3);
+  delayGain.gain.setTargetAtTime(lerp(a.delayWet, b.delayWet, frac), now, 0.3);
+  delayFeedback.gain.setTargetAtTime(lerp(a.delayFb, b.delayFb, frac), now, 0.3);
+  delay.delayTime.setTargetAtTime(lerp(a.delayTime, b.delayTime, frac), now, 0.3);
   bgMusic.playbackRate = lerp(a.playbackRate, b.playbackRate, frac);
-}
+};

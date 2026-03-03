@@ -12,7 +12,7 @@ let _musicStarted = false;
 function startMusic() {
   if (_musicStarted) return;
   _musicStarted = true;
-  audioCtx.resume();
+  if (audioCtx) audioCtx.resume();
   bgMusic.play().then(() => {
     for (const evt of _musicEvents) window.removeEventListener(evt, startMusic);
   }).catch(() => { _musicStarted = false; });
