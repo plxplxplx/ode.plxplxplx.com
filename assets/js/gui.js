@@ -73,7 +73,7 @@ export const params = {
   steelRoughness: matSteel.roughness,
   pixelRatio: renderer.getPixelRatio(),
   fxaa: fxaaPass.enabled,
-  exposure: renderer.toneMappingExposure,
+  exposure: 0.65,
   godRaysEnabled: false,
   godRayExposure: godRaysPass.uniforms.exposure.value,
   godRayDecay: godRaysPass.uniforms.decay.value,
