@@ -107,7 +107,7 @@ export const params = {
   ffBeatDecay: 8,
   musicVolume: bgMusic.volume,
   trackProgress: 0,
-  track: 'Dance Dunce ODE',
+  track: 'Dance Dunce ODE ♫',
   // Camera
   usePerspective: false,
   perspFov: 50,
