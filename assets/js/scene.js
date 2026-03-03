@@ -11,7 +11,7 @@ export const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(isMobile ? Math.min(window.devicePixelRatio, 1.5) : Math.min(window.devicePixelRatio, 2));
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.65;
+renderer.toneMappingExposure = 0.75;
 renderer.shadowMap.enabled = !isMobile;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.localClippingEnabled = true;
