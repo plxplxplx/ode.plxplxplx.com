@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
-import { FBXLoader } from 'three/addons/loaders/FBXLoader.js';
+
 import { manager } from './loader.js';
 import {
   BAYS_X, BAYS_Z, BAY_W, BAY_D, LEVEL_H, TOP_H,
@@ -501,41 +501,6 @@ for (let g = 0; g < 15; g++) {
 
 scene.add(shrubGroup);
 
-// =====================================================
-// FIGURE — standing in SUMMIT stage corner against railing
-// =====================================================
-const fbxLoader = new FBXLoader(manager);
-deferLoad(() => fbxLoader.load('assets/models/Male Standing Pose.fbx', (fbx) => {
-  const boundingBox = new THREE.Box3().setFromObject(fbx);
-  const height = boundingBox.max.y - boundingBox.min.y;
-  const targetHeight = 1.8;
-  const s = targetHeight / height;
-  fbx.scale.setScalar(s);
-
-  fbx.traverse(child => {
-    if (child.isMesh) {
-      child.castShadow = true;
-      child.receiveShadow = true;
-    }
-  });
-
-  // Apply built-in pose if the FBX contains animation clips
-  if (fbx.animations && fbx.animations.length > 0) {
-    const mixer = new THREE.AnimationMixer(fbx);
-    const action = mixer.clipAction(fbx.animations[0]);
-    action.play();
-    mixer.update(0);
-    action.paused = true;
-  }
-
-  // Place in SUMMIT stage (stage 4) corner, back against the railing
-  const stageY = STAGES[3].floorY + PLAT_H;
-  fbx.position.set(gx(BAYS_X) - 0.2, stageY, gz(BAYS_Z) - 0.2);
-  fbx.rotation.y = -Math.PI * 0.75; // face inward diagonally from corner
-  fbx.rotation.x = -0.05; // slight lean back against railing
-
-  scene.add(fbx);
-}, undefined, (err) => console.warn('FBX load error:', err)));
 
 // =====================================================
 // VINES GLB MODEL (dense variant) — InstancedMesh

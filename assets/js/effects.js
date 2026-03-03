@@ -44,7 +44,7 @@ export function pickLightTarget(gl) {
 // =====================================================
 export const FF_COUNT = isMobile ? 4 : 10;
 export const fireflies = [];
-const ffGlowGeo = new THREE.SphereGeometry(0.06, 6, 4);
+const ffGlowGeo = new THREE.SphereGeometry(0.06, 16, 12);
 const FF_LIGHT_COUNT = isMobile ? 0 : 4;
 
 export const FF_STAGE_COLORS = [

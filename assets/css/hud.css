@@ -1,6 +1,6 @@
 #hud {
   position: fixed; bottom: 60px; left: 50%; transform: translateX(-50%);
-  color: rgba(var(--color-cream), 0.2); font-family: var(--font-serif); font-size: var(--font-size-hud);
+  color: rgba(var(--color-cream), 0.2); font-family: var(--font-sans); font-size: var(--font-size-hud);
   z-index: var(--z-hud); pointer-events: none; letter-spacing: var(--letter-spacing-tight); text-align: center;
   text-transform: lowercase;
 }
@@ -85,7 +85,7 @@
   border: 1px solid rgba(var(--color-orange), 0.15);
   border-radius: var(--radius-pill);
   padding: 10px var(--space-edge);
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: var(--font-size-caption);
   font-weight: var(--font-weight-light);
   letter-spacing: var(--letter-spacing-tight);

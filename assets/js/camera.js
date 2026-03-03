@@ -14,7 +14,7 @@ function startMusic() {
   audioCtx.resume();
   bgMusic.play().catch(() => {});
 }
-for (const evt of ['click', 'pointerdown', 'keydown', 'touchstart', 'wheel']) {
+for (const evt of ['click', 'pointerdown', 'keydown', 'touchstart', 'wheel', 'scroll']) {
   window.addEventListener(evt, startMusic, { once: true, passive: true });
 }
 

@@ -31,32 +31,56 @@ function makeRibbonTex(title, body, width = 4096, height = 512) {
   const ctx = c.getContext('2d');
   ctx.clearRect(0, 0, width, height);
 
-  const pad = 80;
-  let bodyX = pad;
+  const bannerPad = 40;
+  const font = "'NHaas Grotesk', 'Helvetica Neue', Helvetica, Arial, sans-serif";
 
+  // Measure total content width
+  const bodySize = Math.floor(height * 0.22);
+  ctx.font = `300 ${bodySize}px ${font}`;
+  const lines = body.split('\n');
+  let maxBodyW = 0;
+  for (const line of lines) maxBodyW = Math.max(maxBodyW, ctx.measureText(line).width);
+
+  let titleW = 0, titleSize = 0, titleGap = 0;
   if (title) {
-    const titleSize = Math.floor(height * 0.4);
-    ctx.fillStyle = '#ffffff';
-    ctx.font = `300 ${titleSize}px Georgia, serif`;
-    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-    ctx.fillText(title, pad, pad * 0.35);
+    titleSize = Math.floor(height * 0.4);
+    ctx.font = `300 ${titleSize}px ${font}`;
+    titleW = ctx.measureText(title).width;
+    titleGap = 180;
+  }
 
-    const titleW = ctx.measureText(title).width;
+  const contentW = titleW + titleGap + maxBodyW;
+  const textH = lines.length * bodySize * 1.45;
+
+  // Center everything on the canvas
+  const cx = (width - contentW) / 2;
+  const cy = (height - textH) / 2;
+
+  // Banner region: black rectangle at full alpha — shader reads as fabric area
+  ctx.fillStyle = '#000000';
+  ctx.fillRect(cx - bannerPad, cy - bannerPad, contentW + bannerPad * 2, textH + bannerPad * 2);
+
+  // Title text (white on black banner)
+  if (title) {
+    ctx.fillStyle = '#ffffff';
+    ctx.font = `300 ${titleSize}px ${font}`;
+    ctx.textAlign = 'left'; ctx.textBaseline = 'top';
+    ctx.fillText(title, cx, cy);
+
     ctx.strokeStyle = 'rgba(255,255,255,0.5)';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(pad + titleW + 40, pad * 0.35 + titleSize * 0.5);
-    ctx.lineTo(pad + titleW + 160, pad * 0.35 + titleSize * 0.5);
+    ctx.moveTo(cx + titleW + 40, cy + titleSize * 0.5);
+    ctx.lineTo(cx + titleW + 160, cy + titleSize * 0.5);
     ctx.stroke();
-    bodyX = pad + titleW + 180;
   }
 
-  const bodySize = Math.floor(height * 0.22);
-  ctx.fillStyle = 'rgba(255,255,255,0.85)';
-  ctx.font = `300 ${bodySize}px Georgia, serif`;
+  // Body text (white on black banner)
+  const bodyX = cx + titleW + titleGap;
+  ctx.fillStyle = '#ffffff';
+  ctx.font = `300 ${bodySize}px ${font}`;
   ctx.textAlign = 'left'; ctx.textBaseline = 'top';
-  const lines = body.split('\n');
-  let by = pad * 0.3;
+  let by = cy;
   for (const line of lines) {
     ctx.fillText(line, bodyX, by);
     by += bodySize * 1.45;
@@ -115,6 +139,9 @@ ZONES.forEach((zone, i) => {
       phase: { value: i * 2.5 },
       opacity: { value: 0.0 },
       brightness: { value: 1.0 },
+      tintColor: { value: new THREE.Color(1, 1, 1) },
+      bgColor: { value: new THREE.Color(0, 0, 0) },
+      bgOpacity: { value: 0.0 },
     },
     vertexShader: ribbonVert,
     fragmentShader: ribbonFrag,
@@ -125,7 +152,7 @@ ZONES.forEach((zone, i) => {
   });
 
   const startAngle = i * Math.PI * 0.6;
-  const geo = buildRibbonGeo(6.5, 295 * Math.PI / 180, 5.5, RIBBON_SEGS, startAngle, 18);
+  const geo = buildRibbonGeo(9.0, 295 * Math.PI / 180, 5.5, RIBBON_SEGS, startAngle, 18);
   const mesh = new THREE.Mesh(geo, mat);
   mesh.position.y = zone.y + 3;
   ribbonOverlayScene.add(mesh);

@@ -62,7 +62,7 @@ export const params = {
   textFlipX: true,
   textFlipY: false,
   textFlipZ: true,
-  textRadius: 6.5,
+  textRadius: 9.0,
   textArc: 295,
   textHeight: 5.5,
   textRise: 18,
@@ -136,7 +136,7 @@ export const params = {
   // Glass Panels
   glassPanelVisible: true,
   glassPanelOpacity: 0.42,
-  glassPanelImages: false,
+  glassPanelImages: true,
   glassPanelImageOpacity: 0.7,
   // Caution Tape
   tapeVisible: TAPE_OPTS.visible,

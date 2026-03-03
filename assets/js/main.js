@@ -310,9 +310,13 @@ function animate() {
     const pulse = Math.max(0, Math.sin(t * ff.pulseSpeed + ff.phase));
     // Beat-synced pulse when audio is active; individual sine pulse as fallback
     const scaleVal = audioReactive
-      ? 0.3 + beatPulse
+      ? 0.6 + beatPulse * 3.0
       : 0.6 + pulse * 2.0;
     ff.sprite.scale.setScalar(scaleVal * ff.glowScale);
+    // Glow opacity reacts to beat — visible at rest, flares on peaks
+    ff.mat.opacity = audioReactive
+      ? Math.min(1.0, 0.4 + beatPulse * 2.0)
+      : 1.0;
     _ffColor.copy(FF_STAGE_COLORS[0]);
     for (let si = STAGES.length - 1; si >= 0; si--) {
       if (fy >= STAGES[si].floorY) {
@@ -328,7 +332,7 @@ function animate() {
       ff.light.position.set(fx, fy, fz);
       ff.light.color.copy(_ffColor);
       const intensityVal = audioReactive
-        ? 0.3 + beatPulse * beatPulse
+        ? 0.3 + beatPulse * beatPulse * 4.0
         : 0.3 + pulse * pulse * 0.7;
       ff.light.intensity = ff.baseIntensity * intensityVal;
     }

@@ -10,7 +10,7 @@ import { scene, buildPlane, buildPlaneBottom } from './scene.js';
 /** Load image tape texture */
 const texLoader = new THREE.TextureLoader();
 function makeTapeTexture() {
-  const tex = texLoader.load('assets/reference/plxodeTape.jpg');
+  const tex = texLoader.load('assets/reference/tape.svg');
   tex.wrapS = THREE.RepeatWrapping;
   tex.wrapT = THREE.ClampToEdgeWrapping;
   tex.colorSpace = THREE.SRGBColorSpace;

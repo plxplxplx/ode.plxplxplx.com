@@ -396,6 +396,9 @@ export const ribbonFrag = `
   uniform sampler2D map;
   uniform float opacity;
   uniform float brightness;
+  uniform vec3 tintColor;
+  uniform vec3 bgColor;
+  uniform float bgOpacity;
   varying vec2 vUv;
   varying float vDisplacement;
 
@@ -408,7 +411,11 @@ export const ribbonFrag = `
     if (!gl_FrontFacing) {
       shade *= 0.88;
     }
-    gl_FragColor = vec4(tex.rgb * shade * brightness, tex.a * opacity);
+    float textMask = tex.r;
+    float bannerMask = tex.a;
+    vec3 col = mix(bgColor, tintColor, textMask) * shade * brightness;
+    float a = bannerMask * mix(bgOpacity, 1.0, textMask) * opacity;
+    gl_FragColor = vec4(col, a);
   }
 `;
 

@@ -9,18 +9,20 @@ import { buildRibbonGeo } from './zones.js';
 // ARC IMAGE CARDS (curved around tower like flags)
 // =====================================================
 export const IMG_FILES = [
-  'HqQQT9mTcL-1920.jpeg','IZ18TVsRAN-1920.jpeg','Iu6VuT-ElC-2400.jpeg',
-  'HM8Dvcqtnd-2400.jpeg','XQiztaN26N-2000.jpeg','BqR9NVWOMV-1920.jpeg',
-  'C_QJwm4AcV-2400.jpeg','BEvnYvtByD-2400.jpeg','AjRWcfMMCI-2400.jpeg',
-  'ghPutsDdTy-2048.jpeg','U45Puxr6Ci-2400.jpeg','AzdaZvnRUH-2400.jpeg',
-  'f9I4EJZnoa-2400.jpeg','eU0NJu8KEc-2400.jpeg','Wh1Sy6D4_o-2400.jpeg',
-  'yMsnqWOtUi-2400.jpeg','DPW9CtXPXi-2400.jpeg','GqH5ave7rI-2400.jpeg',
-  '8gA1qoMXow-2400.jpeg','A0MBXh2Gyn-2400.jpeg','4523HBjZCE-2400.jpeg',
-  'dwuKC2SCjT-2400.jpeg','l7pfxJcCIr-1920.jpeg','746RjWk9uw-2400.jpeg',
-  '6kN6nvLZio-1920.jpeg','_DSpGAYZ4W-1920.jpeg','dzZHLTzuHv-1920.jpeg',
-  'iz30Ho2Gku-1920.jpeg','LnLVhxBU-J-2400.jpeg','QGqfYT3OLI-2400.jpeg',
+  'plxodejoy-francis.webp',
+  'plxodejoy-dina.webp',
+  'plxodejoy-emil.webp',
+  'plxodejoy-patrik.webp',
 ];
-export const CARD_COUNT = 30;
+
+export const IMG_CREDITS = [
+  { name: 'Francis Patrick Brady', url: 'https://francispatrickbrady.com/', instagram: 'francispatrickbrady' },
+  { name: 'Dina Khashan', url: 'https://soundcloud.com/dinakhashan', instagram: 'dinakhashan' },
+  { name: 'Emil Grillting', url: 'https://grillting.com/', instagram: 'grill_ting' },
+  { name: 'Patrik Söderståm', url: 'https://www.showstudio.com/contributors/patrik_soderstam', instagram: 'mixpatriksoderstam' },
+];
+
+export const CARD_COUNT = IMG_FILES.length;
 const texLoader = new THREE.TextureLoader(manager);
 
 export const CARD_OPTS = {
