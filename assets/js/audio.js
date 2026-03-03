@@ -8,6 +8,7 @@ export const TRACKS = {
   'Årsmöte I':           'assets/audio/anton-ingvarsson-arsmote-del-1.mp3',
   'Årsmöte II':          'assets/audio/anton-ingvarsson-arsmote-del-2.mp3',
   'Dance Dunce':         'assets/audio/anton-ingvarsson-dance-dunce-ambient.mp3',
+  'Dance Dunce ODE':     'assets/audio/anton-ingvarsson-dance-dunce-ode.mp3',
   'Free':                'assets/audio/anton-ingvarsson-free.mp3',
   'Havet':               'assets/audio/anton-ingvarsson-havet-ar-rattsagidddit.mp3',
   'Kyrkorgel':           'assets/audio/anton-ingvarsson-kyrkorgel-del-2.mp3',
@@ -19,7 +20,7 @@ export const TRACKS = {
   'The Story Continues': 'assets/audio/anton-ingvarsson-the-story-continues.mp3',
 };
 
-export const bgMusic = new Audio(TRACKS['PLX Freakzone']);
+export const bgMusic = new Audio(TRACKS['Dance Dunce ODE']);
 bgMusic.loop = true;
 bgMusic.crossOrigin = 'anonymous';
 
