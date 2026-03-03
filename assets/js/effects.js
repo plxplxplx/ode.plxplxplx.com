@@ -90,3 +90,57 @@ for (let i = 0; i < FF_COUNT; i++) {
     baseIntensity: 4.0,
   });
 }
+
+// =====================================================
+// PER-FRAME UPDATE
+// =====================================================
+const _ffColor = new THREE.Color();
+
+export function updateEffects(dt, t, camH, params) {
+  // Traveling grid lights
+  for (const gl of gridLights) {
+    gl.progress += gl.speed * dt;
+    if (gl.progress >= 1) {
+      gl.gi = gl.ti; gl.gj = gl.tj; gl.lv = gl.tlv;
+      pickLightTarget(gl);
+    }
+    const p = gl.progress;
+    gl.light.position.set(
+      THREE.MathUtils.lerp(gx(gl.gi), gx(gl.ti), p),
+      THREE.MathUtils.lerp(gl.lv * LEVEL_H, gl.tlv * LEVEL_H, p),
+      THREE.MathUtils.lerp(gz(gl.gj), gz(gl.tj), p)
+    );
+    gl.light.intensity = 0.5 + 0.3 * Math.sin(t * 1.5 + gl.gi);
+  }
+
+  // Fireflies — simple sine pulse animation
+  for (const ff of fireflies) {
+    ff.angle += ff.speed * dt * 0.15;
+    ff.yOffset += Math.sin(t * ff.ySpeed + ff.phase) * 0.005;
+    const vr = params.ffVerticalRange;
+    if (ff.yOffset > vr) ff.yOffset = vr;
+    if (ff.yOffset < -vr) ff.yOffset = -vr;
+    const fx = Math.cos(ff.angle) * ff.radius;
+    const fz = Math.sin(ff.angle) * ff.radius;
+    const fy = camH + ff.yOffset + Math.sin(t * ff.ySpeed + ff.phase) * 1.5;
+    ff.sprite.position.set(fx, fy, fz);
+    const pulse = Math.max(0, Math.sin(t * ff.pulseSpeed + ff.phase));
+    ff.sprite.scale.setScalar((0.6 + pulse * 2.0) * ff.glowScale);
+    _ffColor.copy(FF_STAGE_COLORS[0]);
+    for (let si = STAGES.length - 1; si >= 0; si--) {
+      if (fy >= STAGES[si].floorY) {
+        const nextSi = Math.min(si + 1, STAGES.length - 1);
+        const range = (STAGES[nextSi].floorY || TOP_H) - STAGES[si].floorY;
+        const frac = range > 0 ? Math.min((fy - STAGES[si].floorY) / range, 1) : 0;
+        _ffColor.copy(FF_STAGE_COLORS[si]).lerp(FF_STAGE_COLORS[nextSi], frac);
+        break;
+      }
+    }
+    ff.mat.color.copy(_ffColor);
+    if (ff.light) {
+      ff.light.position.set(fx, fy, fz);
+      ff.light.color.copy(_ffColor);
+      ff.light.intensity = ff.baseIntensity * (0.3 + pulse * pulse * 0.7);
+    }
+  }
+}

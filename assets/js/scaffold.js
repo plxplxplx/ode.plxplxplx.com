@@ -6,19 +6,20 @@ import {
 } from './config.js';
 import { STAGE_MATS, steelAt, deckAt, tube, box } from './materials.js';
 import { scene, buildPlane, buildPlaneBottom } from './scene.js';
+import { seededPRNG } from './utils.js';
 
 // =====================================================
 // BUILD 4-STAGE TOWER (async chunked to reduce TBT)
 // =====================================================
 export const scaffold = new THREE.Group();
 scaffold.name = 'scaffold';
-export const collidables = [];
+const collidables = [];
 export const floorMats = []; // cloned materials for floor planes (opacity/mirror control)
 const rampMat = new THREE.MeshBasicMaterial({ visible: false });
 
 // Computed synchronously so downstream modules can import at init
 export const totalLevels = Math.ceil(TOP_H / LEVEL_H);
-export const stairPath = []; // { i, j } per level
+const stairPath = []; // { i, j } per level
 export const LOOKOUTS = [
   { stageIdx: 0, dir: [1, 0],  bays: 3, yOff: 0 },
   { stageIdx: 0, dir: [0, -1], bays: 2, yOff: 0 },
@@ -95,14 +96,7 @@ export const scaffoldReady = (async () => {
     const STAIR_SW = BAY_D - 2 * MARGIN;
     const LAND_W = BAY_W - 2 * MARGIN;
 
-    // seeded PRNG
-    let _ss = 42;
-    const srand = () => {
-      _ss |= 0; _ss = _ss + 0x6D2B79F5 | 0;
-      let t = Math.imul(_ss ^ _ss >>> 15, 1 | _ss);
-      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-      return ((t ^ t >>> 14) >>> 0) / 4294967296;
-    };
+    const srand = seededPRNG(42);
 
     // shuffled bay cycle for maximum variety
     const bays = [];
@@ -271,13 +265,7 @@ export const scaffoldReady = (async () => {
 
   // --- Section 5: Scattered platforms ---
   {
-    let _ps = 31;
-    const prand = () => {
-      _ps |= 0; _ps = _ps + 0x6D2B79F5 | 0;
-      let t = Math.imul(_ps ^ _ps >>> 15, 1 | _ps);
-      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-      return ((t ^ t >>> 14) >>> 0) / 4294967296;
-    };
+    const prand = seededPRNG(31);
 
     let lv = 3;
     while (lv < totalLevels - 1) {
@@ -481,14 +469,7 @@ export const scaffoldReady = (async () => {
 
   // --- Section 7: Glass panels ---
   {
-    // seeded PRNG for deterministic layout
-    let _s = 7;
-    const rand = () => {
-      _s |= 0; _s = _s + 0x6D2B79F5 | 0;
-      let t = Math.imul(_s ^ _s >>> 15, 1 | _s);
-      t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
-      return ((t ^ t >>> 14) >>> 0) / 4294967296;
-    };
+    const rand = seededPRNG(7);
 
     // white base material — neutral so image textures show true colour
     const glassMat = new THREE.MeshStandardMaterial({
@@ -553,3 +534,66 @@ export const scaffoldReady = (async () => {
     }
   }
 })();
+
+// =====================================================
+// GLASS PANEL IMAGE MANAGEMENT
+// =====================================================
+import { IMG_FILES } from './cards.js';
+
+const glassTexLoader = new THREE.TextureLoader();
+const glassTexCache = new Map();
+let glassImageMats = null;
+
+export function applyGlassImages(params) {
+  if (!glassImageMats) {
+    glassImageMats = IMG_FILES.map(file => {
+      const path = `assets/img/${file}`;
+      if (!glassTexCache.has(path)) {
+        const tex = glassTexLoader.load(path);
+        tex.colorSpace = THREE.SRGBColorSpace;
+        tex.wrapS = THREE.RepeatWrapping;
+        glassTexCache.set(path, tex);
+      }
+      const tex = glassTexCache.get(path);
+      tex.repeat.x = params.glassPanelFlipImages ? -1 : 1;
+      tex.offset.x = params.glassPanelFlipImages ? 1 : 0;
+      return new THREE.MeshStandardMaterial({
+        map: glassTexCache.get(path),
+        transparent: true,
+        opacity: params.glassPanelImageOpacity,
+        roughness: 0.1,
+        metalness: 0.05,
+        side: THREE.DoubleSide,
+        depthWrite: false,
+        clippingPlanes: [buildPlane, buildPlaneBottom],
+      });
+    });
+  }
+  // Spread images across different heights of the scaffold
+  const squares = glassPanels.filter(m => m.userData.squareFrame);
+  if (squares.length === 0) return;
+  squares.sort((a, b) => a.position.y - b.position.y);
+  const count = Math.min(IMG_FILES.length, squares.length);
+  const step = squares.length / count;
+  for (let i = 0; i < count; i++) {
+    const idx = Math.min(Math.floor(i * step + step / 2), squares.length - 1);
+    const mesh = squares[idx];
+    if (!mesh.userData.origMat) mesh.userData.origMat = mesh.material;
+    mesh.material = glassImageMats[i];
+    mesh.userData.imageMode = true;
+    mesh.userData.imgFile = IMG_FILES[i];
+  }
+}
+
+export function removeGlassImages(params) {
+  glassPanels.forEach(mesh => {
+    if (mesh.userData.origMat) {
+      mesh.material = mesh.userData.origMat;
+      mesh.material.opacity = params.glassPanelOpacity;
+    }
+    mesh.userData.imageMode = false;
+  });
+}
+
+export function getGlassImageMats() { return glassImageMats; }
+export function getGlassTexCache() { return glassTexCache; }

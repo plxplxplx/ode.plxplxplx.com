@@ -4,12 +4,11 @@ import { FRUSTUM } from './config.js';
 import { renderer, scene, sunPos, sunMesh, sunOccMesh, keyLight, perspCamera, switchCamera, buildPlane, buildPlaneBottom } from './scene.js';
 import * as sceneModule from './scene.js';
 import { STAGE_MATS, matSteel, loadMarbleTextures, getMarbleTextures, applyMarbleTextures } from './materials.js';
-import { cards, CARD_OPTS, rebuildCards } from './cards.js';
+import { cards, CARD_OPTS, rebuildCards, IMG_FILES } from './cards.js';
 import { ZONES, sideTexts, rebuildRibbons } from './zones.js';
 import { vineGroup, shrubGroup, flowerLight, stageGlowPlanes, backdropPanels, shroudPlanes } from './environment.js';
 import { gridLights, fireflies, FF_COUNT } from './effects.js';
-import { scaffold, floorMats, glassPanels, scaffoldReady } from './scaffold.js';
-import { IMG_FILES } from './cards.js';
+import { scaffold, floorMats, glassPanels, scaffoldReady, applyGlassImages, removeGlassImages, getGlassImageMats, getGlassTexCache } from './scaffold.js';
 import { bloom, bokehPass, godRaysPass, colorGradePass, grainPass, fxaaPass, setPostCamera } from './postprocessing.js';
 import { setControlsCamera } from './camera.js';
 
@@ -177,60 +176,6 @@ const applyPoleThickness = v => {
     }
   });
 };
-
-const glassTexLoader = new THREE.TextureLoader();
-const glassTexCache = new Map();
-let glassImageMats = null;
-
-function applyGlassImages() {
-  if (!glassImageMats) {
-    glassImageMats = IMG_FILES.map(file => {
-      const path = `assets/img/${file}`;
-      if (!glassTexCache.has(path)) {
-        const tex = glassTexLoader.load(path);
-        tex.colorSpace = THREE.SRGBColorSpace;
-        tex.wrapS = THREE.RepeatWrapping;
-        glassTexCache.set(path, tex);
-      }
-      const tex = glassTexCache.get(path);
-      tex.repeat.x = params.glassPanelFlipImages ? -1 : 1;
-      tex.offset.x = params.glassPanelFlipImages ? 1 : 0;
-      return new THREE.MeshStandardMaterial({
-        map: glassTexCache.get(path),
-        transparent: true,
-        opacity: params.glassPanelImageOpacity,
-        roughness: 0.1,
-        metalness: 0.05,
-        side: THREE.DoubleSide,
-        depthWrite: false,
-        clippingPlanes: [buildPlane, buildPlaneBottom],
-      });
-    });
-  }
-  // Spread images across different heights of the scaffold
-  const squares = glassPanels.filter(m => m.userData.squareFrame);
-  if (squares.length === 0) return;
-  squares.sort((a, b) => a.position.y - b.position.y);
-  const count = Math.min(IMG_FILES.length, squares.length);
-  const step = squares.length / count;
-  for (let i = 0; i < count; i++) {
-    const idx = Math.min(Math.floor(i * step + step / 2), squares.length - 1);
-    const mesh = squares[idx];
-    if (!mesh.userData.origMat) mesh.userData.origMat = mesh.material;
-    mesh.material = glassImageMats[i];
-    mesh.userData.imageMode = true;
-    mesh.userData.imgFile = IMG_FILES[i];
-  }
-}
-function removeGlassImages() {
-  glassPanels.forEach(mesh => {
-    if (mesh.userData.origMat) {
-      mesh.material = mesh.userData.origMat;
-      mesh.material.opacity = params.glassPanelOpacity;
-    }
-    mesh.userData.imageMode = false;
-  });
-}
 
 const updateSun = () => {
   sunPos.set(params.sunX, params.sunY, params.sunZ);
@@ -439,20 +384,21 @@ glassFolder.addBinding(params, 'glassPanelOpacity', { label: 'Color Opacity', mi
   });
 });
 glassFolder.addBinding(params, 'glassPanelImages', { label: 'Show Images' }).on('change', ev => {
-  if (ev.value) applyGlassImages();
-  else removeGlassImages();
+  if (ev.value) applyGlassImages(params);
+  else removeGlassImages(params);
 });
 glassFolder.addBinding(params, 'glassPanelImageOpacity', { label: 'Image Opacity', min: 0, max: 1, step: 0.01 }).on('change', ev => {
-  if (glassImageMats) glassImageMats.forEach(m => { m.opacity = ev.value; });
+  const mats = getGlassImageMats();
+  if (mats) mats.forEach(m => { m.opacity = ev.value; });
 });
 glassFolder.addBinding(params, 'glassPanelFlipImages', { label: 'Flip Images' }).on('change', ev => {
-  for (const [, tex] of glassTexCache) {
+  for (const [, tex] of getGlassTexCache()) {
     tex.repeat.x = ev.value ? -1 : 1;
     tex.offset.x = ev.value ? 1 : 0;
   }
 });
 // Defer until scaffold is built (glassPanels are empty at GUI init)
-scaffoldReady.then(() => { if (params.glassPanelImages) applyGlassImages(); });
+scaffoldReady.then(() => { if (params.glassPanelImages) applyGlassImages(params); });
 
 // -- Texture --
 const texFolder = scenePage.addFolder({ title: 'Texture', expanded: false });

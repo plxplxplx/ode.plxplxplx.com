@@ -10,12 +10,9 @@ import {
 import { scene, ktx2Loader } from './scene.js';
 import { stageGlowVert, stageGlowFrag, backdropFogVert, backdropFogFrag } from './shaders.js';
 import { totalLevels, LOOKOUTS } from './scaffold.js';
+import { seededPRNG } from './utils.js';
 
-// =====================================================
-// SEEDED PRNG — deterministic vegetation placement
-// =====================================================
-let _seed = 12345;
-function seededRandom() { _seed = (_seed * 16807) % 2147483647; return (_seed - 1) / 2147483646; }
+let seededRandom = seededPRNG(12345);
 
 // =====================================================
 // INSTANCED MESH HELPER
@@ -136,7 +133,7 @@ const rIC = typeof requestIdleCallback === 'function'
 const deferLoad = QUALITY.deferEnv ? (fn) => rIC(fn, { timeout: 5000 }) : (fn) => fn();
 
 deferLoad(() => gltfLoader.load('assets/models/vine.glb', (gltf) => {
-  _seed = 54321;
+  seededRandom = seededPRNG(54321);
   const vineModel = gltf.scene;
   const vineTransforms = [];
 
@@ -234,7 +231,7 @@ deferLoad(() => gltfLoader.load('assets/models/vine.glb', (gltf) => {
 // IVY GLB MODEL — InstancedMesh
 // =====================================================
 deferLoad(() => gltfLoader.load('assets/models/Ivy.glb', (gltf) => {
-  _seed = 13579;
+  seededRandom = seededPRNG(13579);
   const ivyModel = gltf.scene;
   const ivyTransforms = [];
 
@@ -319,7 +316,7 @@ deferLoad(() => gltfLoader.load('assets/models/Ivy.glb', (gltf) => {
 // IVY 2 GLB MODEL (denser variant) — InstancedMesh
 // =====================================================
 deferLoad(() => gltfLoader.load('assets/models/Ivy 2.glb', (gltf) => {
-  _seed = 24680;
+  seededRandom = seededPRNG(24680);
   const ivy2Model = gltf.scene;
   const ivy2Transforms = [];
 
@@ -506,7 +503,7 @@ scene.add(shrubGroup);
 // VINES GLB MODEL (dense variant) — InstancedMesh
 // =====================================================
 deferLoad(() => gltfLoader.load('assets/models/Vines.glb', (gltf) => {
-  _seed = 97531;
+  seededRandom = seededPRNG(97531);
   const vinesModel = gltf.scene;
   const vinesTransforms = [];
 
@@ -580,7 +577,7 @@ const flowerGroup = new THREE.Group();
 flowerGroup.name = 'flowers';
 
 deferLoad(() => gltfLoader.load('assets/models/Flowers.glb', (gltf) => {
-  _seed = 86420;
+  seededRandom = seededPRNG(86420);
   const flowerModel = gltf.scene;
   const flowerTransforms = [];
 
@@ -795,5 +792,34 @@ for (let si = 0; si < STAGES.length; si++) {
       stageY: STAGES[si].floorY,
       stageIdx: si,
     });
+  }
+}
+
+// =====================================================
+// PER-FRAME UPDATE
+// =====================================================
+function wDist(a, b) { const d = Math.abs(a - b); return Math.min(d, TOP_H - d); }
+
+export function updateEnvironment(dt, t, camH, params) {
+  // Volumetric fog bands (wrap-aware)
+  for (const tp of transitionPlanes) {
+    const proximity = Math.max(0, 1 - wDist(camH, tp.y) / 10);
+    tp.mesh.material.opacity = proximity * tp.bellCurve * 0.3;
+  }
+  // Dark shroud (wrap-aware)
+  for (const sp of shroudPlanes) {
+    const proximity = Math.max(0, 1 - wDist(camH, sp.layerY) / 15);
+    sp.mesh.material.opacity = proximity * sp.maxOpacity;
+  }
+  // Stage glow floor planes (wrap-aware)
+  for (const sg of stageGlowPlanes) {
+    const proximity = Math.max(0, 1 - wDist(camH, sg.stageY) / 20);
+    sg.mat.uniforms.opacity.value = proximity * params.stageGlowIntensity;
+  }
+  // Distant backdrop fog panels (wrap-aware)
+  for (const bp of backdropPanels) {
+    const proximity = Math.max(0, 1 - wDist(camH, bp.stageY) / 22);
+    bp.mat.uniforms.opacity.value = proximity * params.backdropIntensity;
+    bp.mat.uniforms.time.value = t;
   }
 }

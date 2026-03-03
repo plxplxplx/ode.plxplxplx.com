@@ -5,12 +5,10 @@
   text-transform: lowercase;
 }
 
-/* Panel zoom close button */
-#panel-close {
+/* Shared panel button base */
+.panel-btn {
   display: none;
   position: fixed;
-  top: 80px;
-  right: var(--space-edge);
   z-index: var(--z-panel);
   background: rgba(var(--color-orange), 0.7);
   backdrop-filter: blur(var(--blur-ui));
@@ -20,56 +18,39 @@
   width: var(--button-size);
   height: var(--button-size);
   color: rgba(0,0,0,0.8);
-  font-size: 24px;
-  line-height: var(--button-size);
   text-align: center;
   cursor: pointer;
   transition: background var(--transition-normal), color var(--transition-normal);
 }
-#panel-close:hover {
+.panel-btn:hover {
   background: rgba(var(--color-orange), 0.9);
   color: rgba(0,0,0,0.95);
 }
-#panel-close:focus-visible {
+.panel-btn:focus-visible {
   outline: var(--focus-outline);
   outline-offset: var(--focus-offset);
+}
+@media (prefers-reduced-motion: reduce) {
+  .panel-btn { transition: none; }
+}
+
+/* Panel zoom close button */
+#panel-close {
+  top: 80px;
+  right: var(--space-edge);
+  font-size: 24px;
+  line-height: var(--button-size);
 }
 
 /* Panel zoom nav arrows */
 #panel-prev, #panel-next {
-  display: none;
-  position: fixed;
   top: 50%;
   transform: translateY(-50%);
-  z-index: var(--z-panel);
-  background: rgba(var(--color-orange), 0.7);
-  backdrop-filter: blur(var(--blur-ui));
-  -webkit-backdrop-filter: blur(var(--blur-ui));
-  border: 1px solid rgba(var(--color-lime), 0.25);
-  border-radius: var(--radius-circle);
-  width: var(--button-size);
-  height: var(--button-size);
-  color: rgba(0,0,0,0.8);
   font-size: 28px;
   line-height: 42px;
-  text-align: center;
-  cursor: pointer;
-  transition: background var(--transition-normal), color var(--transition-normal);
 }
 #panel-prev { left: var(--space-edge); }
 #panel-next { right: var(--space-edge); }
-#panel-prev:hover, #panel-next:hover {
-  background: rgba(var(--color-orange), 0.9);
-  color: rgba(0,0,0,0.95);
-}
-#panel-prev:focus-visible, #panel-next:focus-visible {
-  outline: var(--focus-outline);
-  outline-offset: var(--focus-offset);
-}
-
-@media (prefers-reduced-motion: reduce) {
-  #panel-close, #panel-prev, #panel-next { transition: none; }
-}
 
 /* Panel zoom caption */
 #panel-caption {

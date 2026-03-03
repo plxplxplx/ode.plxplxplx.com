@@ -70,8 +70,7 @@ const _motionMQ = window.matchMedia('(prefers-reduced-motion: reduce)');
 export let prefersReducedMotion = _motionMQ.matches;
 _motionMQ.addEventListener('change', (e) => { prefersReducedMotion = e.matches; });
 
-// Character + camera config
-export const MOVE_SPEED = 4.0, JUMP_VEL = 7.2, GRAVITY = -20, STEP_UP = 0.35;
+// Camera config
 export const FRUSTUM = 12, CAM_DIST = 60, CAM_SMOOTH = 0.07;
 export const STD_R = 0.024, LED_R = 0.019, BRACE_R = 0.016, PLAT_H = 0.05;
 export const MARGIN = 0.1, N_TREADS = 10;

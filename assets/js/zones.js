@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { STAGES, LEVEL_H } from './config.js';
+import { STAGES, LEVEL_H, TOP_H } from './config.js';
 import { ribbonVert, ribbonFrag } from './shaders.js';
 
 // =====================================================
@@ -168,5 +168,54 @@ export function rebuildRibbons(params) {
     st.mesh.geometry = newGeo;
     st.mesh.position.y = st.zoneY + params.textYOffset;
     st.mesh.rotation.y = params.textRotY * Math.PI / 180;
+  }
+}
+
+// =====================================================
+// PER-FRAME UPDATES
+// =====================================================
+function wDist(a, b) { const d = Math.abs(a - b); return Math.min(d, TOP_H - d); }
+
+const _colorA = new THREE.Color();
+const _colorB = new THREE.Color();
+
+export function updateZones(camH, scene, wrapFogBoost) {
+  let zoneA = ZONES[0], zoneB = ZONES[0], zoneFrac = 0;
+  const zLen = ZONES.length;
+  for (let z = 0; z < zLen; z++) {
+    const curr = ZONES[z];
+    const next = ZONES[(z + 1) % zLen];
+    const currY = curr.y;
+    const nextY = next.y;
+    if (nextY > currY) {
+      if (camH >= currY && camH < nextY) {
+        zoneA = curr; zoneB = next;
+        zoneFrac = (camH - currY) / (nextY - currY);
+        break;
+      }
+    } else {
+      if (camH >= currY || camH < nextY) {
+        zoneA = curr; zoneB = next;
+        const span = (TOP_H - currY) + nextY;
+        const pos = camH >= currY ? (camH - currY) : (TOP_H - currY + camH);
+        zoneFrac = span > 0 ? pos / span : 0;
+        break;
+      }
+    }
+  }
+  _colorA.set(zoneA.fogColor);
+  _colorB.set(zoneB.fogColor);
+  scene.fog.color.copy(_colorA).lerp(_colorB, zoneFrac);
+  scene.background.copy(scene.fog.color);
+  scene.fog.density = THREE.MathUtils.lerp(zoneA.fogDensity, zoneB.fogDensity, zoneFrac) + wrapFogBoost;
+}
+
+export function updateSideTexts(dt, t, camH, params) {
+  for (const st of sideTexts) {
+    const dist = wDist(camH, st.zoneY);
+    const range = params.textFadeRange * params.textFadeOutMult;
+    st.mat.uniforms.opacity.value = Math.max(0, 1 - dist / range) * params.textMaxOpacity;
+    st.mat.uniforms.time.value = t;
+    st.mesh.rotation.y += params.textOrbitSpeed * dt;
   }
 }
