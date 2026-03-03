@@ -221,6 +221,15 @@ export function exitPanelZoom() {
   document.getElementById('viewport').focus();
 }
 
+// Block arrow/space keys from scrolling the page while viewing an image
+window.addEventListener('keydown', (e) => {
+  if (!panelZoomed) return;
+  if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Space'].includes(e.code)) {
+    e.preventDefault();
+  }
+  if (e.code === 'Escape') exitPanelZoom();
+});
+
 // =====================================================
 // CAMERA UPDATE (scroll-driven orbit)
 // =====================================================
