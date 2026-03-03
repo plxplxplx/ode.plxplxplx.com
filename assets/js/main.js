@@ -32,7 +32,7 @@ import { gx, gz } from './config.js';
 import { controls, scrollCurrent, updateCam, wrapFogBoost, panelZoomed, startPanelZoom, exitPanelZoom, navigatePanelZoom } from './camera.js';
 
 // Audio
-import './audio.js';
+import { updateAudio } from './audio.js';
 
 // Post-processing
 import { composer, colorGradePass, grainPass, godRaysPass } from './postprocessing.js';
@@ -197,6 +197,9 @@ function animate() {
   scene.fog.color.copy(_colorA).lerp(_colorB, zoneFrac);
   scene.background.copy(scene.fog.color);
   scene.fog.density = THREE.MathUtils.lerp(zoneA.fogDensity, zoneB.fogDensity, zoneFrac) + wrapFogBoost;
+
+  // Per-stage audio effects (throttle on mobile)
+  if (QUALITY.cardRaycast || (_occFrame & 3) === 0) updateAudio(camH);
 
   // Fade side typography in/out + animate flag wave + orbit (wrap-aware)
   for (const st of sideTexts) {
