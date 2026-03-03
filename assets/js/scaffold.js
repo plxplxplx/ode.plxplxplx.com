@@ -33,6 +33,7 @@ export const LOOKOUTS = [
   { stageIdx: 3, dir: [-1, 0], bays: 3, yOff: 0 },
 ];
 export const glassPanels = [];
+export let glassMat = null; // set during async scaffold build
 
 // Yield to main thread between sections
 const yieldTick = () => new Promise(r => setTimeout(r, 0));
@@ -472,7 +473,7 @@ export const scaffoldReady = (async () => {
     const rand = seededPRNG(7);
 
     // white base material — neutral so image textures show true colour
-    const glassMat = new THREE.MeshStandardMaterial({
+    glassMat = new THREE.MeshStandardMaterial({
       color: 0xffffff, transparent: true, opacity: 0.42,
       roughness: 0.05, metalness: 0.1,
       side: THREE.DoubleSide, depthWrite: false,

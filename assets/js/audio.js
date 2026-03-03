@@ -1,4 +1,4 @@
-import { STAGES } from './config.js';
+import { STAGES, isMobile } from './config.js';
 
 // =====================================================
 // DYNAMIC AUDIO — Web Audio API with per-stage effects
@@ -45,48 +45,55 @@ hpFilter.type = 'highpass';
 hpFilter.frequency.value = 20;
 hpFilter.Q.value = 0.5;
 
-// Reverb via convolver
-function createImpulse(duration, decay) {
-  const len = audioCtx.sampleRate * duration;
-  const impulse = audioCtx.createBuffer(2, len, audioCtx.sampleRate);
-  for (let ch = 0; ch < 2; ch++) {
-    const data = impulse.getChannelData(ch);
-    for (let i = 0; i < len; i++) {
-      data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+// On mobile, skip expensive convolver + delay to save CPU
+let convolver, reverbGain, delay, delayFeedback, delayGain;
+
+if (!isMobile) {
+  // Reverb via convolver
+  function createImpulse(duration, decay) {
+    const len = audioCtx.sampleRate * duration;
+    const impulse = audioCtx.createBuffer(2, len, audioCtx.sampleRate);
+    for (let ch = 0; ch < 2; ch++) {
+      const data = impulse.getChannelData(ch);
+      for (let i = 0; i < len; i++) {
+        data[i] = (Math.random() * 2 - 1) * Math.pow(1 - i / len, decay);
+      }
     }
+    return impulse;
   }
-  return impulse;
+  convolver = audioCtx.createConvolver();
+  convolver.buffer = createImpulse(3.0, 2.5);
+  reverbGain = audioCtx.createGain();
+  reverbGain.gain.value = 0.15;
+
+  // Delay
+  delay = audioCtx.createDelay(1.0);
+  delay.delayTime.value = 0.35;
+  delayFeedback = audioCtx.createGain();
+  delayFeedback.gain.value = 0.0;
+  delayGain = audioCtx.createGain();
+  delayGain.gain.value = 0.0;
 }
-const convolver = audioCtx.createConvolver();
-convolver.buffer = createImpulse(3.0, 2.5);
-const reverbGain = audioCtx.createGain();
-reverbGain.gain.value = 0.15;
 
-// Delay
-const delay = audioCtx.createDelay(1.0);
-delay.delayTime.value = 0.35;
-const delayFeedback = audioCtx.createGain();
-delayFeedback.gain.value = 0.0;
-const delayGain = audioCtx.createGain();
-delayGain.gain.value = 0.0;
-
-// Signal chain (no analyser — keeps per-frame cost low)
+// Signal chain
 sourceNode.connect(lpFilter);
 lpFilter.connect(hpFilter);
 hpFilter.connect(masterGain);
 masterGain.connect(audioCtx.destination);
 
-// Reverb send
-hpFilter.connect(convolver);
-convolver.connect(reverbGain);
-reverbGain.connect(audioCtx.destination);
+if (!isMobile) {
+  // Reverb send
+  hpFilter.connect(convolver);
+  convolver.connect(reverbGain);
+  reverbGain.connect(audioCtx.destination);
 
-// Delay send
-hpFilter.connect(delay);
-delay.connect(delayFeedback);
-delayFeedback.connect(delay);
-delay.connect(delayGain);
-delayGain.connect(audioCtx.destination);
+  // Delay send
+  hpFilter.connect(delay);
+  delay.connect(delayFeedback);
+  delayFeedback.connect(delay);
+  delay.connect(delayGain);
+  delayGain.connect(audioCtx.destination);
+}
 
 export function switchTrack(name) {
   const wasPlaying = !bgMusic.paused;
@@ -120,9 +127,12 @@ export function updateAudio(camH) {
 
   lpFilter.frequency.setTargetAtTime(lerp(a.lpFreq, b.lpFreq, frac), now, 0.3);
   hpFilter.frequency.setTargetAtTime(lerp(a.hpFreq, b.hpFreq, frac), now, 0.3);
-  reverbGain.gain.setTargetAtTime(lerp(a.reverbWet, b.reverbWet, frac), now, 0.3);
-  delayGain.gain.setTargetAtTime(lerp(a.delayWet, b.delayWet, frac), now, 0.3);
-  delayFeedback.gain.setTargetAtTime(lerp(a.delayFb, b.delayFb, frac), now, 0.3);
-  delay.delayTime.setTargetAtTime(lerp(a.delayTime, b.delayTime, frac), now, 0.3);
+
+  if (!isMobile) {
+    reverbGain.gain.setTargetAtTime(lerp(a.reverbWet, b.reverbWet, frac), now, 0.3);
+    delayGain.gain.setTargetAtTime(lerp(a.delayWet, b.delayWet, frac), now, 0.3);
+    delayFeedback.gain.setTargetAtTime(lerp(a.delayFb, b.delayFb, frac), now, 0.3);
+    delay.delayTime.setTargetAtTime(lerp(a.delayTime, b.delayTime, frac), now, 0.3);
+  }
   bgMusic.playbackRate = lerp(a.playbackRate, b.playbackRate, frac);
 }

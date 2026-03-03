@@ -8,7 +8,7 @@ import { cards, CARD_OPTS, rebuildCards, IMG_FILES } from './cards.js';
 import { ZONES, sideTexts, rebuildRibbons } from './zones.js';
 import { vineGroup, shrubGroup, flowerLight, stageGlowPlanes, backdropPanels, shroudPlanes } from './environment.js';
 import { gridLights, fireflies, FF_COUNT } from './effects.js';
-import { scaffold, floorMats, glassPanels, scaffoldReady, applyGlassImages, removeGlassImages, getGlassImageMats, getGlassTexCache } from './scaffold.js';
+import { scaffold, floorMats, glassPanels, glassMat, scaffoldReady, applyGlassImages, removeGlassImages, getGlassImageMats, getGlassTexCache } from './scaffold.js';
 import { bloom, bokehPass, godRaysPass, colorGradePass, grainPass, fxaaPass, setPostCamera } from './postprocessing.js';
 import { setControlsCamera } from './camera.js';
 
@@ -66,7 +66,8 @@ export const params = {
   textYOffset: 3,
   textRotY: 0,
   textStartAngleOffset: 0,
-  poleThickness: 2.0,
+  poleThickness: 1.0,
+  scaffoldTint: '#8a8a8a',
   steelMetalness: matSteel.metalness,
   steelRoughness: matSteel.roughness,
   pixelRatio: renderer.getPixelRatio(),
@@ -357,6 +358,11 @@ matFolder.addBinding(params, 'poleThickness', { label: 'Pole Thickness', min: 0.
 applyPoleThickness(params.poleThickness);
 // Re-apply after async scaffold build completes
 scaffoldReady.then(() => applyPoleThickness(params.poleThickness));
+matFolder.addBinding(params, 'scaffoldTint', { label: 'Scaffold Tint' }).on('change', ev => {
+  const c = new THREE.Color(ev.value);
+  STAGE_MATS.forEach(sm => { sm.steel.color.copy(c); sm.deck.color.copy(c); });
+  if (glassMat) glassMat.color.copy(c);
+});
 matFolder.addBinding(params, 'steelMetalness', { label: 'Steel Metalness', min: 0, max: 1, step: 0.01 }).on('change', ev => {
   STAGE_MATS.forEach(sm => sm.steel.metalness = ev.value);
 });
