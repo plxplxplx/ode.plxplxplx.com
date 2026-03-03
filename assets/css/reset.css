@@ -28,6 +28,7 @@ body { min-height: 1000vh; overflow-y: scroll; -ms-overflow-style: none; }
 }
 
 #main-content:focus { outline: none; }
+#viewport:focus { outline: none; }
 
 .visually-hidden {
   position: absolute;
