@@ -4,6 +4,7 @@ import * as THREE from 'three';
 export const manager = new THREE.LoadingManager();
 
 const pct = document.getElementById('loader-pct');
+const headingImg = document.getElementById('heading-img');
 
 export const loaderReady = new Promise((resolve) => {
   let resolved = false;
@@ -12,6 +13,8 @@ export const loaderReady = new Promise((resolve) => {
   manager.onProgress = (_url, loaded, total) => {
     const p = Math.round((loaded / total) * 100);
     if (pct) pct.textContent = `${p}%`;
+    // Left-to-right clip mask reveal — CSS transition smooths the jumps
+    if (headingImg) headingImg.style.clipPath = `inset(0 ${100 - p}% 0 0)`;
   };
 
   manager.onLoad = done;

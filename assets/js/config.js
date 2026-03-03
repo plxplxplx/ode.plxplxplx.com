@@ -26,6 +26,39 @@ export const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
   || (navigator.maxTouchPoints > 1 && window.innerWidth < 1024)
   || window.innerWidth < 768;
 
+// Centralised quality settings — tweak mobile values here
+export const QUALITY = isMobile ? {
+  pixelRatio:     Math.min(window.devicePixelRatio, 1.5),
+  antialias:      false,
+  shadows:        false,
+  shadowMapSize:  1024,
+  envMap:         false,
+  bloom:          false,
+  filmGrain:      false,
+  tubeSegments:   4,
+  volFogLayers:   4,
+  shroudLayers:   6,
+  gridLights:     2,
+  fireflyCount:   4,
+  fireflyLights:  0,
+  deferEnv:       true,
+} : {
+  pixelRatio:     Math.min(window.devicePixelRatio, 2),
+  antialias:      true,
+  shadows:        true,
+  shadowMapSize:  2048,
+  envMap:         true,
+  bloom:          true,
+  filmGrain:      true,
+  tubeSegments:   8,
+  volFogLayers:   8,
+  shroudLayers:   12,
+  gridLights:     6,
+  fireflyCount:   10,
+  fireflyLights:  4,
+  deferEnv:       false,
+};
+
 // Reduced motion preference (WCAG 2.3.3) — reactive
 const _motionMQ = window.matchMedia('(prefers-reduced-motion: reduce)');
 export let prefersReducedMotion = _motionMQ.matches;

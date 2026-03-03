@@ -24,6 +24,39 @@
   color: rgba(var(--color-cream), 0.35);
 }
 
+/* ── Loading reveal ──
+   Heading image stays at its final navbar position but above the loader,
+   with a left-to-right clip mask driven by JS loading progress. When
+   loaded the mask is fully open, nav fades in, loader fades out. */
+
+body:not(.site-loaded) #site-header {
+  z-index: calc(var(--z-loader) + 1);
+}
+
+body:not(.site-loaded) #heading-img {
+  clip-path: inset(0 100% 0 0);
+}
+
+body:not(.site-loaded) #header-nav {
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* Transitions fire when body gains .site-loaded */
+#site-header {
+  transition: z-index 0s 1s;
+}
+
+#heading-img {
+  transition: clip-path 0.3s ease-out;
+}
+
+#header-nav {
+  transition: opacity 0.6s ease 0.4s;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  #loader { transition: none; }
+  #loader, #site-header, #heading-img, #header-nav {
+    transition: none;
+  }
 }

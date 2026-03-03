@@ -5,7 +5,7 @@ import { manager } from './loader.js';
 import {
   BAYS_X, BAYS_Z, BAY_W, BAY_D, LEVEL_H, TOP_H,
   STAGES, ZONES_COLORS, PLAT_H, TOTAL_W, TOTAL_D,
-  gx, gz, isMobile,
+  gx, gz, QUALITY,
 } from './config.js';
 import { scene, ktx2Loader } from './scene.js';
 import { stageGlowVert, stageGlowFrag, backdropFogVert, backdropFogFrag } from './shaders.js';
@@ -60,7 +60,7 @@ function createInstancedMeshes(model, transforms, targetGroup) {
 // =====================================================
 export const transitionPlanes = [];
 const volFogGeo = new THREE.PlaneGeometry(60, 60);
-const VOL_FOG_LAYERS = isMobile ? 4 : 8;
+const VOL_FOG_LAYERS = QUALITY.volFogLayers;
 const VOL_FOG_SPREAD = 4;
 
 for (let si = 1; si < STAGES.length; si++) {
@@ -91,7 +91,7 @@ for (let si = 1; si < STAGES.length; si++) {
 }
 
 // Dark shroud at top and bottom of tower
-const SHROUD_LAYERS = isMobile ? 6 : 12;
+const SHROUD_LAYERS = QUALITY.shroudLayers;
 const SHROUD_DEPTH = 8;
 const shroudColor = new THREE.Color(0x020202);
 export const shroudPlanes = [];
@@ -133,7 +133,7 @@ const gltfLoader = new GLTFLoader(manager);
 const rIC = typeof requestIdleCallback === 'function'
   ? requestIdleCallback
   : (fn, opts) => setTimeout(fn, opts?.timeout ?? 0);
-const deferLoad = isMobile ? (fn) => rIC(fn, { timeout: 5000 }) : (fn) => fn();
+const deferLoad = QUALITY.deferEnv ? (fn) => rIC(fn, { timeout: 5000 }) : (fn) => fn();
 
 deferLoad(() => gltfLoader.load('assets/models/vine.glb', (gltf) => {
   _seed = 54321;

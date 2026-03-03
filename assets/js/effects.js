@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { BAYS_X, BAYS_Z, NUM_LEVELS, TOP_H, LEVEL_H, STAGES, gx, gz, isMobile } from './config.js';
+import { BAYS_X, BAYS_Z, NUM_LEVELS, TOP_H, LEVEL_H, STAGES, gx, gz, QUALITY } from './config.js';
 import { scene } from './scene.js';
 
 // =====================================================
@@ -7,7 +7,7 @@ import { scene } from './scene.js';
 // =====================================================
 export const gridLights = [];
 const lColors = [0xf05b30, 0xC8CC5A, 0xFF8844, 0xFFCC44, 0xE8A030, 0xCC6622];
-const GRID_LIGHT_COUNT = isMobile ? 2 : 6;
+const GRID_LIGHT_COUNT = QUALITY.gridLights;
 for (let n = 0; n < GRID_LIGHT_COUNT; n++) {
   const lt = new THREE.PointLight(lColors[n], 1.5, 25);
   const orb = new THREE.Mesh(
@@ -42,10 +42,10 @@ export function pickLightTarget(gl) {
 // =====================================================
 // FIREFLIES
 // =====================================================
-export const FF_COUNT = isMobile ? 4 : 10;
+export const FF_COUNT = QUALITY.fireflyCount;
 export const fireflies = [];
 const ffGlowGeo = new THREE.SphereGeometry(0.06, 16, 12);
-const FF_LIGHT_COUNT = isMobile ? 0 : 4;
+const FF_LIGHT_COUNT = QUALITY.fireflyLights;
 
 export const FF_STAGE_COLORS = [
   new THREE.Color(0xC8CC5A), // GROUND — poster lime

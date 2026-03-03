@@ -38,7 +38,7 @@ import { updateAudio, getAmplitude, bgMusic } from './audio.js';
 import { composer, colorGradePass, grainPass, godRaysPass } from './postprocessing.js';
 
 // GUI (must be last — reads from all modules)
-import { params, updateFPS, updateTrackProgress } from './gui.js';
+import { params, updateFPS } from './gui.js';
 
 // Loader
 import { loaderReady } from './loader.js';
@@ -397,9 +397,6 @@ function animate() {
 
   composer.render();
 
-  // Update audio timeline slider (~every 10 frames)
-  if (_occFrame % 10 === 0) updateTrackProgress();
-
   updateFPS();
 }
 
@@ -412,5 +409,6 @@ Promise.all([loaderReady, scaffoldReady]).then(() => {
   renderer.render(scene, sceneModule.camera);
 
   document.getElementById('loader').classList.add('loaded');
+  document.body.classList.add('site-loaded');
   animate();
 });

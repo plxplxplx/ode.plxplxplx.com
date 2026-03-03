@@ -1,18 +1,18 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
 import { KTX2Loader } from 'three/addons/loaders/KTX2Loader.js';
-import { FRUSTUM, TOP_H, isMobile } from './config.js';
+import { FRUSTUM, TOP_H, QUALITY } from './config.js';
 
 // =====================================================
 // RENDERER + SCENE
 // =====================================================
 export const canvas = document.getElementById('viewport');
-export const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-renderer.setPixelRatio(isMobile ? Math.min(window.devicePixelRatio, 1.5) : Math.min(window.devicePixelRatio, 2));
+export const renderer = new THREE.WebGLRenderer({ canvas, antialias: QUALITY.antialias });
+renderer.setPixelRatio(QUALITY.pixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
 renderer.toneMappingExposure = 0.75;
-renderer.shadowMap.enabled = !isMobile;
+renderer.shadowMap.enabled = QUALITY.shadows;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.localClippingEnabled = true;
 
@@ -31,7 +31,7 @@ export const fogColor = 0x140e08;
 scene.background = new THREE.Color(0x140e08);
 scene.fog = new THREE.FogExp2(fogColor, 0.04);
 
-if (!isMobile) {
+if (QUALITY.envMap) {
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
   pmrem.dispose();
@@ -62,7 +62,7 @@ scene.add(new THREE.AmbientLight(0x3a2a1a, 1.0));
 export const keyLight = new THREE.DirectionalLight(0xffe8d0, 5.0);
 keyLight.position.set(-5, 25, -12);
 keyLight.castShadow = true;
-keyLight.shadow.mapSize.set(isMobile ? 1024 : 2048, isMobile ? 1024 : 2048);
+keyLight.shadow.mapSize.set(QUALITY.shadowMapSize, QUALITY.shadowMapSize);
 keyLight.shadow.camera.left = -15; keyLight.shadow.camera.right = 15;
 keyLight.shadow.camera.top = 70; keyLight.shadow.camera.bottom = -5;
 keyLight.shadow.camera.far = 150;

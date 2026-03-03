@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { Pane } from 'tweakpane';
-import { FRUSTUM, isMobile } from './config.js';
+import { FRUSTUM } from './config.js';
 import { renderer, scene, sunPos, sunMesh, sunOccMesh, keyLight, perspCamera, switchCamera, buildPlane, buildPlaneBottom } from './scene.js';
 import * as sceneModule from './scene.js';
 import { STAGE_MATS, matSteel, loadMarbleTextures, getMarbleTextures, applyMarbleTextures } from './materials.js';
@@ -11,7 +11,6 @@ import { gridLights, fireflies, FF_COUNT } from './effects.js';
 import { scaffold, floorMats, glassPanels, scaffoldReady } from './scaffold.js';
 import { IMG_FILES } from './cards.js';
 import { bloom, bokehPass, godRaysPass, colorGradePass, grainPass, fxaaPass, setPostCamera } from './postprocessing.js';
-import { bgMusic, audioCtx, masterGain, TRACKS, switchTrack } from './audio.js';
 import { setControlsCamera } from './camera.js';
 
 // =====================================================
@@ -104,9 +103,6 @@ export const params = {
   ffBpm: 122,
   ffBeatDivision: 1,
   ffBeatDecay: 8,
-  musicVolume: bgMusic.volume,
-  trackProgress: 0,
-  track: 'Dance Dunce ODE ♫',
   // Camera
   usePerspective: false,
   perspFov: 50,
@@ -255,14 +251,12 @@ const tab = pane.addTab({
     { title: 'Rendering' },
     { title: 'Scene' },
     { title: 'Objects' },
-    { title: 'Audio' },
   ],
 });
 
 const renderPage = tab.pages[0];
 const scenePage = tab.pages[1];
 const objectsPage = tab.pages[2];
-const audioPage = tab.pages[3];
 
 // =====================================================
 // RENDERING TAB
@@ -596,45 +590,6 @@ ffSpeedFolder.addBinding(params, 'ffVerticalSpeed', { label: 'Vertical Speed', m
 ffSpeedFolder.addBinding(params, 'ffVerticalRange', { label: 'Vertical Range', min: 1, max: 40, step: 1 }).on('change', ev => {
   fireflies.forEach(ff => ff.yOffset = THREE.MathUtils.clamp(ff.yOffset, -ev.value, ev.value));
 });
-
-// =====================================================
-// AUDIO TAB
-// =====================================================
-audioPage.addBinding(params, 'track', { label: 'Track', options: Object.fromEntries(Object.keys(TRACKS).map(k => [k, k])) }).on('change', ev => {
-  switchTrack(ev.value);
-});
-audioPage.addButton({ title: 'Play Music' }).on('click', () => {
-  audioCtx.resume(); bgMusic.play().catch(() => {});
-});
-audioPage.addButton({ title: 'Pause' }).on('click', () => {
-  bgMusic.pause();
-});
-audioPage.addBinding(params, 'musicVolume', { label: 'Volume', min: 0, max: 1, step: 0.01 }).on('change', ev => {
-  masterGain.gain.setTargetAtTime(ev.value, audioCtx.currentTime, 0.05);
-});
-
-// Timeline scrubber
-let _scrubbing = false;
-const progressBinding = audioPage.addBinding(params, 'trackProgress', { label: 'Timeline', min: 0, max: 1, step: 0.001 });
-progressBinding.on('change', ev => {
-  if (_scrubbing && isFinite(bgMusic.duration)) {
-    bgMusic.currentTime = ev.value * bgMusic.duration;
-  }
-});
-// Detect user drag vs programmatic refresh
-const progressEl = progressBinding.element;
-progressEl.addEventListener('pointerdown', () => { _scrubbing = true; });
-window.addEventListener('pointerup', () => { _scrubbing = false; });
-
-export function updateTrackProgress() {
-  if (_scrubbing) return;
-  if (isFinite(bgMusic.duration) && bgMusic.duration > 0) {
-    params.trackProgress = bgMusic.currentTime / bgMusic.duration;
-  } else {
-    params.trackProgress = 0;
-  }
-  progressBinding.refresh();
-}
 
 // =====================================================
 // INITIAL STATE

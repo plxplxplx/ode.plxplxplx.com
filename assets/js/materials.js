@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { STAGES, isMobile } from './config.js';
+import { STAGES, QUALITY } from './config.js';
 import { buildPlane, buildPlaneBottom, ktx2Loader } from './scene.js';
 
 // =====================================================
@@ -111,7 +111,7 @@ export const matDeck  = STAGE_MATS[0].deck;
 // GEOMETRY FACTORIES
 // =====================================================
 export const geoCache = new Map();
-const TUBE_SEGS = isMobile ? 4 : 8;
+const TUBE_SEGS = QUALITY.tubeSegments;
 export function cylGeo(r, l) {
   const k = `c${r.toFixed(4)}_${l.toFixed(4)}`;
   if (!geoCache.has(k)) {

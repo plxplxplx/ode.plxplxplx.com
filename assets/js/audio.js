@@ -10,6 +10,7 @@ export const TRACKS = {
   'Dance Dunce':         'assets/audio/anton-ingvarsson-dance-dunce-ambient.mp3',
   'Dance Dunce ODE':     'assets/audio/anton-ingvarsson-dance-dunce-ode.mp3',
   'Dance Dunce ODE ♫':   'assets/audio/anton-ingvarsson-dance-dunce-ode-mono.mp3',
+  'Dance Dunce 8-bit':   'assets/audio/anton-ingvarsson-dance-dunce-ode-8-bit-mono.mp3',
   'Free':                'assets/audio/anton-ingvarsson-free.mp3',
   'Havet':               'assets/audio/anton-ingvarsson-havet-ar-rattsagidddit.mp3',
   'Kyrkorgel':           'assets/audio/anton-ingvarsson-kyrkorgel-del-2.mp3',

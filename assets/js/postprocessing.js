@@ -10,7 +10,7 @@ import {
   FilmGrainShader, ColorGradeShader,
 } from './shaders.js';
 import { renderer, scene, camera, occRT, occBlurRT, setOrtho } from './scene.js';
-import { isMobile } from './config.js';
+import { QUALITY } from './config.js';
 
 
 // =====================================================
@@ -22,7 +22,7 @@ composer.addPass(new RenderPass(scene, camera));
 export const bloom = new UnrealBloomPass(
   new THREE.Vector2(window.innerWidth, window.innerHeight), 0.3, 0.3, 0.75
 );
-bloom.enabled = !isMobile;
+bloom.enabled = QUALITY.bloom;
 composer.addPass(bloom);
 
 export const bokehPass = new BokehPass(scene, camera, {
@@ -45,7 +45,7 @@ export const colorGradePass = new ShaderPass(ColorGradeShader);
 composer.addPass(colorGradePass);
 
 export const grainPass = new ShaderPass(FilmGrainShader);
-grainPass.enabled = !isMobile;
+grainPass.enabled = QUALITY.filmGrain;
 composer.addPass(grainPass);
 
 // FXAA — cheap screen-space anti-aliasing (compensates for EffectComposer losing native MSAA)
