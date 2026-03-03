@@ -318,6 +318,7 @@ setFloorsVisible(params.stageFloorsVisible);
 // Re-apply after async scaffold build completes (meshes don't exist yet at GUI init)
 scaffoldReady.then(() => setFloorsVisible(params.stageFloorsVisible));
 stageGlowPlanes.forEach(sg => { sg.mesh.visible = params.stageGlowEnabled; });
+backdropPanels.forEach(bp => { bp.mesh.visible = params.backdropEnabled; });
 floorsFolder.addBinding(params, 'floorOpacity', { label: 'Opacity', min: 0, max: 1, step: 0.01 }).on('change', ev => {
   floorMats.forEach(m => { m.opacity = ev.value; });
 });

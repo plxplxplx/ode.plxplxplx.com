@@ -11,7 +11,7 @@ import * as sceneModule from './scene.js';
 import './materials.js';
 
 // Structure
-import { glassPanels, scaffoldReady } from './scaffold.js';
+import { glassPanels, scaffoldReady, mergeScaffoldForMobile } from './scaffold.js';
 
 // Environment (fog, floor, vines, shrubs, stage glow)
 import { updateEnvironment } from './environment.js';
@@ -194,6 +194,9 @@ function animate() {
 // START
 // =====================================================
 Promise.all([loaderReady, scaffoldReady]).then(() => {
+  // Merge scaffold meshes by material on mobile (~93% draw call reduction)
+  mergeScaffoldForMobile();
+
   // Warm up GPU — compile all shaders and generate shadow maps behind the overlay
   renderer.compile(scene, sceneModule.camera);
   renderer.render(scene, sceneModule.camera);

@@ -1,8 +1,9 @@
 import * as THREE from 'three';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import {
   BAYS_X, BAYS_Z, BAY_W, BAY_D, LEVEL_H, TOP_H, STAGES,
   gx, gz, cellCx, cellCz, STD_R, LED_R, BRACE_R, PLAT_H,
-  MARGIN, N_TREADS,
+  MARGIN, N_TREADS, isMobile,
 } from './config.js';
 import { STAGE_MATS, steelAt, deckAt, tube, box } from './materials.js';
 import { scene, buildPlane, buildPlaneBottom } from './scene.js';
@@ -535,6 +536,62 @@ export const scaffoldReady = (async () => {
     }
   }
 })();
+
+// =====================================================
+// MERGE SCAFFOLD GEOMETRY FOR MOBILE
+// =====================================================
+const glassPanelSet = new Set();
+scaffoldReady.then(() => { glassPanels.forEach(m => glassPanelSet.add(m)); });
+
+export function mergeScaffoldForMobile() {
+  if (!isMobile) return;
+
+  scaffold.updateMatrixWorld(true);
+
+  // Group visible non-glass meshes by material identity
+  const groups = new Map();
+  const toRemove = [];
+
+  for (const child of scaffold.children) {
+    if (!child.isMesh || !child.visible || glassPanelSet.has(child)) continue;
+    const mat = child.material;
+    if (!groups.has(mat)) groups.set(mat, []);
+    groups.get(mat).push(child);
+  }
+
+  for (const [mat, meshes] of groups) {
+    if (meshes.length < 2) continue;
+
+    // Clone each geometry and bake world transform (includes pole thickness scale)
+    const clones = [];
+    for (const mesh of meshes) {
+      const g = mesh.geometry.clone();
+      g.applyMatrix4(mesh.matrixWorld);
+      clones.push(g);
+    }
+
+    const merged = mergeGeometries(clones, false);
+    if (!merged) {
+      clones.forEach(g => g.dispose());
+      continue;
+    }
+
+    const mergedMesh = new THREE.Mesh(merged, mat);
+    mergedMesh.frustumCulled = false; // spans full tower
+    mergedMesh.castShadow = meshes[0].castShadow;
+
+    // Dispose intermediate clones (not the cached originals)
+    clones.forEach(g => g.dispose());
+
+    // Mark originals for removal (don't dispose cached geometries)
+    for (const mesh of meshes) toRemove.push(mesh);
+
+    scaffold.add(mergedMesh);
+  }
+
+  // Remove originals from scaffold
+  for (const mesh of toRemove) scaffold.remove(mesh);
+}
 
 // =====================================================
 // GLASS PANEL IMAGE MANAGEMENT
