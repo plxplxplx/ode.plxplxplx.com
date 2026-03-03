@@ -39,9 +39,11 @@ godRaysPass.enabled = false;
 composer.addPass(godRaysPass);
 
 const vignettePass = new ShaderPass(VignetteShader);
+vignettePass.enabled = QUALITY.vignette;
 composer.addPass(vignettePass);
 
 export const colorGradePass = new ShaderPass(ColorGradeShader);
+colorGradePass.enabled = QUALITY.colorGrade;
 composer.addPass(colorGradePass);
 
 export const grainPass = new ShaderPass(FilmGrainShader);

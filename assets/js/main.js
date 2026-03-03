@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 // Config (must be first)
-import { TOP_H, LEVEL_H, STAGES, prefersReducedMotion } from './config.js';
+import { TOP_H, LEVEL_H, STAGES, prefersReducedMotion, QUALITY } from './config.js';
 
 // Scene setup
 import { renderer, scene, keyLight, sunPos, sunMesh, sunOccMesh, sunLight, occlusionScene, occlusionMat, occRT, occBlurRT, buildPlane, buildPlaneBottom } from './scene.js';
@@ -198,8 +198,8 @@ function animate() {
   scene.fog.color.copy(_colorA).lerp(_colorB, zoneFrac);
   scene.background.copy(scene.fog.color);
   scene.fog.density = THREE.MathUtils.lerp(zoneA.fogDensity, zoneB.fogDensity, zoneFrac) + wrapFogBoost;
-  // Dynamic audio
-  updateAudio(camH);
+  // Dynamic audio (throttle on mobile — setTargetAtTime is expensive per-frame)
+  if (QUALITY.cardRaycast || (_occFrame & 3) === 0) updateAudio(camH);
 
   // Fade side typography in/out + animate flag wave + orbit (wrap-aware)
   for (const st of sideTexts) {
@@ -259,16 +259,18 @@ function animate() {
   // Arc image cards — slow group rotation + shader-driven wave
   cardGroup.rotation.y += CARD_OPTS.orbitSpeed * dt;
 
-  const doRaycast = (Math.round(t * 60) % 3 === 0);
-  if (doRaycast) {
-    cardRaycaster.setFromCamera(cardPointer, sceneModule.camera);
-    const hits = cardRaycaster.intersectObjects(_cardMeshes, false);
-    const prevHovered = hoveredCard;
-    const newHovered = hits.length > 0 ? cards.find(c => c.mesh === hits[0].object) : null;
-    setHoveredCard(newHovered);
-    if (prevHovered && prevHovered !== newHovered) prevHovered.hovered = false;
-    if (newHovered) newHovered.hovered = true;
-    canvas.style.cursor = newHovered ? 'pointer' : '';
+  if (QUALITY.cardRaycast) {
+    const doRaycast = (Math.round(t * 60) % 3 === 0);
+    if (doRaycast) {
+      cardRaycaster.setFromCamera(cardPointer, sceneModule.camera);
+      const hits = cardRaycaster.intersectObjects(_cardMeshes, false);
+      const prevHovered = hoveredCard;
+      const newHovered = hits.length > 0 ? cards.find(c => c.mesh === hits[0].object) : null;
+      setHoveredCard(newHovered);
+      if (prevHovered && prevHovered !== newHovered) prevHovered.hovered = false;
+      if (newHovered) newHovered.hovered = true;
+      canvas.style.cursor = newHovered ? 'pointer' : '';
+    }
   }
 
   for (const card of cards) {
@@ -395,7 +397,12 @@ function animate() {
   // Update film grain time
   grainPass.uniforms.time.value = t + Math.random() * 100;
 
-  composer.render();
+  // On mobile all post-processing passes are disabled — skip composer overhead
+  if (QUALITY.bloom || QUALITY.filmGrain || QUALITY.vignette || QUALITY.colorGrade) {
+    composer.render();
+  } else {
+    renderer.render(scene, sceneModule.camera);
+  }
 
   updateFPS();
 }
