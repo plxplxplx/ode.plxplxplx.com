@@ -4,7 +4,7 @@ import { CAM_DIST, TOP_H, FRUSTUM } from './config.js';
 import { camera, canvas } from './scene.js';
 import * as sceneModule from './scene.js';
 import { audioCtx, bgMusic } from './audio.js';
-import { IMG_FILES, IMG_CREDITS } from './cards.js';
+import { IMG_FILES } from './cards.js';
 import { setPostCamera } from './postprocessing.js';
 
 // Start music on any user interaction
@@ -257,44 +257,6 @@ export function updateCam(dt) {
     cam.updateProjectionMatrix();
 
     controls.update();
-
-    // Show caption only once zoom-in has settled
-    if (arrived && _panelZoomGoal === 1 && !_panelCaptionShown && _panelImgFile) {
-      _panelCaptionShown = true;
-      const cap = document.getElementById('panel-caption');
-      if (cap) {
-        const idx = IMG_FILES.indexOf(_panelImgFile);
-        const credit = idx >= 0 ? IMG_CREDITS[idx] : null;
-        if (credit) {
-          cap.innerHTML = '';
-          const name = document.createElement('span');
-          name.textContent = credit.name;
-          cap.appendChild(name);
-          const links = document.createElement('span');
-          links.className = 'caption-links';
-          if (credit.url) {
-            const a = document.createElement('a');
-            a.href = credit.url;
-            a.target = '_blank';
-            a.rel = 'noopener';
-            a.textContent = 'Web';
-            links.appendChild(a);
-          }
-          if (credit.instagram) {
-            const a = document.createElement('a');
-            a.href = 'https://instagram.com/' + credit.instagram;
-            a.target = '_blank';
-            a.rel = 'noopener';
-            a.textContent = '@' + credit.instagram;
-            links.appendChild(a);
-          }
-          cap.appendChild(links);
-        } else {
-          cap.textContent = _panelImgFile;
-        }
-        cap.style.display = 'block';
-      }
-    }
 
     if (arrived && _panelZoomGoal === 0) {
       panelZoomed = false;

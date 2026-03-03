@@ -138,7 +138,7 @@ export const params = {
   glassPanelOpacity: 1.0,
   glassPanelImages: true,
   glassPanelImageOpacity: 1.0,
-  glassPanelFlipImages: false,
+  glassPanelFlipImages: true,
   // Caution Tape
   tapeVisible: TAPE_OPTS.visible,
   tapeColor: '#f05b30',
