@@ -114,7 +114,7 @@
   text-align: center;
   -webkit-text-stroke: 2px #000;
   paint-order: stroke fill;
-  transition: color var(--transition-fast), -webkit-text-stroke-color var(--transition-fast);
+  transition: none;
 }
 
 .nav-link:nth-child(2) {
@@ -143,10 +143,6 @@
 }
 
 /* ── Mobile ── */
-@media (prefers-reduced-motion: reduce) {
-  .nav-link { transition: none; }
-}
-
 @media (max-width: 600px) {
   #heading-img {
     width: 80vw;
