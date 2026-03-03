@@ -409,18 +409,10 @@ export const ribbonFrag = `
   varying vec3 vWorldPos;
 
   void main(){
-    // Use view direction vs surface normal to determine facing
-    // (robust against mesh scale flips that confuse gl_FrontFacing)
-    vec3 viewDir = normalize(cameraPosition - vWorldPos);
-    bool facingCamera = dot(viewDir, vWorldNormal) > 0.0;
-    vec2 uv = facingCamera ? vUv : vec2(1.0 - vUv.x, vUv.y);
-    vec4 tex = texture2D(map, uv);
+    vec4 tex = texture2D(map, vUv);
     // Fold shading — highlights and shadows from displacement
     float shade = 1.0 + vDisplacement * 3.0;
     shade = clamp(shade, 0.85, 1.25);
-    if (!facingCamera) {
-      shade *= 0.88;
-    }
     float textMask = tex.r;
     float bannerMask = tex.a;
     vec3 col = mix(bgColor, tintColor, textMask) * shade * brightness;
