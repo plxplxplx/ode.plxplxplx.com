@@ -28,18 +28,18 @@ export const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
 
 // Centralised quality settings — tweak mobile values here
 export const QUALITY = isMobile ? {
-  pixelRatio:     Math.min(window.devicePixelRatio, 1.5),
+  pixelRatio:     Math.min(window.devicePixelRatio, 1),
   antialias:      false,
   shadows:        false,
-  shadowMapSize:  1024,
+  shadowMapSize:  512,
   envMap:         false,
   bloom:          false,
   filmGrain:      false,
-  tubeSegments:   4,
-  volFogLayers:   4,
-  shroudLayers:   6,
-  gridLights:     2,
-  fireflyCount:   4,
+  tubeSegments:   3,
+  volFogLayers:   3,
+  shroudLayers:   4,
+  gridLights:     1,
+  fireflyCount:   3,
   fireflyLights:  0,
   deferEnv:       true,
 } : {
