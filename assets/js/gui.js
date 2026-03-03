@@ -226,12 +226,20 @@ function applyGlassImages() {
       });
     });
   }
-  glassPanels.forEach((mesh, idx) => {
+  // Spread images across different heights of the scaffold
+  const squares = glassPanels.filter(m => m.userData.squareFrame);
+  if (squares.length === 0) return;
+  squares.sort((a, b) => a.position.y - b.position.y);
+  const count = Math.min(IMG_FILES.length, squares.length);
+  const step = squares.length / count;
+  for (let i = 0; i < count; i++) {
+    const idx = Math.min(Math.floor(i * step + step / 2), squares.length - 1);
+    const mesh = squares[idx];
     if (!mesh.userData.origMat) mesh.userData.origMat = mesh.material;
-    mesh.material = glassImageMats[idx % glassImageMats.length];
+    mesh.material = glassImageMats[i];
     mesh.userData.imageMode = true;
-    mesh.userData.imgFile = IMG_FILES[idx % IMG_FILES.length];
-  });
+    mesh.userData.imgFile = IMG_FILES[i];
+  }
 }
 function removeGlassImages() {
   glassPanels.forEach(mesh => {

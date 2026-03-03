@@ -75,7 +75,7 @@
 #panel-caption {
   display: none;
   position: fixed;
-  bottom: 48px;
+  bottom: 80px;
   left: 50%;
   transform: translateX(-50%);
   z-index: var(--z-panel);
@@ -83,7 +83,7 @@
   backdrop-filter: blur(var(--blur-ui));
   -webkit-backdrop-filter: blur(var(--blur-ui));
   border: 1px solid rgba(var(--color-orange), 0.15);
-  border-radius: var(--radius-pill);
+  border-radius: 0;
   padding: 10px var(--space-edge);
   font-family: var(--font-sans);
   font-size: var(--font-size-caption);

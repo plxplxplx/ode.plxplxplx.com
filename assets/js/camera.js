@@ -11,12 +11,14 @@ import { setPostCamera } from './postprocessing.js';
 let _musicStarted = false;
 function startMusic() {
   if (_musicStarted) return;
-  _musicStarted = true;
-  audioCtx.resume();
-  bgMusic.play().catch(() => {});
+  // AudioContext.resume() requires a trusted user gesture — retry until it succeeds
+  audioCtx.resume().then(() => {
+    _musicStarted = true;
+    bgMusic.play().catch(() => {});
+  }).catch(() => {});
 }
-for (const evt of ['click', 'pointerdown', 'keydown', 'touchstart', 'wheel', 'scroll']) {
-  window.addEventListener(evt, startMusic, { once: true, passive: true });
+for (const evt of ['click', 'pointerdown', 'pointerup', 'keydown', 'touchstart', 'touchend', 'mousedown', 'wheel', 'scroll']) {
+  window.addEventListener(evt, startMusic, { passive: true });
 }
 
 // =====================================================

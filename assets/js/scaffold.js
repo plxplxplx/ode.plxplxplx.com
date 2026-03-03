@@ -510,6 +510,7 @@ export const scaffoldReady = (async () => {
       const m = new THREE.Mesh(xFacing ? rZY : rXZ, glassMat);
       m.position.set(cx, cy, cz);
       if (xFacing) m.rotation.y = Math.PI / 2;
+      m.userData.squareFrame = xFacing; // BAY_D === LEVEL_H → square
       m.renderOrder = 1;
       scaffold.add(m);
       glassPanels.push(m);

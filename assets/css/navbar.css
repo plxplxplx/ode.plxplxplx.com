@@ -63,6 +63,20 @@
   pointer-events: none;
 }
 
+#venue-text {
+  margin: 0 0 8px;
+  font-family: var(--font-sans);
+  font-size: 18px;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-align: center;
+  text-transform: uppercase;
+  color: #fff;
+  -webkit-text-stroke: 1px #000;
+  paint-order: stroke fill;
+  line-height: 1.15;
+}
+
 #site-header h1 {
   margin: 0;
   padding: 0;
@@ -72,7 +86,7 @@
 }
 
 #heading-img {
-  width: min(50vw, 500px);
+  width: min(40vw, 400px);
   height: auto;
   display: block;
 }
