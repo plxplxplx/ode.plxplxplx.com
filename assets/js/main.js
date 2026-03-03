@@ -84,8 +84,6 @@ canvas.addEventListener('click', (e) => {
 
 window.addEventListener('keydown', (e) => {
   if (e.code === 'Escape' && panelZoomed) exitPanelZoom();
-  if (e.code === 'ArrowLeft' && panelZoomed) { e.preventDefault(); navigatePanel(-1); }
-  if (e.code === 'ArrowRight' && panelZoomed) { e.preventDefault(); navigatePanel(1); }
 });
 
 const _closeBtn = document.getElementById('panel-close');
