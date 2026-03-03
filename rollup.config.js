@@ -32,10 +32,11 @@ function htmlPlugin() {
   return {
     name: 'html-bundle',
     writeBundle() {
+      const hash = Date.now().toString(36);
       let html = readFileSync('index.html', 'utf8');
       html = html.replace(/\s*<link rel="stylesheet" href="assets\/css\/[^"]+\.css[^"]*">/g, '');
-      html = html.replace('</head>', '  <link rel="stylesheet" href="assets/css/styles.min.css">\n</head>');
-      html = html.replace(/src="assets\/js\/main\.js[^"]*"/, 'src="assets/js/main.min.js"');
+      html = html.replace('</head>', `  <link rel="stylesheet" href="assets/css/styles.min.css?v=${hash}">\n</head>`);
+      html = html.replace(/src="assets\/js\/main\.js[^"]*"/, `src="assets/js/main.min.js?v=${hash}"`);
       writeFileSync('docs/index.html', html);
     },
   };
