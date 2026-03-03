@@ -362,6 +362,8 @@ export const ribbonVert = `
   uniform float phase;
   varying vec2 vUv;
   varying float vDisplacement;
+  varying vec3 vWorldNormal;
+  varying vec3 vWorldPos;
 
   void main(){
     vUv = vec2(uv.x, 1.0 - uv.y); // flip V so text reads correctly
@@ -388,6 +390,8 @@ export const ribbonVert = `
     pos += radial * totalDisp;
 
     vDisplacement = totalDisp;
+    vWorldPos = (modelMatrix * vec4(pos, 1.0)).xyz;
+    vWorldNormal = normalize((modelMatrix * vec4(normal, 0.0)).xyz);
     gl_Position = projectionMatrix * modelViewMatrix * vec4(pos, 1.0);
   }
 `;
@@ -401,14 +405,20 @@ export const ribbonFrag = `
   uniform float bgOpacity;
   varying vec2 vUv;
   varying float vDisplacement;
+  varying vec3 vWorldNormal;
+  varying vec3 vWorldPos;
 
   void main(){
-    vec2 uv = gl_FrontFacing ? vUv : vec2(1.0 - vUv.x, vUv.y);
+    // Use view direction vs surface normal to determine facing
+    // (robust against mesh scale flips that confuse gl_FrontFacing)
+    vec3 viewDir = normalize(cameraPosition - vWorldPos);
+    bool facingCamera = dot(viewDir, vWorldNormal) > 0.0;
+    vec2 uv = facingCamera ? vUv : vec2(1.0 - vUv.x, vUv.y);
     vec4 tex = texture2D(map, uv);
     // Fold shading — highlights and shadows from displacement
     float shade = 1.0 + vDisplacement * 3.0;
     shade = clamp(shade, 0.85, 1.25);
-    if (!gl_FrontFacing) {
+    if (!facingCamera) {
       shade *= 0.88;
     }
     float textMask = tex.r;
