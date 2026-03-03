@@ -4,7 +4,6 @@ import { FRUSTUM, isMobile } from './config.js';
 import { renderer, scene, sunPos, sunMesh, sunOccMesh, keyLight, perspCamera, switchCamera, buildPlane, buildPlaneBottom } from './scene.js';
 import * as sceneModule from './scene.js';
 import { STAGE_MATS, matSteel, loadMarbleTextures, getMarbleTextures, applyMarbleTextures } from './materials.js';
-import { TAPE_OPTS, tapeGroup, buildTape } from './tape.js';
 import { cards, CARD_OPTS, rebuildCards } from './cards.js';
 import { ZONES, sideTexts, rebuildRibbons } from './zones.js';
 import { vineGroup, shrubGroup, flowerLight, stageGlowPlanes, backdropPanels, shroudPlanes } from './environment.js';
@@ -139,15 +138,6 @@ export const params = {
   glassPanelImages: true,
   glassPanelImageOpacity: 1.0,
   glassPanelFlipImages: true,
-  // Caution Tape
-  tapeVisible: TAPE_OPTS.visible,
-  tapeColor: '#f05b30',
-  tapeTextColor: TAPE_OPTS.textColor,
-  tapeText: TAPE_OPTS.text,
-  tapeOpacity: 0.5,
-  tapeWidth: TAPE_OPTS.width,
-  tapeWaveAmount: TAPE_OPTS.waveAmount,
-  tapeFlipText: true,
 };
 
 const pane = new Pane({ title: 'Installation Controls' });
@@ -518,31 +508,6 @@ cardFolder.addBinding(params, 'cardWaveAmp', { label: 'Wave Amp', min: 0, max: 3
 cardFolder.addBinding(params, 'cardRadiusSpread', { label: 'Radius Spread', min: 0, max: 8, step: 0.5 }).on('change', () => rebuildCards(params));
 cardFolder.addBinding(params, 'cardOrbitSpeed', { label: 'Orbit Speed', min: 0, max: 0.05, step: 0.001 }).on('change', ev => {
   CARD_OPTS.orbitSpeed = ev.value;
-});
-
-// -- Caution Tape --
-const tapeFolder = objectsPage.addFolder({ title: 'Caution Tape', expanded: false });
-tapeFolder.addBinding(params, 'tapeVisible', { label: 'Visible' }).on('change', ev => { tapeGroup.visible = ev.value; });
-tapeFolder.addBinding(params, 'tapeColor', { label: 'Tape Color' }).on('change', ev => {
-  TAPE_OPTS.color = ev.value; buildTape(TAPE_OPTS);
-});
-tapeFolder.addBinding(params, 'tapeTextColor', { label: 'Text Color' }).on('change', ev => {
-  TAPE_OPTS.textColor = ev.value; buildTape(TAPE_OPTS);
-});
-tapeFolder.addBinding(params, 'tapeText', { label: 'Text' }).on('change', ev => {
-  TAPE_OPTS.text = ev.value; buildTape(TAPE_OPTS);
-});
-tapeFolder.addBinding(params, 'tapeOpacity', { label: 'Opacity', min: 0, max: 1, step: 0.01 }).on('change', ev => {
-  tapeGroup.children.forEach(m => { m.material.uniforms.opacity.value = ev.value; });
-});
-tapeFolder.addBinding(params, 'tapeWidth', { label: 'Width', min: 0.1, max: 2, step: 0.05 }).on('change', ev => {
-  TAPE_OPTS.width = ev.value; buildTape(TAPE_OPTS);
-});
-tapeFolder.addBinding(params, 'tapeWaveAmount', { label: 'Flutter', min: 0, max: 3, step: 0.05 }).on('change', ev => {
-  tapeGroup.children.forEach(m => { m.material.uniforms.waveAmount.value = ev.value; });
-});
-tapeFolder.addBinding(params, 'tapeFlipText', { label: 'Flip Text' }).on('change', ev => {
-  tapeGroup.children.forEach(m => { m.material.uniforms.flipU.value = ev.value ? 1.0 : 0.0; });
 });
 
 // -- Typography --

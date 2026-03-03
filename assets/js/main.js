@@ -26,8 +26,6 @@ import { cards, CARD_OPTS, cardGroup, cardRaycaster, cardPointer, hoveredCard, s
 // Effects (grid lights, particles, fireflies)
 import { gridLights, pickLightTarget, fireflies, FF_STAGE_COLORS } from './effects.js';
 
-// Caution tape
-import { updateTape } from './tape.js';
 import { gx, gz } from './config.js';
 
 // Camera & scroll
@@ -279,8 +277,6 @@ function animate() {
     card.mat.uniforms.time.value = t;
   }
 
-  // Caution tape flutter (frozen when reduced motion)
-  updateTape(prefersReducedMotion ? 0 : t);
 
   // Fireflies — BPM-synced beat pulse × amplitude
   const amplitude = params.ffAudioReactive ? getAmplitude() : 0;
