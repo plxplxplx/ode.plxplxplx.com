@@ -98,11 +98,6 @@ export const params = {
   ffGlowSize: 1.0,
   ffGlowOpacity: 1.0,
   ffLightDecay: 2,
-  ffAudioReactive: true,
-  ffAudioSensitivity: 12.0,
-  ffBpm: 122,
-  ffBeatDivision: 1,
-  ffBeatDecay: 8,
   // Camera
   usePerspective: false,
   perspFov: 50,
@@ -572,11 +567,6 @@ ffFolder.addBinding(params, 'ffGlowOpacity', { label: 'Glow Opacity', min: 0, ma
 ffFolder.addBinding(params, 'ffRadius', { label: 'Spread Radius', min: 1, max: 30, step: 0.5 }).on('change', ev => {
   fireflies.forEach(ff => ff.radius = 1 + Math.random() * ev.value);
 });
-ffFolder.addBinding(params, 'ffAudioReactive', { label: 'Audio Reactive' });
-ffFolder.addBinding(params, 'ffAudioSensitivity', { label: 'Audio Sensitivity', min: 0, max: 20, step: 0.1 });
-ffFolder.addBinding(params, 'ffBpm', { label: 'BPM', min: 20, max: 200, step: 1 });
-ffFolder.addBinding(params, 'ffBeatDivision', { label: 'Beat Division', options: { '1/1 Quarter': 1, '1/2 Eighth': 2, '1/4 Sixteenth': 4, '1/8 Thirty-second': 8 } });
-ffFolder.addBinding(params, 'ffBeatDecay', { label: 'Beat Decay', min: 1, max: 20, step: 0.5 });
 const ffSpeedFolder = ffFolder.addFolder({ title: 'Animation Speeds', expanded: false });
 ffSpeedFolder.addBinding(params, 'ffPulseSpeed', { label: 'Pulse Speed', min: 0.1, max: 8, step: 0.1 }).on('change', ev => {
   fireflies.forEach(ff => ff.pulseSpeed = (1.5 + Math.random() * 3) * ev.value);

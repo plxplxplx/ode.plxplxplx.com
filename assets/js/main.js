@@ -32,7 +32,7 @@ import { gx, gz } from './config.js';
 import { controls, scrollCurrent, updateCam, wrapFogBoost, panelZoomed, startPanelZoom, exitPanelZoom, navigatePanelZoom } from './camera.js';
 
 // Audio
-import { updateAudio, getAmplitude, bgMusic } from './audio.js';
+import './audio.js';
 
 // Post-processing
 import { composer, colorGradePass, grainPass, godRaysPass } from './postprocessing.js';
@@ -110,7 +110,6 @@ function wDist(a, b) { const d = Math.abs(a - b); return Math.min(d, TOP_H - d);
 const _colorA = new THREE.Color();
 const _colorB = new THREE.Color();
 const _ffColor = new THREE.Color();
-const _camDir = new THREE.Vector3();
 const _sunScreen = new THREE.Vector3();
 const _occBlack = new THREE.Color(0x000000);
 const _cardMeshes = cards.map(c => c.mesh);
@@ -198,8 +197,6 @@ function animate() {
   scene.fog.color.copy(_colorA).lerp(_colorB, zoneFrac);
   scene.background.copy(scene.fog.color);
   scene.fog.density = THREE.MathUtils.lerp(zoneA.fogDensity, zoneB.fogDensity, zoneFrac) + wrapFogBoost;
-  // Dynamic audio (throttle on mobile — setTargetAtTime is expensive per-frame)
-  if (QUALITY.cardRaycast || (_occFrame & 3) === 0) updateAudio(camH);
 
   // Fade side typography in/out + animate flag wave + orbit (wrap-aware)
   for (const st of sideTexts) {
@@ -278,21 +275,7 @@ function animate() {
   }
 
 
-  // Fireflies — BPM-synced beat pulse × amplitude
-  const amplitude = params.ffAudioReactive ? getAmplitude() : 0;
-  const audioReactive = params.ffAudioReactive && amplitude > 0.001;
-
-  // Beat-synced envelope: sharp attack at beat onset, exponential decay
-  // Squared amplitude exaggerates peaks — quiet stays dim, loud hits hard
-  let beatPulse = 0;
-  if (audioReactive) {
-    const amp2 = amplitude * amplitude;
-    const beatsPerSec = params.ffBpm / 60 * params.ffBeatDivision;
-    const beatPhase = (bgMusic.currentTime * beatsPerSec) % 1; // 0→1 per beat
-    const envelope = Math.exp(-params.ffBeatDecay * beatPhase);
-    beatPulse = envelope * amp2 * params.ffAudioSensitivity;
-  }
-
+  // Fireflies — simple sine pulse animation
   for (const ff of fireflies) {
     ff.angle += ff.speed * dt * 0.15;
     ff.yOffset += Math.sin(t * ff.ySpeed + ff.phase) * 0.005;
@@ -304,15 +287,7 @@ function animate() {
     const fy = camH + ff.yOffset + Math.sin(t * ff.ySpeed + ff.phase) * 1.5;
     ff.sprite.position.set(fx, fy, fz);
     const pulse = Math.max(0, Math.sin(t * ff.pulseSpeed + ff.phase));
-    // Beat-synced pulse when audio is active; individual sine pulse as fallback
-    const scaleVal = audioReactive
-      ? 0.6 + beatPulse * 3.0
-      : 0.6 + pulse * 2.0;
-    ff.sprite.scale.setScalar(scaleVal * ff.glowScale);
-    // Glow opacity reacts to beat — visible at rest, flares on peaks
-    ff.mat.opacity = audioReactive
-      ? Math.min(1.0, 0.4 + beatPulse * 2.0)
-      : 1.0;
+    ff.sprite.scale.setScalar((0.6 + pulse * 2.0) * ff.glowScale);
     _ffColor.copy(FF_STAGE_COLORS[0]);
     for (let si = STAGES.length - 1; si >= 0; si--) {
       if (fy >= STAGES[si].floorY) {
@@ -327,10 +302,7 @@ function animate() {
     if (ff.light) {
       ff.light.position.set(fx, fy, fz);
       ff.light.color.copy(_ffColor);
-      const intensityVal = audioReactive
-        ? 0.3 + beatPulse * beatPulse * 4.0
-        : 0.3 + pulse * pulse * 0.7;
-      ff.light.intensity = ff.baseIntensity * intensityVal;
+      ff.light.intensity = ff.baseIntensity * (0.3 + pulse * pulse * 0.7);
     }
   }
 

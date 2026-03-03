@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CAM_DIST, TOP_H, FRUSTUM } from './config.js';
 import { camera, canvas } from './scene.js';
 import * as sceneModule from './scene.js';
-import { audioCtx, bgMusic } from './audio.js';
+import { bgMusic } from './audio.js';
 import { IMG_FILES } from './cards.js';
 import { setPostCamera } from './postprocessing.js';
 
@@ -12,8 +12,6 @@ let _musicStarted = false;
 function startMusic() {
   if (_musicStarted) return;
   _musicStarted = true;
-  // Both calls must be synchronous within the gesture for iOS autoplay
-  audioCtx.resume();
   bgMusic.play().then(() => {
     for (const evt of _musicEvents) window.removeEventListener(evt, startMusic);
   }).catch(() => { _musicStarted = false; });
