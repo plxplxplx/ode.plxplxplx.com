@@ -11,14 +11,14 @@ import { setPostCamera } from './postprocessing.js';
 let _musicStarted = false;
 function startMusic() {
   if (_musicStarted) return;
-  _musicStarted = true; // guard synchronously to prevent duplicate calls
-  audioCtx.resume().then(() => {
-    bgMusic.play().catch(() => { _musicStarted = false; });
-    // Clean up — no need to keep listening
+  _musicStarted = true;
+  // Both calls must be synchronous within the gesture for iOS autoplay
+  audioCtx.resume();
+  bgMusic.play().then(() => {
     for (const evt of _musicEvents) window.removeEventListener(evt, startMusic);
   }).catch(() => { _musicStarted = false; });
 }
-const _musicEvents = ['click', 'pointerdown', 'keydown', 'touchstart'];
+const _musicEvents = ['click', 'touchend', 'pointerdown', 'keydown'];
 for (const evt of _musicEvents) {
   window.addEventListener(evt, startMusic, { passive: true });
 }
