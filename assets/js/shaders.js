@@ -409,7 +409,7 @@ export const ribbonFrag = `
   varying vec3 vWorldPos;
 
   void main(){
-    vec4 tex = texture2D(map, vUv);
+    vec4 tex = texture2D(map, vec2(1.0 - vUv.x, vUv.y));
     // Fold shading — highlights and shadows from displacement
     float shade = 1.0 + vDisplacement * 3.0;
     shade = clamp(shade, 0.85, 1.25);
