@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { CAM_DIST, TOP_H, FRUSTUM } from './config.js';
+import { CAM_DIST, TOP_H, FRUSTUM, STAGES } from './config.js';
 import { camera, canvas } from './scene.js';
 import * as sceneModule from './scene.js';
 import { audioCtx, playStems } from './audio.js';
@@ -36,7 +36,7 @@ controls.minPolarAngle = 0.2;
 controls.autoRotate = false;
 
 // Scroll state — start above fade zone
-const START_Y = 20;
+const START_Y = 0;
 const INITIAL_ANGLE = Math.PI * 0.15;
 export let scrollTarget = { y: START_Y, angle: INITIAL_ANGLE };
 export let scrollCurrent = { y: START_Y, angle: INITIAL_ANGLE };
@@ -60,6 +60,7 @@ export const SCROLL_LERP = 0.06;
 export let virtualScroll = START_Y;
 let lastRawScroll = 0;
 export const SCROLL_SENSITIVITY = 0.7;
+let _reachedTop = false; // must scroll to SUMMIT before wrapping is allowed
 const MAX_DELTA_FRAC = 0.04; // cap per-event scroll jump (prevents lag spikes from fast swipes)
 export let wrapFogBoost = 0;
 
@@ -93,6 +94,10 @@ export function onScroll() {
   lastRawScroll = rawScroll;
 
   virtualScroll += deltaFrac * TOP_H * SCROLL_SENSITIVITY;
+  if (!_reachedTop) {
+    if (virtualScroll >= STAGES[STAGES.length - 1].floorY) _reachedTop = true;
+    else virtualScroll = Math.max(0, virtualScroll);
+  }
   virtualScroll = ((virtualScroll % TOP_H) + TOP_H) % TOP_H;
 
   if (rawFrac > 0.85 || rawFrac < 0.15) {
@@ -131,6 +136,10 @@ canvas.addEventListener('touchmove', (e) => {
     lastTouchY = touchY;
     const deltaFrac = Math.max(-MAX_DELTA_FRAC, Math.min(MAX_DELTA_FRAC, deltaPixels / window.innerHeight));
     virtualScroll += deltaFrac * TOP_H * SCROLL_SENSITIVITY * 0.5;
+    if (!_reachedTop) {
+      if (virtualScroll >= STAGES[STAGES.length - 1].floorY) _reachedTop = true;
+      else virtualScroll = Math.max(0, virtualScroll);
+    }
     virtualScroll = ((virtualScroll % TOP_H) + TOP_H) % TOP_H;
     scrollTarget.y = virtualScroll;
     scrollTarget.angle += deltaFrac * Math.PI * 3 * SCROLL_SENSITIVITY * 0.5;
