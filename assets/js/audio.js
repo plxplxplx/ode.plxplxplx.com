@@ -1,4 +1,4 @@
-import { STAGES, isMobile } from './config.js';
+import { STAGES, TOP_H, isMobile } from './config.js';
 
 // =====================================================
 // DYNAMIC AUDIO — Multi-stem layering with per-stage fades
@@ -166,34 +166,35 @@ export const STAGE_AUDIO = [
   { lpFreq: 16000, hpFreq: 80,  reverbWet: 0.25, delayWet: 0.12, delayFb: 0.2,  delayTime: 0.4,  playbackRate: 0.97 },
 ];
 
-// On mobile, no Web Audio nodes exist — use HTML5 volume for stem fades
-export const updateAudio = isMobile ? function(camH) {
-  let aIdx = 0, bIdx = 0, frac = 0;
+// Find stage blend — above last stage floor, crossfade back toward GROUND
+const lastFloor = STAGES[STAGES.length - 1].floorY;
+function getStageBlend(camH) {
+  // Between defined stages
   for (let i = 0; i < STAGES.length - 1; i++) {
     if (camH >= STAGES[i].floorY && camH < STAGES[i + 1].floorY) {
-      aIdx = i; bIdx = i + 1;
-      frac = (camH - STAGES[i].floorY) / (STAGES[i + 1].floorY - STAGES[i].floorY);
-      break;
+      return { aIdx: i, bIdx: i + 1,
+        frac: (camH - STAGES[i].floorY) / (STAGES[i + 1].floorY - STAGES[i].floorY) };
     }
-    if (i === STAGES.length - 2) { aIdx = bIdx = STAGES.length - 1; frac = 0; }
   }
+  // Above last stage — crossfade from SUMMIT back to GROUND over the remaining height
+  const last = STAGES.length - 1;
+  const frac = (camH - lastFloor) / (TOP_H - lastFloor);
+  return { aIdx: last, bIdx: 0, frac };
+}
+
+const lerp = (x, y, t) => x + (y - x) * t;
+
+// On mobile, no Web Audio nodes exist — use HTML5 volume for stem fades
+export const updateAudio = isMobile ? function(camH) {
+  const { aIdx, bIdx, frac } = getStageBlend(camH);
   for (let s = 0; s < mobileStemEls.length; s++) {
     const volA = STEM_DEFS[s].stages[aIdx];
     const volB = STEM_DEFS[s].stages[bIdx];
-    mobileStemEls[s].volume = (volA + (volB - volA) * frac) * 0.4;
+    mobileStemEls[s].volume = lerp(volA, volB, frac) * 0.4;
   }
 } : function(camH) {
-  let aIdx = 0, bIdx = 0, frac = 0;
-  for (let i = 0; i < STAGES.length - 1; i++) {
-    if (camH >= STAGES[i].floorY && camH < STAGES[i + 1].floorY) {
-      aIdx = i; bIdx = i + 1;
-      frac = (camH - STAGES[i].floorY) / (STAGES[i + 1].floorY - STAGES[i].floorY);
-      break;
-    }
-    if (i === STAGES.length - 2) { aIdx = bIdx = STAGES.length - 1; frac = 0; }
-  }
+  const { aIdx, bIdx, frac } = getStageBlend(camH);
   const a = STAGE_AUDIO[aIdx], b = STAGE_AUDIO[bIdx];
-  const lerp = (x, y, t) => x + (y - x) * t;
   const now = audioCtx.currentTime;
 
   // Fade each stem's gain
