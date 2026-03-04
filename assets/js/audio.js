@@ -1,40 +1,67 @@
 import { STAGES, isMobile } from './config.js';
 
 // =====================================================
-// DYNAMIC AUDIO — Web Audio API with per-stage effects
+// DYNAMIC AUDIO — Multi-stem layering with per-stage fades
+// Uses AudioBufferSourceNode for sample-accurate sync
 // =====================================================
-export const TRACKS = {
-  'Martinaise':          'assets/audio/Disco Elysium - Martinaise District Theme 1.mp3',
-  'Årsmöte I':           'assets/audio/anton-ingvarsson-arsmote-del-1.mp3',
-  'Årsmöte II':          'assets/audio/anton-ingvarsson-arsmote-del-2.mp3',
-  'Dance Dunce':         'assets/audio/anton-ingvarsson-dance-dunce-ambient.mp3',
-  'Dance Dunce ODE':     'assets/audio/anton-ingvarsson-dance-dunce-ode.mp3',
-  'Dance Dunce ODE ♫':   'assets/audio/anton-ingvarsson-dance-dunce-ode-mono.mp3',
-  'Dance Dunce 8-bit':   'assets/audio/anton-ingvarsson-dance-dunce-ode-8-bit-mono.mp3',
-  'Free':                'assets/audio/anton-ingvarsson-free.mp3',
-  'Havet':               'assets/audio/anton-ingvarsson-havet-ar-rattsagidddit.mp3',
-  'Kyrkorgel':           'assets/audio/anton-ingvarsson-kyrkorgel-del-2.mp3',
-  'PLX Freakzone':       'assets/audio/anton-ingvarsson-plx-freakzone.mp3',
-  'Raga':                'assets/audio/anton-ingvarsson-raga-3.mp3',
-  'Samsara':             'assets/audio/anton-ingvarsson-samsara.mp3',
-  'Skogen':              'assets/audio/anton-ingvarsson-skogen.mp3',
-  'Thanks':              'assets/audio/anton-ingvarsson-thanks.mp3',
-  'The Story Continues': 'assets/audio/anton-ingvarsson-the-story-continues.mp3',
-};
 
-export const bgMusic = new Audio(TRACKS['Dance Dunce ODE ♫']);
-bgMusic.loop = true;
-bgMusic.crossOrigin = 'anonymous';
+// Stem definitions: each stem has a file and per-stage volume (0-1)
+// GROUND: strings | SECOND: + hihat | THIRD: + beat + whistle | SUMMIT: + shakuhachi + steel pan
+const STEM_DEFS = [
+  { name: 'beat',       src: 'assets/audio/ode-beat.mp3',       stages: [0.0, 0.0, 1.0, 1.0] },
+  { name: 'strings',    src: 'assets/audio/ode-strings.mp3',    stages: [1.0, 1.0, 1.0, 1.0] },
+  { name: 'hihat',      src: 'assets/audio/ode-hihat.mp3',      stages: [0.0, 1.0, 1.0, 1.0] },
+  { name: 'whistle',    src: 'assets/audio/ode-whistle.mp3',     stages: [0.0, 0.0, 1.0, 1.0] },
+  { name: 'shakuhachi', src: 'assets/audio/ode-shakuhachi.mp3', stages: [0.0, 0.0, 0.0, 1.0] },
+  { name: 'steelpan',   src: 'assets/audio/ode-steelpan.mp3',   stages: [0.0, 0.0, 0.0, 1.0] },
+];
 
 // On mobile, skip the entire Web Audio API chain — Safari's implementation
 // causes scroll jank even with just filters. Use HTML5 Audio volume instead.
 export let audioCtx = null;
 export let masterGain = null;
 let lpFilter, hpFilter, reverbGain, delayGain, delayFeedback, delay;
+let stemGains = [];   // per-stem GainNode
+let stemBuffers = []; // decoded AudioBuffers
+let stemSources = []; // active AudioBufferSourceNodes
+
+// Mobile fallback — HTML5 Audio elements (no Web Audio)
+let mobileStemEls = null;
+if (isMobile) {
+  mobileStemEls = STEM_DEFS.map(def => {
+    const el = new Audio(def.src);
+    el.loop = true;
+    el.crossOrigin = 'anonymous';
+    el.volume = def.stages[0] * 0.4;
+    return el;
+  });
+}
+
+// Fetch and decode all stems into AudioBuffers (desktop only)
+async function loadStemBuffers() {
+  if (!audioCtx) return;
+  const fetches = STEM_DEFS.map(async (def) => {
+    const res = await fetch(def.src);
+    const arrayBuf = await res.arrayBuffer();
+    return audioCtx.decodeAudioData(arrayBuf);
+  });
+  stemBuffers = await Promise.all(fetches);
+}
 
 if (!isMobile) {
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-  const sourceNode = audioCtx.createMediaElementSource(bgMusic);
+
+  // Stem bus — all stems merge here before shared effects
+  const stemBus = audioCtx.createGain();
+  stemBus.gain.value = 1.0;
+
+  // Create per-stem gain nodes and connect to bus
+  for (const def of STEM_DEFS) {
+    const gain = audioCtx.createGain();
+    gain.gain.value = def.stages[0];
+    gain.connect(stemBus);
+    stemGains.push(gain);
+  }
 
   // Master gain
   masterGain = audioCtx.createGain();
@@ -77,8 +104,8 @@ if (!isMobile) {
   delayGain = audioCtx.createGain();
   delayGain.gain.value = 0.0;
 
-  // Signal chain
-  sourceNode.connect(lpFilter);
+  // Signal chain: stemBus → LP → HP → master → destination
+  stemBus.connect(lpFilter);
   lpFilter.connect(hpFilter);
   hpFilter.connect(masterGain);
   masterGain.connect(audioCtx.destination);
@@ -94,19 +121,44 @@ if (!isMobile) {
   delayFeedback.connect(delay);
   delay.connect(delayGain);
   delayGain.connect(audioCtx.destination);
-} else {
-  bgMusic.volume = 0.4;
+
+  // Start loading buffers immediately
+  loadStemBuffers();
 }
 
-export function switchTrack(name) {
-  const wasPlaying = !bgMusic.paused;
-  bgMusic.pause();
-  bgMusic.src = TRACKS[name];
-  bgMusic.load();
-  if (wasPlaying) bgMusic.play().catch(() => {});
+// Play all stems at the exact same time (sample-accurate)
+export async function playStems() {
+  if (isMobile) {
+    // Mobile: fire all plays together (best effort)
+    return Promise.all(mobileStemEls.map(el => el.play().catch(() => {})));
+  }
+
+  // Wait for buffers if still loading
+  if (stemBuffers.length === 0) await loadStemBuffers();
+
+  // Stop any currently playing sources
+  for (const src of stemSources) {
+    try { src.stop(); } catch (_) {}
+  }
+  stemSources = [];
+
+  // Create all BufferSourceNodes first, then start them at the same instant
+  const startTime = audioCtx.currentTime;
+  for (let i = 0; i < stemBuffers.length; i++) {
+    const source = audioCtx.createBufferSource();
+    source.buffer = stemBuffers[i];
+    source.loop = true;
+    source.connect(stemGains[i]);
+    stemSources.push(source);
+  }
+
+  // Single start time = sample-accurate sync
+  for (const source of stemSources) {
+    source.start(startTime);
+  }
 }
 
-// Per-stage audio presets
+// Per-stage audio presets (effects chain)
 export const STAGE_AUDIO = [
   { lpFreq: 800,  hpFreq: 20,  reverbWet: 0.1,  delayWet: 0.0,  delayFb: 0.0,  delayTime: 0.3,  playbackRate: 1.0 },
   { lpFreq: 3000, hpFreq: 60,  reverbWet: 0.25, delayWet: 0.0,  delayFb: 0.0,  delayTime: 0.3,  playbackRate: 1.0 },
@@ -114,8 +166,23 @@ export const STAGE_AUDIO = [
   { lpFreq: 16000, hpFreq: 150, reverbWet: 0.55, delayWet: 0.3, delayFb: 0.4, delayTime: 0.55, playbackRate: 0.95 },
 ];
 
-// On mobile, no Web Audio nodes exist — nothing to modulate per frame
-export const updateAudio = isMobile ? () => {} : function(camH) {
+// On mobile, no Web Audio nodes exist — use HTML5 volume for stem fades
+export const updateAudio = isMobile ? function(camH) {
+  let aIdx = 0, bIdx = 0, frac = 0;
+  for (let i = 0; i < STAGES.length - 1; i++) {
+    if (camH >= STAGES[i].floorY && camH < STAGES[i + 1].floorY) {
+      aIdx = i; bIdx = i + 1;
+      frac = (camH - STAGES[i].floorY) / (STAGES[i + 1].floorY - STAGES[i].floorY);
+      break;
+    }
+    if (i === STAGES.length - 2) { aIdx = bIdx = STAGES.length - 1; frac = 0; }
+  }
+  for (let s = 0; s < mobileStemEls.length; s++) {
+    const volA = STEM_DEFS[s].stages[aIdx];
+    const volB = STEM_DEFS[s].stages[bIdx];
+    mobileStemEls[s].volume = (volA + (volB - volA) * frac) * 0.4;
+  }
+} : function(camH) {
   let aIdx = 0, bIdx = 0, frac = 0;
   for (let i = 0; i < STAGES.length - 1; i++) {
     if (camH >= STAGES[i].floorY && camH < STAGES[i + 1].floorY) {
@@ -129,11 +196,24 @@ export const updateAudio = isMobile ? () => {} : function(camH) {
   const lerp = (x, y, t) => x + (y - x) * t;
   const now = audioCtx.currentTime;
 
+  // Fade each stem's gain
+  for (let s = 0; s < STEM_DEFS.length; s++) {
+    const volA = STEM_DEFS[s].stages[aIdx];
+    const volB = STEM_DEFS[s].stages[bIdx];
+    stemGains[s].gain.setTargetAtTime(lerp(volA, volB, frac), now, 0.3);
+  }
+
+  // Shared effects chain
   lpFilter.frequency.setTargetAtTime(lerp(a.lpFreq, b.lpFreq, frac), now, 0.3);
   hpFilter.frequency.setTargetAtTime(lerp(a.hpFreq, b.hpFreq, frac), now, 0.3);
   reverbGain.gain.setTargetAtTime(lerp(a.reverbWet, b.reverbWet, frac), now, 0.3);
   delayGain.gain.setTargetAtTime(lerp(a.delayWet, b.delayWet, frac), now, 0.3);
   delayFeedback.gain.setTargetAtTime(lerp(a.delayFb, b.delayFb, frac), now, 0.3);
   delay.delayTime.setTargetAtTime(lerp(a.delayTime, b.delayTime, frac), now, 0.3);
-  bgMusic.playbackRate = lerp(a.playbackRate, b.playbackRate, frac);
+
+  // Sync playback rate across all stems
+  const rate = lerp(a.playbackRate, b.playbackRate, frac);
+  for (const src of stemSources) {
+    src.playbackRate.setTargetAtTime(rate, now, 0.3);
+  }
 };
