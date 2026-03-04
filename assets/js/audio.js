@@ -8,12 +8,12 @@ import { STAGES, isMobile } from './config.js';
 // Stem definitions: each stem has a file and per-stage volume (0-1)
 // GROUND: strings | SECOND: + hihat | THIRD: + beat + whistle | SUMMIT: + shakuhachi + steel pan
 const STEM_DEFS = [
-  { name: 'beat',       src: 'assets/audio/ode-beat.mp3',       stages: [0.0, 0.0, 1.0, 1.0] },
-  { name: 'strings',    src: 'assets/audio/ode-strings.mp3',    stages: [1.0, 1.0, 1.0, 1.0] },
-  { name: 'hihat',      src: 'assets/audio/ode-hihat.mp3',      stages: [0.0, 1.0, 1.0, 1.0] },
-  { name: 'whistle',    src: 'assets/audio/ode-whistle.mp3',     stages: [0.0, 0.0, 1.0, 1.0] },
-  { name: 'shakuhachi', src: 'assets/audio/ode-shakuhachi.mp3', stages: [0.0, 0.0, 0.0, 1.0] },
-  { name: 'steelpan',   src: 'assets/audio/ode-steelpan.mp3',   stages: [0.0, 0.0, 0.0, 1.0] },
+  { name: 'beat',       src: 'assets/audio/ode-beat.mp3',       stages: [0.0, 0.0, 0.9, 0.9] },
+  { name: 'strings',    src: 'assets/audio/ode-strings.mp3',    stages: [0.9, 0.9, 0.9, 0.9] },
+  { name: 'hihat',      src: 'assets/audio/ode-hihat.mp3',      stages: [0.0, 0.9, 0.9, 0.9] },
+  { name: 'whistle',    src: 'assets/audio/ode-whistle.mp3',     stages: [0.0, 0.0, 0.9, 0.9] },
+  { name: 'shakuhachi', src: 'assets/audio/ode-shakuhachi.mp3', stages: [0.0, 0.0, 0.0, 0.9] },
+  { name: 'steelpan',   src: 'assets/audio/ode-steelpan.mp3',   stages: [0.0, 0.0, 0.0, 0.9] },
 ];
 
 // On mobile, skip the entire Web Audio API chain — Safari's implementation
@@ -160,10 +160,10 @@ export async function playStems() {
 
 // Per-stage audio presets (effects chain)
 export const STAGE_AUDIO = [
-  { lpFreq: 800,  hpFreq: 20,  reverbWet: 0.1,  delayWet: 0.0,  delayFb: 0.0,  delayTime: 0.3,  playbackRate: 1.0 },
-  { lpFreq: 3000, hpFreq: 60,  reverbWet: 0.25, delayWet: 0.0,  delayFb: 0.0,  delayTime: 0.3,  playbackRate: 1.0 },
-  { lpFreq: 8000, hpFreq: 100, reverbWet: 0.4,  delayWet: 0.15, delayFb: 0.25, delayTime: 0.4,  playbackRate: 0.98 },
-  { lpFreq: 16000, hpFreq: 150, reverbWet: 0.55, delayWet: 0.3, delayFb: 0.4, delayTime: 0.55, playbackRate: 0.95 },
+  { lpFreq: 2000,  hpFreq: 20,  reverbWet: 0.08, delayWet: 0.0,  delayFb: 0.0,  delayTime: 0.3,  playbackRate: 1.0 },
+  { lpFreq: 5000,  hpFreq: 40,  reverbWet: 0.12, delayWet: 0.0,  delayFb: 0.0,  delayTime: 0.3,  playbackRate: 1.0 },
+  { lpFreq: 10000, hpFreq: 60,  reverbWet: 0.18, delayWet: 0.06, delayFb: 0.12, delayTime: 0.35, playbackRate: 0.99 },
+  { lpFreq: 16000, hpFreq: 80,  reverbWet: 0.25, delayWet: 0.12, delayFb: 0.2,  delayTime: 0.4,  playbackRate: 0.97 },
 ];
 
 // On mobile, no Web Audio nodes exist — use HTML5 volume for stem fades
