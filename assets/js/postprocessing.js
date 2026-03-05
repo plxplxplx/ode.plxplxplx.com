@@ -16,7 +16,10 @@ import { QUALITY } from './config.js';
 // =====================================================
 // POST-PROCESSING
 // =====================================================
-export const composer = new EffectComposer(renderer);
+const rt = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, {
+  samples: QUALITY.antialias ? 4 : 0,
+});
+export const composer = new EffectComposer(renderer, rt);
 composer.addPass(new RenderPass(scene, camera));
 
 export const bloom = new UnrealBloomPass(
@@ -54,7 +57,7 @@ composer.addPass(grainPass);
 import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
 export const fxaaPass = new ShaderPass(FXAAShader);
 fxaaPass.uniforms.resolution.value.set(1 / window.innerWidth, 1 / window.innerHeight);
-fxaaPass.enabled = false;
+fxaaPass.enabled = true;
 composer.addPass(fxaaPass);
 
 // OutputPass applies tone mapping + output color space to final render

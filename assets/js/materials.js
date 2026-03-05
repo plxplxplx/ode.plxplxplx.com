@@ -65,19 +65,19 @@ export function applyMarbleTextures(enabled) {
 // =====================================================
 export const STAGE_MATS = [
   { // GROUND — neutral gray steel
-    steel: new THREE.MeshStandardMaterial({ color: 0x8a8a8a, metalness: 0.0, roughness: 0.0 }),
+    steel: new THREE.MeshStandardMaterial({ color: 0x8a8a8a, metalness: 0.1, roughness: 0.35 }),
     deck:  new THREE.MeshStandardMaterial({ color: 0x7a7a7a, metalness: 0.3, roughness: 0.55 }),
   },
   { // SECOND — neutral gray steel
-    steel: new THREE.MeshStandardMaterial({ color: 0x8a8a8a, metalness: 0.0, roughness: 0.0 }),
+    steel: new THREE.MeshStandardMaterial({ color: 0x8a8a8a, metalness: 0.1, roughness: 0.35 }),
     deck:  new THREE.MeshStandardMaterial({ color: 0x7a7a7a, metalness: 0.35, roughness: 0.5 }),
   },
   { // THIRD — neutral gray steel
-    steel: new THREE.MeshStandardMaterial({ color: 0x8a8a8a, metalness: 0.0, roughness: 0.0 }),
+    steel: new THREE.MeshStandardMaterial({ color: 0x8a8a8a, metalness: 0.1, roughness: 0.35 }),
     deck:  new THREE.MeshStandardMaterial({ color: 0x7a7a7a, metalness: 0.35, roughness: 0.45 }),
   },
   { // SUMMIT — neutral gray steel
-    steel: new THREE.MeshStandardMaterial({ color: 0x8a8a8a, metalness: 0.0, roughness: 0.0 }),
+    steel: new THREE.MeshStandardMaterial({ color: 0x8a8a8a, metalness: 0.1, roughness: 0.35 }),
     deck:  new THREE.MeshStandardMaterial({ color: 0x7a7a7a, metalness: 0.35, roughness: 0.4 }),
   },
 ];

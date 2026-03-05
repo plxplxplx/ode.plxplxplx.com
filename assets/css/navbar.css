@@ -62,12 +62,10 @@
   align-items: center;
   user-select: none;
   pointer-events: none;
-  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-.info-active {
+#site-header.info-active #header-nav {
   opacity: 0;
-  pointer-events: none !important;
 }
 
 #venue-text {

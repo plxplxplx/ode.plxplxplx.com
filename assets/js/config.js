@@ -56,7 +56,7 @@ export const QUALITY = isMobile ? {
   vignette:       true,
   colorGrade:     true,
   cardRaycast:    true,
-  tubeSegments:   8,
+  tubeSegments:   12,
   volFogLayers:   8,
   shroudLayers:   12,
   gridLights:     6,
@@ -72,5 +72,5 @@ _motionMQ.addEventListener('change', (e) => { prefersReducedMotion = e.matches; 
 
 // Camera config
 export const FRUSTUM = 12, CAM_DIST = 60, CAM_SMOOTH = 0.07;
-export const STD_R = 0.024, LED_R = 0.019, BRACE_R = 0.016, PLAT_H = 0.05;
+export const STD_R = 0.036, LED_R = 0.0285, BRACE_R = 0.024, PLAT_H = 0.05;
 export const MARGIN = 0.1, N_TREADS = 10;
