@@ -185,7 +185,7 @@ export function startPanelZoom(panelMesh) {
   _showPanelUI(panelMesh);
 }
 
-const INFO_ZOOM_FRUSTUM = 5.5;
+const INFO_ZOOM_FRUSTUM = 3.8;
 export function startInfoZoom(worldPos, normal) {
   if (panelZoomed) return;
   const cam = sceneModule.camera;
