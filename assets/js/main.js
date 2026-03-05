@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 // Config (must be first)
-import { QUALITY } from './config.js';
+import { QUALITY, TOTAL_W, FRUSTUM } from './config.js';
 
 // Scene setup
 import { renderer, scene, keyLight, sunMesh, sunOccMesh, sunLight, buildPlane, buildPlaneBottom } from './scene.js';
@@ -80,6 +80,19 @@ canvas.addEventListener('click', (e) => {
 });
 
 // =====================================================
+// SCAFFOLD SCREEN-SPACE WIDTH → CSS variable
+// =====================================================
+function updateScaffoldVar() {
+  const aspect = window.innerWidth / window.innerHeight;
+  const visibleW = FRUSTUM * aspect;
+  const scaffScreenFrac = TOTAL_W / visibleW; // fraction of screen the scaffold occupies
+  const scaffLeftPx = (0.5 - scaffScreenFrac / 2) * window.innerWidth;
+  document.documentElement.style.setProperty('--scaffold-left', `${scaffLeftPx}px`);
+}
+updateScaffoldVar();
+window.addEventListener('resize', updateScaffoldVar, { passive: true });
+
+// =====================================================
 // INFO OVERLAY — toggle slide-up panel
 // =====================================================
 const infoBtn = document.getElementById('info-btn');
@@ -92,21 +105,6 @@ function toggleInfo(forceClose) {
   siteHeader.classList.toggle('info-active', open);
   infoBtn.setAttribute('aria-expanded', open);
   infoOverlay.setAttribute('aria-hidden', !open);
-  if (open) {
-    // Position header image just above info content
-    requestAnimationFrame(() => {
-      const contentH = infoContent.offsetHeight;
-      const headerH = siteHeader.offsetHeight;
-      // Place header just above info content, but don't go above 10% from top
-      const idealTop = window.innerHeight - contentH - headerH - 16;
-      const clampedTop = Math.max(window.innerHeight * 0.1, idealTop);
-      siteHeader.style.transform = `translate(-50%, 0)`;
-      siteHeader.style.top = `${clampedTop}px`;
-    });
-  } else {
-    siteHeader.style.transform = '';
-    siteHeader.style.top = '';
-  }
 }
 
 infoOverlay.addEventListener('click', (e) => {

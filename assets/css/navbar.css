@@ -65,10 +65,17 @@
 }
 
 #header-nav {
-  transition: none;
+  transition: opacity 0.4s ease-in-out;
 }
 #site-header.info-active #header-nav {
   opacity: 0;
+}
+#site-header h1 {
+  transition: opacity 0.4s ease-in-out;
+}
+#site-header.info-active h1 {
+  opacity: 0;
+  pointer-events: none;
 }
 
 #venue-text {
