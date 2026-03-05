@@ -28,7 +28,7 @@ export const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
 
 // Centralised quality settings — tweak mobile values here
 export const QUALITY = isMobile ? {
-  pixelRatio:     1.0,
+  pixelRatio:     Math.min(window.devicePixelRatio, 1.25),
   antialias:      false,
   shadows:        false,
   shadowMapSize:  512,
