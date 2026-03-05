@@ -275,7 +275,6 @@ fogFolder.addBinding(params, 'fogFar', { label: 'Far', min: 10, max: 500, step: 
 const godRayFolder = renderPage.addFolder({ title: 'God Rays', expanded: false });
 godRayFolder.addBinding(params, 'godRaysEnabled', { label: 'Enable' }).on('change', ev => {
   godRaysPass.enabled = ev.value;
-  sunMesh.visible = ev.value;
 });
 godRayFolder.addBinding(params, 'godRayExposure', { label: 'Exposure', min: 0, max: 1, step: 0.01 }).on('change', ev => godRaysPass.uniforms.exposure.value = ev.value);
 godRayFolder.addBinding(params, 'godRayDecay', { label: 'Decay', min: 0.8, max: 1, step: 0.005 }).on('change', ev => godRaysPass.uniforms.decay.value = ev.value);

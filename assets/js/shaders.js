@@ -37,7 +37,11 @@ export const GodRaysShader = {
       vec2 sampleCoord = texCoord;
       for(int i = 0; i < 120; i++){
         sampleCoord -= deltaTexCoord;
-        float s = texture2D(tOcclusion, sampleCoord).r;
+        // Clamp + fade at screen edges to prevent hard clipping
+        vec2 sc = clamp(sampleCoord, 0.0, 1.0);
+        vec2 edge = min(sc, 1.0 - sc);
+        float edgeFade = smoothstep(0.0, 0.05, edge.x) * smoothstep(0.0, 0.05, edge.y);
+        float s = texture2D(tOcclusion, sc).r * edgeFade;
         s *= currentDecay * weight;
         illumination += s;
         currentDecay *= decay;

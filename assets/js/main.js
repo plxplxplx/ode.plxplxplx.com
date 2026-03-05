@@ -121,7 +121,7 @@ if (_nextBtn) _nextBtn.addEventListener('click', (e) => { e.stopPropagation(); n
 // GAME LOOP
 // =====================================================
 const clock = new THREE.Clock();
-let _occFrame = 0;
+let _frame = 0;
 
 // Reusable objects — avoids per-frame allocations / GC pressure
 const _sunScreen = new THREE.Vector3();
@@ -144,7 +144,7 @@ function animate() {
   updateZones(camH, scene, wrapFogBoost);
 
   // Per-stage audio effects (throttle on mobile)
-  if (QUALITY.cardRaycast || (_occFrame & 3) === 0) updateAudio(camH);
+  if (QUALITY.cardRaycast || (_frame & 3) === 0) updateAudio(camH);
 
   updateSideTexts(dt, t, camH, params);
   updateEnvironment(dt, t, camH, params);
@@ -184,7 +184,7 @@ function animate() {
     sunMesh.position.set(sx, sy, sz);
     sunOccMesh.position.set(sx, sy, sz);
     sunLight.position.set(sx, sy, sz);
-    sunMesh.visible = params.godRaysEnabled;
+    sunMesh.visible = false;
   }
 
   // God rays — project sun to screen space
@@ -194,7 +194,8 @@ function animate() {
     (_sunScreen.y + 1) * 0.5
   );
 
-  renderOcclusion(sceneModule.camera, ++_occFrame);
+  ++_frame;
+  renderOcclusion(sceneModule.camera);
 
   // Update film grain time
   grainPass.uniforms.time.value = t + Math.random() * 100;

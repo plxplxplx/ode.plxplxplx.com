@@ -65,19 +65,19 @@ export function applyMarbleTextures(enabled) {
 // =====================================================
 export const STAGE_MATS = [
   { // GROUND — neutral gray steel
-    steel: new THREE.MeshStandardMaterial({ color: 0x8a8a8a, metalness: 0.1, roughness: 0.35 }),
+    steel: new THREE.MeshStandardMaterial({ color: 0x8a8a8a, metalness: 0.1, roughness: 0.5 }),
     deck:  new THREE.MeshStandardMaterial({ color: 0x7a7a7a, metalness: 0.3, roughness: 0.55 }),
   },
   { // SECOND — neutral gray steel
-    steel: new THREE.MeshStandardMaterial({ color: 0x8a8a8a, metalness: 0.1, roughness: 0.35 }),
+    steel: new THREE.MeshStandardMaterial({ color: 0x8a8a8a, metalness: 0.1, roughness: 0.5 }),
     deck:  new THREE.MeshStandardMaterial({ color: 0x7a7a7a, metalness: 0.35, roughness: 0.5 }),
   },
   { // THIRD — neutral gray steel
-    steel: new THREE.MeshStandardMaterial({ color: 0x8a8a8a, metalness: 0.1, roughness: 0.35 }),
+    steel: new THREE.MeshStandardMaterial({ color: 0x8a8a8a, metalness: 0.1, roughness: 0.5 }),
     deck:  new THREE.MeshStandardMaterial({ color: 0x7a7a7a, metalness: 0.35, roughness: 0.45 }),
   },
   { // SUMMIT — neutral gray steel
-    steel: new THREE.MeshStandardMaterial({ color: 0x8a8a8a, metalness: 0.1, roughness: 0.35 }),
+    steel: new THREE.MeshStandardMaterial({ color: 0x8a8a8a, metalness: 0.1, roughness: 0.5 }),
     deck:  new THREE.MeshStandardMaterial({ color: 0x7a7a7a, metalness: 0.35, roughness: 0.4 }),
   },
 ];
@@ -113,9 +113,11 @@ export const matDeck  = STAGE_MATS[0].deck;
 export const geoCache = new Map();
 const TUBE_SEGS = QUALITY.tubeSegments;
 export function cylGeo(r, l) {
+  // Thinner pipes get more radial segments to reduce facet-driven moiré
+  const segs = r < 0.02 ? Math.ceil(TUBE_SEGS * 2) : r < 0.03 ? Math.ceil(TUBE_SEGS * 1.5) : TUBE_SEGS;
   const k = `c${r.toFixed(4)}_${l.toFixed(4)}`;
   if (!geoCache.has(k)) {
-    const geo = new THREE.CylinderGeometry(r, r, l, TUBE_SEGS, 1);
+    const geo = new THREE.CylinderGeometry(r, r, l, segs, 1);
     // Scale UVs to world-space so marble tiles consistently
     const uv = geo.attributes.uv;
     const circ = 2 * Math.PI * r;

@@ -112,7 +112,7 @@
   justify-content: center;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 #info-overlay.info-open {
   opacity: 1;

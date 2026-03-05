@@ -64,6 +64,9 @@
   pointer-events: none;
 }
 
+#header-nav {
+  transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
 #site-header.info-active #header-nav {
   opacity: 0;
 }

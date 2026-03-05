@@ -42,7 +42,7 @@ godRaysPass.enabled = false;
 composer.addPass(godRaysPass);
 
 const vignettePass = new ShaderPass(VignetteShader);
-vignettePass.enabled = QUALITY.vignette;
+vignettePass.enabled = false;
 composer.addPass(vignettePass);
 
 export const colorGradePass = new ShaderPass(ColorGradeShader);
@@ -129,8 +129,8 @@ _blurScene.add(new THREE.Mesh(new THREE.PlaneGeometry(2, 2), _blurMat));
 
 const _occBlack = new THREE.Color(0x000000);
 
-export function renderOcclusion(cam, occFrame) {
-  if (!godRaysPass.enabled || !(occFrame & 1)) return;
+export function renderOcclusion(cam) {
+  if (!godRaysPass.enabled) return;
 
   const origBg = scene.background;
   const origFog = scene.fog;
