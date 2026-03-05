@@ -3,7 +3,7 @@ import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { CAM_DIST, TOP_H, FRUSTUM, STAGES } from './config.js';
 import { camera, canvas } from './scene.js';
 import * as sceneModule from './scene.js';
-import { audioCtx, playStems } from './audio.js';
+import { playStems } from './audio.js';
 import { IMG_FILES } from './cards.js';
 import { setPostCamera } from './postprocessing.js';
 
@@ -12,7 +12,6 @@ let _musicStarted = false;
 function startMusic() {
   if (_musicStarted) return;
   _musicStarted = true;
-  if (audioCtx) audioCtx.resume();
   playStems().then(() => {
     for (const evt of _musicEvents) window.removeEventListener(evt, startMusic);
   }).catch(() => { _musicStarted = false; });

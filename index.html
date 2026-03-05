@@ -1,89 +1,254 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="sv">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="description" content="PLX ODE — an interactive 3D art installation exploring scaffolding, nature, and the climb.">
-  <meta name="theme-color" content="#050505">
-  <link rel="canonical" href="https://ode.plxplxplx.com/">
-  <title>PLX ODE</title>
-  <link rel="icon" type="image/svg+xml" href="assets/favicon.svg">
-  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-  <link rel="preload" href="assets/fonts/NHaasGroteskDSPro-55Rg.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="assets/fonts/NHaasGroteskDSPro-35XLt.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="preload" href="assets/reference/heading.webp" as="image">
-  <link rel="stylesheet" href="assets/css/styles.css?v=2">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="PLX ODE — an interactive 3D art installation exploring scaffolding, nature, and the climb." />
+    <meta
+      name="theme-color"
+      content="#050505" />
+    <link
+      rel="canonical"
+      href="https://ode.plxplxplx.com/" />
+    <title>PLX ODE</title>
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="assets/favicon.svg" />
+    <link
+      rel="preconnect"
+      href="https://cdn.jsdelivr.net"
+      crossorigin />
+    <link
+      rel="preload"
+      href="assets/fonts/NHaasGroteskDSPro-55Rg.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin />
+    <link
+      rel="preload"
+      href="assets/fonts/NHaasGroteskDSPro-35XLt.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin />
+    <link
+      rel="preload"
+      href="assets/reference/heading.webp"
+      as="image" />
+    <link
+      rel="stylesheet"
+      href="assets/css/styles.css?v=2" />
 
-  <!-- Open Graph -->
-  <meta property="og:title" content="PLX ODE — 15–16 maj, Malmö Konstmuseum">
-  <meta property="og:description" content="PLX ODE — an interactive 3D art installation exploring scaffolding, nature, and the climb.">
-  <meta property="og:image" content="https://ode.plxplxplx.com/assets/img/background.jpg">
-  <meta property="og:url" content="https://ode.plxplxplx.com/">
-  <meta property="og:type" content="website">
-  <meta property="og:locale" content="sv_SE">
-  <meta name="twitter:card" content="summary_large_image">
+    <!-- Open Graph -->
+    <meta
+      property="og:title"
+      content="PLX ODE — 15–16 maj, Malmö Konstmuseum" />
+    <meta
+      property="og:description"
+      content="PLX ODE — an interactive 3D art installation exploring scaffolding, nature, and the climb." />
+    <meta
+      property="og:image"
+      content="https://ode.plxplxplx.com/assets/img/background.jpg" />
+    <meta
+      property="og:url"
+      content="https://ode.plxplxplx.com/" />
+    <meta
+      property="og:type"
+      content="website" />
+    <meta
+      property="og:locale"
+      content="sv_SE" />
+    <meta
+      name="twitter:card"
+      content="summary_large_image" />
 
-  <!-- Structured data -->
-  <script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@type": "Event",
-    "name": "PLX ODE",
-    "description": "An interactive 3D art installation exploring scaffolding, nature, and the climb.",
-    "image": "https://ode.plxplxplx.com/assets/img/background.jpg",
-    "startDate": "2026-05-15",
-    "endDate": "2026-05-16",
-    "url": "https://ode.plxplxplx.com/",
-    "location": {
-      "@type": "Place",
-      "name": "Malmö Konstmuseum",
-      "address": {
-        "@type": "PostalAddress",
-        "streetAddress": "Slottsgatan 33",
-        "addressLocality": "Malmö",
-        "addressRegion": "Kungsparken",
-        "addressCountry": "SE"
+    <!-- Structured data -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "Event",
+        "name": "PLX ODE",
+        "description": "An interactive 3D art installation exploring scaffolding, nature, and the climb.",
+        "image": "https://ode.plxplxplx.com/assets/img/background.jpg",
+        "startDate": "2026-05-15",
+        "endDate": "2026-05-16",
+        "url": "https://ode.plxplxplx.com/",
+        "location": {
+          "@type": "Place",
+          "name": "Malmö Konstmuseum",
+          "address": {
+            "@type": "PostalAddress",
+            "streetAddress": "Slottsgatan 33",
+            "addressLocality": "Malmö",
+            "addressRegion": "Kungsparken",
+            "addressCountry": "SE"
+          }
+        },
+        "offers": {
+          "@type": "Offer",
+          "url": "https://billetto.se/e/plx-ode-joy-biljetter-1856579"
+        }
       }
-    },
-    "offers": {
-      "@type": "Offer",
-      "url": "https://billetto.se/e/plx-ode-joy-biljetter-1856579"
-    }
-  }
-  </script>
-</head>
-<body>
-  <div id="loader" role="status" aria-live="polite"><div id="loader-pct">0%</div></div>
+    </script>
+  </head>
+  <body>
+    <div
+      id="loader"
+      role="status"
+      aria-live="polite">
+      <div id="loader-pct">0%</div>
+    </div>
 
-  <a href="#main-content" class="skip-link">Hoppa till innehåll</a>
+    <a
+      href="#main-content"
+      class="skip-link"
+      >Hoppa till innehåll</a
+    >
 
-  <header id="site-header">
-    <h1><img src="assets/reference/heading.webp" alt="PLX ODE JOY — 15–16 Maj, Malmö Konstmuseum i Kungsparken Slottsg. 33" id="heading-img" width="400" height="300"></h1>
-    <nav id="header-nav" aria-label="Site navigation">
-      <a href="https://billetto.se/e/plx-ode-joy-biljetter-1856579" target="_blank" rel="noopener" class="nav-link">Biljetter <span class="visually-hidden">(öppnas i ny flik)</span></a>
-      <span class="nav-link disabled" aria-disabled="true">Lineup TBA</span>
-      <a href="https://instagram.com/plxplxplx" target="_blank" rel="noopener" class="nav-link">Instagram <span class="visually-hidden">(öppnas i ny flik)</span></a>
-      <a href="mailto:info@plxplxplx.com" class="nav-link">Kontakt</a>
-    </nav>
-  </header>
+    <header id="site-header">
+      <h1>
+        <img
+          src="assets/reference/heading.webp"
+          alt="PLX ODE JOY — 15–16 Maj, Malmö Konstmuseum i Kungsparken Slottsg. 33"
+          id="heading-img"
+          width="400"
+          height="300" />
+      </h1>
+      <nav
+        id="header-nav"
+        aria-label="Site navigation">
+        <a
+          href="https://billetto.se/e/plx-ode-joy-biljetter-1856579"
+          target="_blank"
+          rel="noopener"
+          class="nav-link"
+          >Biljetter <span class="visually-hidden">(öppnas i ny flik)</span></a
+        >
+        <span
+          class="nav-link disabled"
+          aria-disabled="true"
+          >Lineup TBA</span
+        >
+        <a
+          href="https://instagram.com/plxplxplx"
+          target="_blank"
+          rel="noopener"
+          class="nav-link"
+          >Instagram <span class="visually-hidden">(öppnas i ny flik)</span></a
+        >
+        <a
+          href="mailto:info@plxplxplx.com"
+          class="nav-link"
+          >Kontakt</a
+        >
+        <button
+          class="nav-link"
+          id="info-btn"
+          aria-expanded="false">
+          Info
+        </button>
+      </nav>
+    </header>
 
-  <main id="main-content" tabindex="-1">
-    <canvas id="viewport" width="960" height="540" tabindex="-1" aria-label="Interactive 3D scaffolding tower — scroll to explore"></canvas>
-    <div id="scroll-fade" aria-hidden="true"></div>
-    <button id="panel-close" class="panel-btn" aria-label="Close image viewer">&times;</button>
-    <button id="panel-prev" class="panel-btn" aria-label="Previous image">&#8249;</button>
-    <button id="panel-next" class="panel-btn" aria-label="Next image">&#8250;</button>
-    <div id="panel-caption" aria-live="polite"></div>
-  </main>
+    <div
+      id="info-overlay"
+      aria-hidden="true">
+      <div id="info-content">
+        <p>
+          Åh PLX, ODE JOY, ODE PLX. 20 år av skapande, verklighetsflykt, performance, konst, musik, mat och umgänge kulminerar på Malmö
+          Gamla Casino i maj 2026. Välkommen till en tvådagars festival, ett musikaliskt kalejdoskop och en performativ karusell. Husets
+          själ i symbios med operans dramaturgi skapar två sammansatta dagars upplevelse.
+        </p>
 
-  <script type="importmap">
-  { "imports": {
-    "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js",
-    "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
-    "tweakpane": "https://cdn.jsdelivr.net/npm/tweakpane@4.0.5/dist/tweakpane.min.js"
-  }}
-  </script>
+        <p>Dom kom, dom åt, dom slutade inte förstå varandra.</p>
+        <p>
+          Börja kvällen med att ta plats vid långbordet för 70 personer och bli en del av bjudningen som både är en middag och ett konstverk
+          signerat Ulf R med vänner.
+        </p>
 
-  <script type="module" src="assets/js/main.js?v=2"></script>
-</body>
+        <h3>Resplan i grova drag</h3>
+        <ul>
+          <li>Vi inleder med primörer – serverade med generösa såser</li>
+          <li>Till detta kommer rå marinerad fisk ta plats på bordet</li>
+          <li>Vidare följer musslor och kyckling</li>
+          <li>Avslutning, brinnande pannkakstårtor</li>
+        </ul>
+        <p class="info-note">Ett smakprov på kommande meny. Fullständig meny presenteras i samband med middagen.</p>
+
+        <h3>Bra att veta</h3>
+        <ul>
+          <li>Middagen är konstverk — alla deltagare serveras samma mat och dryck</li>
+          <li>Fördelning: ca 60% veg, 20% skaldjur, 20% kött</li>
+          <li>Alergener: nötter, fisk, skaldjur, laktos, gluten</li>
+          <li>Middagen inkluderar 2 glas vin och pågår 20.00-21.30</li>
+        </ul>
+
+        <hr class="info-divider" />
+
+        <p>
+          <a
+            href="https://billetto.se/e/plx-ode-joy-biljetter-1856579"
+            target="_blank"
+            rel="noopener"
+            class="info-link"
+            >Köp biljetter på Billetto</a
+          >
+          (biljett till middag inkluderar inte entré till hela utställningen)
+        </p>
+      </div>
+    </div>
+
+    <main
+      id="main-content"
+      tabindex="-1">
+      <canvas
+        id="viewport"
+        width="960"
+        height="540"
+        tabindex="-1"
+        aria-label="Interactive 3D scaffolding tower — scroll to explore"></canvas>
+      <div
+        id="scroll-fade"
+        aria-hidden="true"></div>
+      <button
+        id="panel-close"
+        class="panel-btn"
+        aria-label="Close image viewer">
+        &times;
+      </button>
+      <button
+        id="panel-prev"
+        class="panel-btn"
+        aria-label="Previous image">
+        &#8249;
+      </button>
+      <button
+        id="panel-next"
+        class="panel-btn"
+        aria-label="Next image">
+        &#8250;
+      </button>
+      <div
+        id="panel-caption"
+        aria-live="polite"></div>
+    </main>
+
+    <script type="importmap">
+      {
+        "imports": {
+          "three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js",
+          "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/",
+          "tweakpane": "https://cdn.jsdelivr.net/npm/tweakpane@4.0.5/dist/tweakpane.min.js"
+        }
+      }
+    </script>
+
+    <script
+      type="module"
+      src="assets/js/main.js?v=2"></script>
+  </body>
 </html>

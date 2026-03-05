@@ -48,7 +48,11 @@ async function loadStemBuffers() {
   stemBuffers = await Promise.all(fetches);
 }
 
-if (!isMobile) {
+// Lazy init — create AudioContext and entire node graph on first user gesture
+// This avoids the browser warning about AudioContext created before interaction
+function initAudioCtx() {
+  if (audioCtx || isMobile) return;
+
   audioCtx = new (window.AudioContext || window.webkitAudioContext)();
 
   // Stem bus — all stems merge here before shared effects
@@ -122,7 +126,7 @@ if (!isMobile) {
   delay.connect(delayGain);
   delayGain.connect(audioCtx.destination);
 
-  // Start loading buffers immediately
+  // Start loading buffers
   loadStemBuffers();
 }
 
@@ -132,6 +136,9 @@ export async function playStems() {
     // Mobile: fire all plays together (best effort)
     return Promise.all(mobileStemEls.map(el => el.play().catch(() => {})));
   }
+
+  // Init audio context on first call (user gesture required)
+  initAudioCtx();
 
   // Wait for buffers if still loading
   if (stemBuffers.length === 0) await loadStemBuffers();
@@ -193,6 +200,7 @@ export const updateAudio = isMobile ? function(camH) {
     mobileStemEls[s].volume = lerp(volA, volB, frac) * 0.4;
   }
 } : function(camH) {
+  if (!audioCtx) return; // not yet initialised (awaiting user gesture)
   const { aIdx, bIdx, frac } = getStageBlend(camH);
   const a = STAGE_AUDIO[aIdx], b = STAGE_AUDIO[bIdx];
   const now = audioCtx.currentTime;

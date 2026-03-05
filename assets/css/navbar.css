@@ -50,6 +50,7 @@
 }
 
 /* ── Header ── */
+/* ── Header ── */
 #site-header {
   position: fixed;
   top: 48px;
@@ -61,6 +62,12 @@
   align-items: center;
   user-select: none;
   pointer-events: none;
+}
+
+/* Header image becomes clickable close button when info is open */
+.info-active #heading-img {
+  cursor: pointer;
+  pointer-events: auto;
 }
 
 #venue-text {
@@ -78,6 +85,8 @@
 }
 
 #site-header h1 {
+  position: relative;
+  z-index: var(--z-header);
   margin: 0;
   padding: 0;
   font-size: inherit;
@@ -86,7 +95,7 @@
 }
 
 #heading-img {
-  width: min(40vw, 400px);
+  width: min(30vw, 320px);
   height: auto;
   display: block;
 }
@@ -126,6 +135,10 @@
 .nav-link:nth-child(4) {
   transform: rotate(-0.8deg) translateY(3px);
 }
+.nav-link:nth-child(5) {
+  transform: rotate(0.7deg) translateY(1px);
+  grid-column: 1 / -1;
+}
 
 .nav-link:hover {
   color: rgb(var(--color-lime));
@@ -145,7 +158,7 @@
 /* ── Mobile ── */
 @media (max-width: 600px) {
   #heading-img {
-    width: 80vw;
+    width: 60vw;
   }
   #header-nav {
     grid-template-columns: 1fr;
@@ -157,7 +170,11 @@
   }
   .nav-link:nth-child(2),
   .nav-link:nth-child(3),
-  .nav-link:nth-child(4) {
+  .nav-link:nth-child(4),
+  .nav-link:nth-child(5) {
     transform: none;
+  }
+  .nav-link:nth-child(5) {
+    grid-column: auto;
   }
 }

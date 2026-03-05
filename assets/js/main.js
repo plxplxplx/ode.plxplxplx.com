@@ -79,8 +79,37 @@ canvas.addEventListener('click', (e) => {
   }
 });
 
+// =====================================================
+// INFO OVERLAY — toggle slide-up panel
+// =====================================================
+const infoBtn = document.getElementById('info-btn');
+const infoOverlay = document.getElementById('info-overlay');
+const siteHeader = document.getElementById('site-header');
+const headingImg = document.getElementById('heading-img');
+
+function toggleInfo(forceClose) {
+  const open = forceClose ? false : infoOverlay.classList.toggle('info-open');
+  if (forceClose) infoOverlay.classList.remove('info-open');
+  siteHeader.classList.toggle('info-active', open);
+  infoBtn.setAttribute('aria-expanded', open);
+  infoOverlay.setAttribute('aria-hidden', !open);
+}
+
+headingImg.addEventListener('click', () => {
+  if (siteHeader.classList.contains('info-active')) toggleInfo(true);
+});
+
+infoOverlay.addEventListener('click', (e) => {
+  if (!e.target.closest('#info-content')) toggleInfo(true);
+});
+
+infoBtn.addEventListener('click', () => toggleInfo());
+
 window.addEventListener('keydown', (e) => {
-  if (e.code === 'Escape' && panelZoomed) exitPanelZoom();
+  if (e.code === 'Escape') {
+    if (infoOverlay.classList.contains('info-open')) { toggleInfo(true); return; }
+    if (panelZoomed) exitPanelZoom();
+  }
 });
 
 const _closeBtn = document.getElementById('panel-close');

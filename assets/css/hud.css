@@ -87,3 +87,96 @@
 #panel-caption .caption-links a:hover {
   color: rgba(var(--color-lime), 1);
 }
+
+/* ── Info overlay ── */
+#info-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-fade);
+  background:
+    linear-gradient(to top, rgba(5,5,5,1) 0%, rgba(5,5,5,0.95) 30%, rgba(5,5,5,0.5) 60%, transparent 80%);
+  overflow: hidden;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  pointer-events: none;
+  transform: translateY(100%);
+  transition: transform 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+#info-overlay.info-open {
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+#info-content {
+  position: relative;
+  max-width: 680px;
+  width: 100%;
+  padding: 0 48px 24px;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 16px;
+  line-height: 1.2;
+  color: #fff;
+}
+
+#info-content h2 {
+  font: inherit;
+  margin: 0 0 24px;
+}
+#info-content h3 {
+  font: inherit;
+  margin: 24px 0 8px;
+}
+#info-content .info-tagline {
+  margin: 0 0 24px;
+}
+#info-content ul {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 12px;
+}
+#info-content li {
+  padding: 3px 0;
+}
+#info-content li::before {
+  content: '— ';
+  color: rgba(255,255,255,0.4);
+}
+#info-content p {
+  margin: 0 0 10px;
+}
+#info-content .info-note {
+  color: rgba(255,255,255,0.5);
+}
+.info-divider {
+  border: none;
+  border-top: 1px solid rgba(255,255,255,0.15);
+  margin: 20px 0;
+}
+.info-link {
+  color: rgb(var(--color-orange));
+  text-decoration: none;
+  transition: color 0.2s;
+}
+.info-link:hover {
+  color: rgb(var(--color-lime));
+}
+
+/* Info button reset — inherits .nav-link but needs button resets */
+#info-btn {
+  border: none;
+  cursor: pointer;
+}
+
+@media (max-width: 600px) {
+  #info-overlay {
+    background:
+      linear-gradient(to top, rgba(5,5,5,1) 0%, rgba(5,5,5,0.97) 35%, rgba(5,5,5,0.6) 65%, transparent 85%);
+  }
+  #info-content {
+    padding: 0 14px 16px;
+    max-width: 85vw;
+    font-size: 14px;
+  }
+}
