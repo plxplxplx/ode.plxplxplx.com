@@ -26,8 +26,36 @@ export const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent)
   || (navigator.maxTouchPoints > 1 && window.innerWidth < 1024)
   || window.innerWidth < 768;
 
-// Centralised quality settings — tweak mobile values here
-export const QUALITY = isMobile ? {
+// GPU tier detection — probe WebGL for GPU name
+// ?quality=low / ?quality=high URL param overrides auto-detection
+function detectGPUTier() {
+  const urlQ = new URLSearchParams(window.location.search).get('quality');
+  if (urlQ === 'low') return 'low';
+  if (urlQ === 'high') return 'high';
+  try {
+    const c = document.createElement('canvas');
+    const gl = c.getContext('webgl') || c.getContext('experimental-webgl');
+    if (!gl) return 'low';
+    const ext = gl.getExtension('WEBGL_debug_renderer_info');
+    if (ext) {
+      const gpu = gl.getParameter(ext.UNMASKED_RENDERER_WEBGL).toLowerCase();
+      // Known low-end: Intel integrated, Mali 4xx/6xx, Adreno 3xx/4xx/5xx, Apple A9/A10
+      if (/intel(?!.*arc)/.test(gpu) || /mali[- ]?[46]/.test(gpu)
+        || /adreno[- ]?\d{3}(?!\d)/.test(gpu) && parseInt(gpu.match(/adreno[- ]?(\d)/)[1]) < 6
+        || /apple a[89]|apple a10/.test(gpu) || /swiftshader|llvmpipe|mesa/.test(gpu)) {
+        return 'low';
+      }
+    }
+    // Fallback heuristic: low core count or small screen ≈ weaker GPU
+    if (navigator.hardwareConcurrency && navigator.hardwareConcurrency <= 4) return 'low';
+  } catch (_) {}
+  return 'high';
+}
+
+const gpuTier = isMobile ? 'mobile' : detectGPUTier();
+
+// Centralised quality settings — 3 tiers: mobile / low desktop / high desktop
+const QUALITY_MOBILE = {
   pixelRatio:     Math.min(window.devicePixelRatio, 1.25),
   antialias:      false,
   shadows:        false,
@@ -46,7 +74,30 @@ export const QUALITY = isMobile ? {
   fireflyCount:   5,
   fireflyLights:  0,
   deferEnv:       true,
-} : {
+};
+
+const QUALITY_LOW = {
+  pixelRatio:     Math.min(window.devicePixelRatio, 2.0),
+  antialias:      true,
+  shadows:        true,
+  shadowMapSize:  2048,
+  envMap:         true,
+  bloom:          false,
+  filmGrain:      true,
+  vignette:       false,
+  colorGrade:     true,
+  smaa:           false,
+  cardRaycast:    true,
+  tubeSegments:   24,
+  volFogLayers:   4,
+  shroudLayers:   6,
+  gridLights:     3,
+  fireflyCount:   6,
+  fireflyLights:  2,
+  deferEnv:       false,
+};
+
+const QUALITY_HIGH = {
   pixelRatio:     Math.min(window.devicePixelRatio, 2.5),
   antialias:      true,
   shadows:        true,
@@ -66,6 +117,9 @@ export const QUALITY = isMobile ? {
   fireflyLights:  4,
   deferEnv:       false,
 };
+
+export const QUALITY = gpuTier === 'mobile' ? QUALITY_MOBILE
+  : gpuTier === 'low' ? QUALITY_LOW : QUALITY_HIGH;
 
 // Reduced motion preference (WCAG 2.3.3) — reactive
 const _motionMQ = window.matchMedia('(prefers-reduced-motion: reduce)');

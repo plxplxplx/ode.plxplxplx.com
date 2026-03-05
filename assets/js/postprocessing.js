@@ -17,7 +17,7 @@ import { QUALITY } from './config.js';
 // POST-PROCESSING
 // =====================================================
 const rt = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, {
-  samples: QUALITY.antialias ? 8 : 0,
+  samples: QUALITY.antialias ? (QUALITY.bloom ? 8 : 4) : 0,
 });
 export const composer = new EffectComposer(renderer, rt);
 composer.addPass(new RenderPass(scene, camera));
