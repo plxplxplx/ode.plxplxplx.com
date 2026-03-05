@@ -98,14 +98,14 @@ const QUALITY_LOW = {
 };
 
 const QUALITY_HIGH = {
-  pixelRatio:     Math.min(window.devicePixelRatio, 2.5),
+  pixelRatio:     Math.min(window.devicePixelRatio, 2.0),
   antialias:      true,
   shadows:        true,
-  shadowMapSize:  4096,
+  shadowMapSize:  2048,
   envMap:         true,
-  bloom:          true,
+  bloom:          false,
   filmGrain:      true,
-  vignette:       true,
+  vignette:       false,
   colorGrade:     true,
   smaa:           true,
   cardRaycast:    true,
