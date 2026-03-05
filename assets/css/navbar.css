@@ -62,12 +62,12 @@
   align-items: center;
   user-select: none;
   pointer-events: none;
+  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
-/* Header image becomes clickable close button when info is open */
-.info-active #heading-img {
-  cursor: pointer;
-  pointer-events: auto;
+.info-active {
+  opacity: 0;
+  pointer-events: none !important;
 }
 
 #venue-text {

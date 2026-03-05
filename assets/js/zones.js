@@ -8,16 +8,16 @@ import { ribbonVert, ribbonFrag } from './shaders.js';
 export const ZONES = [
   { name: 'GROUND',    y: STAGES[0].floorY, fogColor: 0x1a2808, fogDensity: 0.06,  tint: [1.1, 1.2, 0.7],
     title: '',
-    text: 'PLX ODE 15–16 MAJ' },
+    text: 'PLX ODE JOY 15–16 MAJ' },
   { name: 'SECOND',    y: STAGES[1].floorY, fogColor: 0x2a1408, fogDensity: 0.055, tint: [1.3, 0.9, 0.6],
     title: '',
-    text: 'PLX ODE 15–16 MAJ' },
+    text: 'PLX ODE JOY 15–16 MAJ' },
   { name: 'THIRD',     y: STAGES[2].floorY, fogColor: 0x221808, fogDensity: 0.05,  tint: [1.2, 0.95, 0.7],
     title: '',
-    text: 'PLX ODE 15–16 MAJ' },
+    text: 'PLX ODE JOY 15–16 MAJ' },
   { name: 'SUMMIT',    y: STAGES[3].floorY, fogColor: 0x1e1008, fogDensity: 0.04,  tint: [1.3, 0.85, 0.6],
     title: '',
-    text: 'PLX ODE 15–16 MAJ' },
+    text: 'PLX ODE JOY 15–16 MAJ' },
 ];
 
 // =====================================================

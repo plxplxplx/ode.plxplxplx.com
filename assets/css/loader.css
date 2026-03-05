@@ -16,12 +16,7 @@
 }
 
 #loader-pct {
-  font-family: var(--font-sans);
-  font-weight: var(--font-weight-regular);
-  font-size: var(--font-size-label);
-  letter-spacing: var(--letter-spacing-wide);
-  text-transform: uppercase;
-  color: rgba(var(--color-cream), 0.35);
+  display: none;
 }
 
 /* ── Loading reveal ──
