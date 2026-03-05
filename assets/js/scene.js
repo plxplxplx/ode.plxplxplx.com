@@ -86,6 +86,7 @@ export const sunMesh = new THREE.Mesh(
   new THREE.MeshBasicMaterial({ color: 0xffffff })
 );
 sunMesh.position.copy(sunPos);
+sunMesh.visible = false;
 scene.add(sunMesh);
 
 // Occlusion scene — renders scene as black silhouettes, sun as bright white

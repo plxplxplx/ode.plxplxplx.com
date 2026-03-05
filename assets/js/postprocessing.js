@@ -17,7 +17,7 @@ import { QUALITY } from './config.js';
 // POST-PROCESSING
 // =====================================================
 const rt = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, {
-  samples: QUALITY.antialias ? 4 : 0,
+  samples: QUALITY.antialias ? 8 : 0,
 });
 export const composer = new EffectComposer(renderer, rt);
 composer.addPass(new RenderPass(scene, camera));
@@ -53,12 +53,11 @@ export const grainPass = new ShaderPass(FilmGrainShader);
 grainPass.enabled = QUALITY.filmGrain;
 composer.addPass(grainPass);
 
-// FXAA — cheap screen-space anti-aliasing (compensates for EffectComposer losing native MSAA)
-import { FXAAShader } from 'three/addons/shaders/FXAAShader.js';
-export const fxaaPass = new ShaderPass(FXAAShader);
-fxaaPass.uniforms.resolution.value.set(1 / window.innerWidth, 1 / window.innerHeight);
-fxaaPass.enabled = true;
-composer.addPass(fxaaPass);
+// SMAA — high-quality sub-pixel anti-aliasing (better than FXAA for thin geometry)
+import { SMAAPass } from 'three/addons/postprocessing/SMAAPass.js';
+export const smaaPass = new SMAAPass(window.innerWidth * renderer.getPixelRatio(), window.innerHeight * renderer.getPixelRatio());
+smaaPass.enabled = true;
+composer.addPass(smaaPass);
 
 // OutputPass applies tone mapping + output color space to final render
 composer.addPass(new OutputPass());
@@ -83,7 +82,7 @@ function onResize() {
     composer.setSize(window.innerWidth, window.innerHeight);
     bloom.resolution.set(window.innerWidth, window.innerHeight);
     bokehPass.setSize(window.innerWidth, window.innerHeight);
-    fxaaPass.uniforms.resolution.value.set(1 / window.innerWidth, 1 / window.innerHeight);
+    smaaPass.setSize(window.innerWidth * renderer.getPixelRatio(), window.innerHeight * renderer.getPixelRatio());
     occRT.setSize(Math.floor(window.innerWidth / 2), Math.floor(window.innerHeight / 2));
     occBlurRT.setSize(Math.floor(window.innerWidth / 2), Math.floor(window.innerHeight / 2));
     // Repaint immediately so the canvas doesn't flash blank between resize events

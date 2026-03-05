@@ -4,7 +4,7 @@ import * as THREE from 'three';
 import { QUALITY } from './config.js';
 
 // Scene setup
-import { renderer, scene, keyLight, sunPos, sunMesh, sunOccMesh, sunLight, buildPlane, buildPlaneBottom } from './scene.js';
+import { renderer, scene, keyLight, sunMesh, sunOccMesh, sunLight, buildPlane, buildPlaneBottom } from './scene.js';
 import * as sceneModule from './scene.js';
 
 // Materials (loaded by scaffold/environment)
@@ -173,22 +173,18 @@ function animate() {
   }
   for (const card of cards) { card.mat.uniforms.time.value = t; }
 
-  // Sun lock — place sun opposite camera so rays seep through scaffold
-  if (params.sunLocked) {
+  // Sun position — always behind scaffold relative to camera
+  {
     const cam = sceneModule.camera;
     const camAngle = Math.atan2(cam.position.z, cam.position.x);
-    const sunR = Math.sqrt(sunPos.x * sunPos.x + sunPos.z * sunPos.z);
-    const sunAngle = camAngle + Math.PI + 0.25;
-    const sx = Math.cos(sunAngle) * sunR;
-    const sz = Math.sin(sunAngle) * sunR;
-    const lockY = scrollCurrent.y + sunPos.y;
-    sunMesh.position.set(sx, lockY, sz);
-    sunOccMesh.position.set(sx, lockY, sz);
-    sunLight.position.set(sx, lockY, sz);
-  } else {
-    sunMesh.position.copy(sunPos);
-    sunOccMesh.position.copy(sunPos);
-    sunLight.position.copy(sunPos);
+    const sunAngle = camAngle + Math.PI + params.sunAngleOffset;
+    const sx = Math.cos(sunAngle) * params.sunRadius;
+    const sz = Math.sin(sunAngle) * params.sunRadius;
+    const sy = scrollCurrent.y + params.sunHeight;
+    sunMesh.position.set(sx, sy, sz);
+    sunOccMesh.position.set(sx, sy, sz);
+    sunLight.position.set(sx, sy, sz);
+    sunMesh.visible = params.godRaysEnabled;
   }
 
   // God rays — project sun to screen space

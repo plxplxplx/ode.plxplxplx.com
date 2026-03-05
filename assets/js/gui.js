@@ -9,7 +9,7 @@ import { ZONES, sideTexts, rebuildRibbons } from './zones.js';
 import { vineGroup, shrubGroup, flowerLight, stageGlowPlanes, backdropPanels, shroudPlanes } from './environment.js';
 import { gridLights, fireflies, FF_COUNT } from './effects.js';
 import { scaffold, floorMats, glassPanels, glassMat, scaffoldReady, applyGlassImages, removeGlassImages, getGlassImageMats, getGlassTexCache } from './scaffold.js';
-import { bloom, bokehPass, godRaysPass, colorGradePass, grainPass, fxaaPass, setPostCamera } from './postprocessing.js';
+import { bloom, bokehPass, godRaysPass, colorGradePass, grainPass, smaaPass, setPostCamera } from './postprocessing.js';
 import { setControlsCamera } from './camera.js';
 
 // =====================================================
@@ -26,6 +26,9 @@ export const params = {
   dofAperture: 0.004,
   dofMaxBlur: 0.001,
   fogDensity: scene.fog.density,
+  fogLinear: false,
+  fogNear: 10,
+  fogFar: 120,
   gridLightIntensity: 1.5,
   gridLightDistance: 25,
   gridLightSpeed: 0.2,
@@ -71,16 +74,16 @@ export const params = {
   steelMetalness: matSteel.metalness,
   steelRoughness: matSteel.roughness,
   pixelRatio: renderer.getPixelRatio(),
-  fxaa: fxaaPass.enabled,
+  smaa: smaaPass.enabled,
   exposure: 0.75,
   godRaysEnabled: false,
   godRayExposure: godRaysPass.uniforms.exposure.value,
   godRayDecay: godRaysPass.uniforms.decay.value,
   godRayDensity: godRaysPass.uniforms.density.value,
   godRayWeight: godRaysPass.uniforms.weight.value,
-  sunX: sunPos.x,
-  sunY: sunPos.y,
-  sunZ: sunPos.z,
+  sunRadius: Math.sqrt(sunPos.x * sunPos.x + sunPos.z * sunPos.z),
+  sunHeight: sunPos.y,
+  sunAngleOffset: 0.25,
   tintR: colorGradePass.uniforms.tintR.value,
   tintG: colorGradePass.uniforms.tintG.value,
   tintB: colorGradePass.uniforms.tintB.value,
@@ -178,11 +181,6 @@ const applyPoleThickness = v => {
   });
 };
 
-const updateSun = () => {
-  sunPos.set(params.sunX, params.sunY, params.sunZ);
-  sunMesh.position.copy(sunPos);
-  sunOccMesh.position.copy(sunPos);
-};
 
 // =====================================================
 // TABS
@@ -255,19 +253,38 @@ dofFolder.addBinding(params, 'dofMaxBlur', { label: 'Max Blur', min: 0, max: 0.1
 
 // -- Fog --
 const fogFolder = renderPage.addFolder({ title: 'Fog', expanded: false });
-fogFolder.addBinding(params, 'fogDensity', { label: 'Density', min: 0, max: 0.5, step: 0.005 }).on('change', ev => scene.fog.density = ev.value);
+fogFolder.addBinding(params, 'fogLinear', { label: 'Linear Fog' }).on('change', ev => {
+  const color = scene.fog.color;
+  if (ev.value) {
+    scene.fog = new THREE.Fog(color, params.fogNear, params.fogFar);
+  } else {
+    scene.fog = new THREE.FogExp2(color, params.fogDensity);
+  }
+});
+fogFolder.addBinding(params, 'fogDensity', { label: 'Density (Exp2)', min: 0, max: 0.5, step: 0.005 }).on('change', ev => {
+  if (!params.fogLinear) scene.fog.density = ev.value;
+});
+fogFolder.addBinding(params, 'fogNear', { label: 'Near', min: 0, max: 100, step: 1 }).on('change', ev => {
+  if (params.fogLinear) scene.fog.near = ev.value;
+});
+fogFolder.addBinding(params, 'fogFar', { label: 'Far', min: 10, max: 500, step: 5 }).on('change', ev => {
+  if (params.fogLinear) scene.fog.far = ev.value;
+});
 
 // -- God Rays --
 const godRayFolder = renderPage.addFolder({ title: 'God Rays', expanded: false });
-godRayFolder.addBinding(params, 'godRaysEnabled', { label: 'Enable' }).on('change', ev => godRaysPass.enabled = ev.value);
+godRayFolder.addBinding(params, 'godRaysEnabled', { label: 'Enable' }).on('change', ev => {
+  godRaysPass.enabled = ev.value;
+  sunMesh.visible = ev.value;
+});
 godRayFolder.addBinding(params, 'godRayExposure', { label: 'Exposure', min: 0, max: 1, step: 0.01 }).on('change', ev => godRaysPass.uniforms.exposure.value = ev.value);
 godRayFolder.addBinding(params, 'godRayDecay', { label: 'Decay', min: 0.8, max: 1, step: 0.005 }).on('change', ev => godRaysPass.uniforms.decay.value = ev.value);
 godRayFolder.addBinding(params, 'godRayDensity', { label: 'Density', min: 0, max: 2, step: 0.05 }).on('change', ev => godRaysPass.uniforms.density.value = ev.value);
 godRayFolder.addBinding(params, 'godRayWeight', { label: 'Weight', min: 0, max: 2, step: 0.05 }).on('change', ev => godRaysPass.uniforms.weight.value = ev.value);
 const sunFolder = godRayFolder.addFolder({ title: 'Sun Position', expanded: false });
-sunFolder.addBinding(params, 'sunX', { label: 'X', min: -20, max: 20, step: 0.5 }).on('change', updateSun);
-sunFolder.addBinding(params, 'sunY', { label: 'Y', min: -10, max: 20, step: 0.5 }).on('change', updateSun);
-sunFolder.addBinding(params, 'sunZ', { label: 'Z', min: -20, max: 20, step: 0.5 }).on('change', updateSun);
+sunFolder.addBinding(params, 'sunRadius', { label: 'Distance', min: 5, max: 60, step: 1 });
+sunFolder.addBinding(params, 'sunHeight', { label: 'Height', min: -10, max: 40, step: 0.5 });
+sunFolder.addBinding(params, 'sunAngleOffset', { label: 'Angle Offset', min: -Math.PI, max: Math.PI, step: 0.05 });
 
 // -- Post FX --
 const fxFolder = renderPage.addFolder({ title: 'Post FX', expanded: false });
@@ -289,10 +306,10 @@ const qualityFolder = renderPage.addFolder({ title: 'Quality', expanded: false }
 qualityFolder.addBinding(params, 'pixelRatio', { label: 'Pixel Ratio', min: 0.5, max: Math.min(window.devicePixelRatio, 3), step: 0.25 }).on('change', ev => {
   renderer.setPixelRatio(ev.value);
   composer.setSize(window.innerWidth, window.innerHeight);
-  fxaaPass.uniforms.resolution.value.set(1 / window.innerWidth, 1 / window.innerHeight);
+  smaaPass.setSize(window.innerWidth * renderer.getPixelRatio(), window.innerHeight * renderer.getPixelRatio());
 });
-qualityFolder.addBinding(params, 'fxaa', { label: 'FXAA' }).on('change', ev => {
-  fxaaPass.enabled = ev.value;
+qualityFolder.addBinding(params, 'smaa', { label: 'SMAA' }).on('change', ev => {
+  smaaPass.enabled = ev.value;
 });
 
 // =====================================================

@@ -46,7 +46,7 @@ export const QUALITY = isMobile ? {
   fireflyLights:  0,
   deferEnv:       true,
 } : {
-  pixelRatio:     Math.min(window.devicePixelRatio, 2),
+  pixelRatio:     Math.min(window.devicePixelRatio, 2.5),
   antialias:      true,
   shadows:        true,
   shadowMapSize:  2048,
