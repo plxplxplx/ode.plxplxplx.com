@@ -69,6 +69,7 @@ let _panelZoomGoal = 0;     // 0 = normal, 1 = zoomed
 let _panelZoomLerp = 0;     // smoothed interpolation factor
 let _panelImgFile = '';      // current panel's filename for caption
 let _panelCaptionShown = false;
+let _infoFrustumOverride = 0; // non-zero = use this instead of PANEL_ZOOM_FRUSTUM
 const PANEL_ZOOM_FRUSTUM = 3.5; // tight ortho zoom on the panel
 const _panelFromCamPos = new THREE.Vector3();  // animation "from" position (changes on navigate)
 const _panelFromTarget = new THREE.Vector3();
@@ -184,6 +185,28 @@ export function startPanelZoom(panelMesh) {
   _showPanelUI(panelMesh);
 }
 
+const INFO_ZOOM_FRUSTUM = 5.5;
+export function startInfoZoom(worldPos, normal) {
+  if (panelZoomed) return;
+  const cam = sceneModule.camera;
+  _panelOriginCamPos.copy(cam.position);
+  _panelOriginTarget.copy(controls.target);
+  _panelOriginFrustum = (cam.top - cam.bottom) || FRUSTUM;
+  _panelFromCamPos.copy(cam.position);
+  _panelFromTarget.copy(controls.target);
+  _panelFromFrustum = _panelOriginFrustum;
+
+  _panelTargetLookAt.copy(worldPos);
+  _panelTargetCamPos.copy(worldPos).addScaledVector(normal, ORBIT_RADIUS);
+
+  // Override zoom frustum for info view
+  _infoFrustumOverride = INFO_ZOOM_FRUSTUM;
+
+  _panelZoomLerp = 0;
+  _panelZoomGoal = 1;
+  panelZoomed = true;
+}
+
 export function navigatePanelZoom(panelMesh) {
   if (!panelZoomed) return;
 
@@ -221,7 +244,8 @@ export function exitPanelZoom() {
   const cam = sceneModule.camera;
   _panelFromCamPos.copy(cam.position);
   _panelFromTarget.copy(controls.target);
-  _panelFromFrustum = PANEL_ZOOM_FRUSTUM;
+  _panelFromFrustum = _infoFrustumOverride || PANEL_ZOOM_FRUSTUM;
+  _infoFrustumOverride = 0;
   _panelTargetCamPos.copy(_panelOriginCamPos);
   _panelTargetLookAt.copy(_panelOriginTarget);
   _panelZoomLerp = 0;
@@ -265,7 +289,8 @@ export function updateCam(dt) {
     controls.target.lerpVectors(_panelFromTarget, _panelTargetLookAt, _panelZoomLerp);
 
     // Animate ortho frustum
-    const targetFrustum = _panelZoomGoal === 0 ? _panelOriginFrustum : PANEL_ZOOM_FRUSTUM;
+    const zoomFrustum = _infoFrustumOverride || PANEL_ZOOM_FRUSTUM;
+    const targetFrustum = _panelZoomGoal === 0 ? _panelOriginFrustum : zoomFrustum;
     const f = THREE.MathUtils.lerp(_panelFromFrustum, targetFrustum, _panelZoomLerp);
     const a = window.innerWidth / window.innerHeight;
     cam.left = -f * a / 2; cam.right = f * a / 2;

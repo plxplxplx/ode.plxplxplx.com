@@ -26,7 +26,7 @@ import { cards, CARD_OPTS, cardGroup, cardRaycaster, cardPointer, hoveredCard, s
 import { updateEffects } from './effects.js';
 
 // Camera & scroll
-import { scrollCurrent, updateCam, wrapFogBoost, panelZoomed, startPanelZoom, exitPanelZoom, navigatePanelZoom } from './camera.js';
+import { scrollCurrent, updateCam, wrapFogBoost, panelZoomed, startPanelZoom, startInfoZoom, exitPanelZoom, navigatePanelZoom } from './camera.js';
 
 // Audio
 import { updateAudio } from './audio.js';
@@ -101,22 +101,66 @@ const siteHeader = document.getElementById('site-header');
 const infoContent = document.getElementById('info-content');
 let _infoOpen = false;
 
-function findNearestImagePanel() {
+// Find two vertically stacked non-image panels on the same face, nearest to camera
+function findInfoPanelPair() {
   const cam = sceneModule.camera;
-  const panels = glassPanels.filter(m => m.userData.imageMode && m.visible);
-  if (panels.length === 0) return null;
-  let best = null, bestDist = Infinity;
-  for (const p of panels) {
-    const d = cam.position.distanceTo(p.getWorldPosition(new THREE.Vector3()));
-    if (d < bestDist) { bestDist = d; best = p; }
+  const plain = glassPanels.filter(m => !m.userData.imageMode && m.visible);
+  if (plain.length === 0) return null;
+
+  // Group by face (same x,z position and rotation)
+  const groups = new Map();
+  const _wp = new THREE.Vector3();
+  for (const p of plain) {
+    p.getWorldPosition(_wp);
+    const key = `${_wp.x.toFixed(2)}_${_wp.z.toFixed(2)}_${p.rotation.y.toFixed(2)}`;
+    if (!groups.has(key)) groups.set(key, []);
+    groups.get(key).push(p);
   }
-  return best;
+
+  // Find pairs that are exactly LEVEL_H apart (stacked)
+  let bestPair = null, bestDist = Infinity;
+  for (const panels of groups.values()) {
+    panels.sort((a, b) => a.position.y - b.position.y);
+    for (let i = 0; i < panels.length - 1; i++) {
+      const dy = Math.abs(panels[i + 1].position.y - panels[i].position.y);
+      if (Math.abs(dy - 2.0) < 0.5) { // LEVEL_H = 2.0
+        const midY = (panels[i].position.y + panels[i + 1].position.y) / 2;
+        panels[i].getWorldPosition(_wp);
+        const midWorld = new THREE.Vector3(_wp.x, midY, _wp.z);
+        const d = cam.position.distanceTo(midWorld);
+        if (d < bestDist) {
+          bestDist = d;
+          bestPair = { lower: panels[i], upper: panels[i + 1], midWorld };
+        }
+      }
+    }
+  }
+
+  // Fallback: single nearest non-image panel
+  if (!bestPair) {
+    let best = null, bd = Infinity;
+    for (const p of plain) {
+      p.getWorldPosition(_wp);
+      const d = cam.position.distanceTo(_wp);
+      if (d < bd) { bd = d; best = p; }
+    }
+    return best ? { single: best } : null;
+  }
+  return bestPair;
 }
 
 function openInfo() {
   if (_infoOpen) return;
-  const panel = findNearestImagePanel();
-  if (panel) startPanelZoom(panel);
+  const result = findInfoPanelPair();
+  if (result) {
+    if (result.single) {
+      startPanelZoom(result.single);
+    } else {
+      // Compute face normal from the lower panel
+      const normal = new THREE.Vector3(0, 0, -1).applyQuaternion(result.lower.quaternion);
+      startInfoZoom(result.midWorld, normal);
+    }
+  }
   _infoOpen = true;
   infoOverlay.classList.add('info-open');
   siteHeader.classList.add('info-active');
