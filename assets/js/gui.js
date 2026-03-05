@@ -99,7 +99,7 @@ export const params = {
   tintR: colorGradePass.uniforms.tintR.value,
   tintG: colorGradePass.uniforms.tintG.value,
   tintB: colorGradePass.uniforms.tintB.value,
-  grainIntensity: 0.05,
+  grainIntensity: 0.015,
   colorSaturation: 1.0,
   colorContrast: 1.3,
   colorBrightness: 0.15,
