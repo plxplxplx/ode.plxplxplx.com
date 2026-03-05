@@ -117,7 +117,7 @@
   font-weight: 500;
   font-size: clamp(15px, 1.4vw + 0.5rem, 24px);
   line-height: 1.3;
-  color: #1a1a1a;
+  color: #fff;
 }
 
 #info-content h2 {
@@ -141,26 +141,26 @@
 }
 #info-content li::before {
   content: '— ';
-  color: rgba(0,0,0,0.35);
+  color: rgba(255,255,255,0.4);
 }
 #info-content p {
   margin: 0 0 10px;
 }
 #info-content .info-note {
-  color: rgba(0,0,0,0.45);
+  color: rgba(255,255,255,0.5);
 }
 .info-divider {
   border: none;
-  border-top: 1px solid rgba(0,0,0,0.15);
+  border-top: 1px solid rgba(255,255,255,0.15);
   margin: 20px 0;
 }
 .info-link {
-  color: #1a1a1a;
-  text-decoration: underline;
+  color: rgb(var(--color-orange));
+  text-decoration: none;
   transition: color 0.2s;
 }
 .info-link:hover {
-  color: #444;
+  color: rgb(var(--color-lime));
 }
 
 /* Info button reset — inherits .nav-link but needs button resets */
