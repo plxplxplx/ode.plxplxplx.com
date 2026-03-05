@@ -115,7 +115,7 @@ export const params = {
   stageGlowIntensity: 0,
   backdropEnabled: false,
   backdropIntensity: 0,
-  shroudEnabled: true,
+  shroudEnabled: false,
   stageFloorsVisible: false,
   floorOpacity: 1.0,
   floorMetalness: 0.3,

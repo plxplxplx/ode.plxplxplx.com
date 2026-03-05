@@ -106,6 +106,7 @@ for (let end = 0; end < 2; end++) {
     }));
     plane.rotation.x = -Math.PI / 2;
     plane.position.y = baseY + yOff;
+    plane.visible = false;
     scene.add(plane);
     shroudPlanes.push({ mesh: plane, baseY, layerY: baseY + yOff, maxOpacity });
   }
