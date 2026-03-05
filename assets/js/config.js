@@ -36,7 +36,7 @@ export const QUALITY = isMobile ? {
   bloom:          false,
   filmGrain:      false,
   vignette:       false,
-  colorGrade:     false,
+  colorGrade:     true,
   smaa:           false,
   cardRaycast:    false,
   tubeSegments:   5,
