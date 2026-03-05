@@ -56,7 +56,7 @@ composer.addPass(grainPass);
 // SMAA — high-quality sub-pixel anti-aliasing (better than FXAA for thin geometry)
 import { SMAAPass } from 'three/addons/postprocessing/SMAAPass.js';
 export const smaaPass = new SMAAPass(window.innerWidth * renderer.getPixelRatio(), window.innerHeight * renderer.getPixelRatio());
-smaaPass.enabled = true;
+smaaPass.enabled = QUALITY.smaa;
 composer.addPass(smaaPass);
 
 // OutputPass applies tone mapping + output color space to final render
