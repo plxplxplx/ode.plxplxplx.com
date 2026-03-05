@@ -75,7 +75,7 @@ export const FilmGrainShader = {
   uniforms: {
     tDiffuse: { value: null },
     time: { value: 0 },
-    intensity: { value: 0.03 },
+    intensity: { value: 0.021 },
   },
   vertexShader: `varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
   fragmentShader: `
