@@ -59,6 +59,7 @@ export default {
         { src: 'assets/audio', dest: 'docs/assets' },
         { src: 'assets/fonts', dest: 'docs/assets' },
         { src: 'assets/reference', dest: 'docs/assets' },
+        { src: 'assets/favicon.svg', dest: 'docs/assets' },
         { src: 'CNAME', dest: 'docs' },
         { src: '.nojekyll', dest: 'docs' },
         { src: 'robots.txt', dest: 'docs' },
