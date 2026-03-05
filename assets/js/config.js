@@ -58,7 +58,7 @@ export const QUALITY = isMobile ? {
   colorGrade:     true,
   smaa:           true,
   cardRaycast:    true,
-  tubeSegments:   16,
+  tubeSegments:   24,
   volFogLayers:   8,
   shroudLayers:   12,
   gridLights:     6,
