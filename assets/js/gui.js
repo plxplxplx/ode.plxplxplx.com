@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { Pane } from 'tweakpane';
 import { FRUSTUM } from './config.js';
-import { renderer, scene, sunPos, sunMesh, sunOccMesh, keyLight, perspCamera, switchCamera, buildPlane, buildPlaneBottom } from './scene.js';
+import { renderer, scene, sunPos, sunMesh, sunOccMesh, keyLight, rimLight, sunLight, ambientLight, hemiLight, perspCamera, switchCamera, buildPlane, buildPlaneBottom } from './scene.js';
 import * as sceneModule from './scene.js';
 import { STAGE_MATS, matSteel, loadMarbleTextures, getMarbleTextures, applyMarbleTextures } from './materials.js';
 import { cards, CARD_OPTS, rebuildCards, IMG_FILES } from './cards.js';
@@ -32,11 +32,23 @@ export const params = {
   gridLightIntensity: 1.5,
   gridLightDistance: 25,
   gridLightSpeed: 0.2,
-  ambientIntensity: 0.35,
+  ambientIntensity: ambientLight.intensity,
+  ambientColor: '#' + ambientLight.color.getHexString(),
+  hemiIntensity: hemiLight.intensity,
+  hemiSkyColor: '#' + hemiLight.color.getHexString(),
+  hemiGroundColor: '#' + hemiLight.groundColor.getHexString(),
   keyLightIntensity: keyLight.intensity,
+  keyLightColor: '#' + keyLight.color.getHexString(),
   keyLightX: keyLight.position.x,
   keyLightY: 18,
   keyLightZ: keyLight.position.z,
+  rimLightIntensity: rimLight.intensity,
+  rimLightColor: '#' + rimLight.color.getHexString(),
+  rimLightX: rimLight.position.x,
+  rimLightY: rimLight.position.y,
+  rimLightZ: rimLight.position.z,
+  sunLightIntensity: sunLight.intensity,
+  sunLightColor: '#' + sunLight.color.getHexString(),
   cardsVisible: false,
   cardOpacity: 0.92,
   cardRadius: CARD_OPTS.radius,
@@ -355,19 +367,44 @@ floorsFolder.addBinding(params, 'floorSlabSize', { label: 'Slab Size', min: 10, 
 
 // -- Lights --
 const lightFolder = scenePage.addFolder({ title: 'Lights', expanded: false });
-lightFolder.addBinding(params, 'gridLightIntensity', { label: 'Grid Intensity', min: 0, max: 10, step: 0.1 }).on('change', ev => {
+
+const ambientFolder = lightFolder.addFolder({ title: 'Ambient', expanded: false });
+ambientFolder.addBinding(params, 'ambientIntensity', { label: 'Intensity', min: 0, max: 5, step: 0.05 }).on('change', ev => ambientLight.intensity = ev.value);
+ambientFolder.addBinding(params, 'ambientColor', { label: 'Color' }).on('change', ev => ambientLight.color.set(ev.value));
+
+const hemiFolder = lightFolder.addFolder({ title: 'Hemisphere', expanded: false });
+hemiFolder.addBinding(params, 'hemiIntensity', { label: 'Intensity', min: 0, max: 5, step: 0.05 }).on('change', ev => hemiLight.intensity = ev.value);
+hemiFolder.addBinding(params, 'hemiSkyColor', { label: 'Sky Color' }).on('change', ev => hemiLight.color.set(ev.value));
+hemiFolder.addBinding(params, 'hemiGroundColor', { label: 'Ground Color' }).on('change', ev => hemiLight.groundColor.set(ev.value));
+
+const keyFolder = lightFolder.addFolder({ title: 'Key Light', expanded: false });
+keyFolder.addBinding(params, 'keyLightIntensity', { label: 'Intensity', min: 0, max: 20, step: 0.1 }).on('change', ev => keyLight.intensity = ev.value);
+keyFolder.addBinding(params, 'keyLightColor', { label: 'Color' }).on('change', ev => keyLight.color.set(ev.value));
+keyFolder.addBinding(params, 'keyLightX', { label: 'X', min: -30, max: 30, step: 0.5 }).on('change', ev => keyLight.position.x = ev.value);
+keyFolder.addBinding(params, 'keyLightY', { label: 'Y offset', min: 0, max: 50, step: 0.5 });
+keyFolder.addBinding(params, 'keyLightZ', { label: 'Z', min: -30, max: 30, step: 0.5 }).on('change', ev => keyLight.position.z = ev.value);
+
+const rimFolder = lightFolder.addFolder({ title: 'Rim Light', expanded: false });
+rimFolder.addBinding(params, 'rimLightIntensity', { label: 'Intensity', min: 0, max: 10, step: 0.1 }).on('change', ev => rimLight.intensity = ev.value);
+rimFolder.addBinding(params, 'rimLightColor', { label: 'Color' }).on('change', ev => rimLight.color.set(ev.value));
+rimFolder.addBinding(params, 'rimLightX', { label: 'X', min: -30, max: 30, step: 0.5 }).on('change', ev => rimLight.position.x = ev.value);
+rimFolder.addBinding(params, 'rimLightY', { label: 'Y', min: -30, max: 50, step: 0.5 }).on('change', ev => rimLight.position.y = ev.value);
+rimFolder.addBinding(params, 'rimLightZ', { label: 'Z', min: -30, max: 30, step: 0.5 }).on('change', ev => rimLight.position.z = ev.value);
+
+const sunLightFolder = lightFolder.addFolder({ title: 'Sun Light', expanded: false });
+sunLightFolder.addBinding(params, 'sunLightIntensity', { label: 'Intensity', min: 0, max: 10, step: 0.1 }).on('change', ev => sunLight.intensity = ev.value);
+sunLightFolder.addBinding(params, 'sunLightColor', { label: 'Color' }).on('change', ev => sunLight.color.set(ev.value));
+
+const gridFolder = lightFolder.addFolder({ title: 'Grid Lights', expanded: false });
+gridFolder.addBinding(params, 'gridLightIntensity', { label: 'Intensity', min: 0, max: 10, step: 0.1 }).on('change', ev => {
   gridLights.forEach(gl => gl.light.intensity = ev.value);
 });
-lightFolder.addBinding(params, 'gridLightDistance', { label: 'Grid Distance', min: 1, max: 80, step: 1 }).on('change', ev => {
+gridFolder.addBinding(params, 'gridLightDistance', { label: 'Distance', min: 1, max: 80, step: 1 }).on('change', ev => {
   gridLights.forEach(gl => gl.light.distance = ev.value);
 });
-lightFolder.addBinding(params, 'gridLightSpeed', { label: 'Grid Speed', min: 0.01, max: 2, step: 0.01 }).on('change', ev => {
+gridFolder.addBinding(params, 'gridLightSpeed', { label: 'Speed', min: 0.01, max: 2, step: 0.01 }).on('change', ev => {
   gridLights.forEach(gl => gl.speed = ev.value);
 });
-lightFolder.addBinding(params, 'keyLightIntensity', { label: 'Key Intensity', min: 0, max: 20, step: 0.1 }).on('change', ev => keyLight.intensity = ev.value);
-lightFolder.addBinding(params, 'keyLightX', { label: 'Key X', min: -30, max: 30, step: 0.5 }).on('change', ev => keyLight.position.x = ev.value);
-lightFolder.addBinding(params, 'keyLightY', { label: 'Key Y offset', min: 0, max: 50, step: 0.5 });
-lightFolder.addBinding(params, 'keyLightZ', { label: 'Key Z', min: -30, max: 30, step: 0.5 }).on('change', ev => keyLight.position.z = ev.value);
 
 // -- Materials --
 const matFolder = scenePage.addFolder({ title: 'Materials', expanded: false });

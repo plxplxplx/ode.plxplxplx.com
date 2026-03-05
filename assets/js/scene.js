@@ -58,7 +58,8 @@ export function switchCamera(toPerspective) {
 // =====================================================
 // LIGHTS
 // =====================================================
-scene.add(new THREE.AmbientLight(0x3a2a1a, 1.0));
+export const ambientLight = new THREE.AmbientLight(0x3a2a1a, 1.0);
+scene.add(ambientLight);
 export const keyLight = new THREE.DirectionalLight(0xffe8d0, 5.0);
 keyLight.position.set(-5, 25, -12);
 keyLight.castShadow = true;
@@ -72,7 +73,8 @@ scene.add(keyLight);
 export const rimLight = new THREE.DirectionalLight(0xffe0c0, 0.8);
 rimLight.position.set(-10, 20, -15);
 scene.add(rimLight);
-scene.add(new THREE.HemisphereLight(0xffddaa, 0x1a1008, 0.7));
+export const hemiLight = new THREE.HemisphereLight(0xffddaa, 0x1a1008, 0.7);
+scene.add(hemiLight);
 
 // Sun — behind the scaffold, above and off-screen for bird's-eye god rays
 export const sunPos = new THREE.Vector3(-3, 12, -20);
