@@ -564,6 +564,8 @@ export const flowerLight = new THREE.DirectionalLight(0xffe4b0, 1.8);
 flowerLight.position.set(4, 8, 3);
 flowerLight.target.position.set(0, 0, 0);
 flowerLight.castShadow = true;
+flowerLight.shadow.bias = -0.0005;
+flowerLight.shadow.normalBias = 0.02;
 flowerLight.shadow.mapSize.set(1024, 1024);
 flowerLight.shadow.camera.near = 0.5;
 flowerLight.shadow.camera.far = 30;

@@ -64,6 +64,8 @@ export const keyLight = new THREE.DirectionalLight(0xffe8d0, 5.0);
 keyLight.position.set(-5, 25, -12);
 keyLight.castShadow = true;
 keyLight.shadow.mapSize.set(QUALITY.shadowMapSize, QUALITY.shadowMapSize);
+keyLight.shadow.bias = -0.0005;
+keyLight.shadow.normalBias = 0.02;
 keyLight.shadow.camera.left = -15; keyLight.shadow.camera.right = 15;
 keyLight.shadow.camera.top = 70; keyLight.shadow.camera.bottom = -5;
 keyLight.shadow.camera.far = 150;

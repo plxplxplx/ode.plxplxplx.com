@@ -50,7 +50,7 @@ export const QUALITY = isMobile ? {
   pixelRatio:     Math.min(window.devicePixelRatio, 2.5),
   antialias:      true,
   shadows:        true,
-  shadowMapSize:  2048,
+  shadowMapSize:  4096,
   envMap:         true,
   bloom:          true,
   filmGrain:      true,
