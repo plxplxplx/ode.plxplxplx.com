@@ -207,7 +207,9 @@ export function updateZones(camH, scene, wrapFogBoost) {
   _colorB.set(zoneB.fogColor);
   scene.fog.color.copy(_colorA).lerp(_colorB, zoneFrac);
   scene.background.copy(scene.fog.color);
-  scene.fog.density = THREE.MathUtils.lerp(zoneA.fogDensity, zoneB.fogDensity, zoneFrac) + wrapFogBoost;
+  if (scene.fog.isFogExp2) {
+    scene.fog.density = THREE.MathUtils.lerp(zoneA.fogDensity, zoneB.fogDensity, zoneFrac) + wrapFogBoost;
+  }
 }
 
 export function updateSideTexts(dt, t, camH, params) {

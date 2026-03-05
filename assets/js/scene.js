@@ -29,7 +29,7 @@ export const buildPlaneBottom = new THREE.Plane(new THREE.Vector3(0, 1, 0), 9999
 export const scene = new THREE.Scene();
 export const fogColor = 0x140e08;
 scene.background = new THREE.Color(0x140e08);
-scene.fog = new THREE.FogExp2(fogColor, 0.04);
+scene.fog = new THREE.Fog(fogColor, 0, 20);
 
 if (QUALITY.envMap) {
   const pmrem = new THREE.PMREMGenerator(renderer);

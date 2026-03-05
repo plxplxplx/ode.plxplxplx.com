@@ -25,10 +25,10 @@ export const params = {
   dofFocus: 1,
   dofAperture: 0.004,
   dofMaxBlur: 0.001,
-  fogDensity: scene.fog.density,
-  fogLinear: false,
-  fogNear: 10,
-  fogFar: 120,
+  fogDensity: 0.04,
+  fogLinear: true,
+  fogNear: 0,
+  fogFar: 20,
   gridLightIntensity: 1.5,
   gridLightDistance: 25,
   gridLightSpeed: 0.2,
@@ -76,7 +76,7 @@ export const params = {
   pixelRatio: renderer.getPixelRatio(),
   smaa: smaaPass.enabled,
   exposure: 0.75,
-  godRaysEnabled: false,
+  godRaysEnabled: true,
   godRayExposure: godRaysPass.uniforms.exposure.value,
   godRayDecay: godRaysPass.uniforms.decay.value,
   godRayDensity: godRaysPass.uniforms.density.value,
@@ -281,8 +281,8 @@ godRayFolder.addBinding(params, 'godRayDecay', { label: 'Decay', min: 0.8, max: 
 godRayFolder.addBinding(params, 'godRayDensity', { label: 'Density', min: 0, max: 2, step: 0.05 }).on('change', ev => godRaysPass.uniforms.density.value = ev.value);
 godRayFolder.addBinding(params, 'godRayWeight', { label: 'Weight', min: 0, max: 2, step: 0.05 }).on('change', ev => godRaysPass.uniforms.weight.value = ev.value);
 const sunFolder = godRayFolder.addFolder({ title: 'Sun Position', expanded: false });
-sunFolder.addBinding(params, 'sunRadius', { label: 'Distance', min: 5, max: 60, step: 1 });
-sunFolder.addBinding(params, 'sunHeight', { label: 'Height', min: -10, max: 40, step: 0.5 });
+sunFolder.addBinding(params, 'sunRadius', { label: 'Distance', min: 15, max: 60, step: 1 });
+sunFolder.addBinding(params, 'sunHeight', { label: 'Height', min: 5, max: 40, step: 0.5 });
 sunFolder.addBinding(params, 'sunAngleOffset', { label: 'Angle Offset', min: -Math.PI, max: Math.PI, step: 0.05 });
 
 // -- Post FX --
