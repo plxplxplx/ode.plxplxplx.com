@@ -76,7 +76,7 @@ export const params = {
   pixelRatio: renderer.getPixelRatio(),
   smaa: smaaPass.enabled,
   exposure: 0.75,
-  godRaysEnabled: true,
+  godRaysEnabled: false,
   godRayExposure: godRaysPass.uniforms.exposure.value,
   godRayDecay: godRaysPass.uniforms.decay.value,
   godRayDensity: godRaysPass.uniforms.density.value,

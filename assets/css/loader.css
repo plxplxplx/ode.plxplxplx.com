@@ -39,18 +39,15 @@ body:not(.site-loaded) #header-nav {
 
 /* Transitions fire when body gains .site-loaded */
 #site-header {
-  transition: z-index 0s 1s;
+  transition: none;
 }
 
 #heading-img {
-  transition: clip-path 0.3s ease-out;
+  transition: none;
 }
 
 #header-nav {
-  transition: opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-}
-body:not(.site-loaded) #header-nav {
-  transition: opacity 0.6s ease 0.4s;
+  transition: none;
 }
 
 @media (prefers-reduced-motion: reduce) {

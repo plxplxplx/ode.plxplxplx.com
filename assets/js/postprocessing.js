@@ -38,7 +38,7 @@ composer.addPass(bokehPass);
 
 export const godRaysPass = new ShaderPass(GodRaysShader);
 godRaysPass.uniforms.tOcclusion.value = occRT.texture;
-godRaysPass.enabled = true;
+godRaysPass.enabled = false;
 composer.addPass(godRaysPass);
 
 const vignettePass = new ShaderPass(VignetteShader);
