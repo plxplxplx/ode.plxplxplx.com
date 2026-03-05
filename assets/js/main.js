@@ -93,29 +93,61 @@ updateScaffoldVar();
 window.addEventListener('resize', updateScaffoldVar, { passive: true });
 
 // =====================================================
-// INFO OVERLAY — toggle slide-up panel
+// INFO OVERLAY — zoom into a glass panel and show text on top
 // =====================================================
 const infoBtn = document.getElementById('info-btn');
 const infoOverlay = document.getElementById('info-overlay');
 const siteHeader = document.getElementById('site-header');
 const infoContent = document.getElementById('info-content');
+let _infoOpen = false;
+
+function findNearestImagePanel() {
+  const cam = sceneModule.camera;
+  const panels = glassPanels.filter(m => m.userData.imageMode && m.visible);
+  if (panels.length === 0) return null;
+  let best = null, bestDist = Infinity;
+  for (const p of panels) {
+    const d = cam.position.distanceTo(p.getWorldPosition(new THREE.Vector3()));
+    if (d < bestDist) { bestDist = d; best = p; }
+  }
+  return best;
+}
+
+function openInfo() {
+  if (_infoOpen) return;
+  const panel = findNearestImagePanel();
+  if (panel) startPanelZoom(panel);
+  _infoOpen = true;
+  infoOverlay.classList.add('info-open');
+  siteHeader.classList.add('info-active');
+  infoBtn.setAttribute('aria-expanded', true);
+  infoOverlay.setAttribute('aria-hidden', false);
+}
+
+function closeInfo() {
+  if (!_infoOpen) return;
+  _infoOpen = false;
+  infoOverlay.classList.remove('info-open');
+  siteHeader.classList.remove('info-active');
+  infoBtn.setAttribute('aria-expanded', false);
+  infoOverlay.setAttribute('aria-hidden', true);
+  if (panelZoomed) exitPanelZoom();
+}
+
 function toggleInfo(forceClose) {
-  const open = forceClose ? false : infoOverlay.classList.toggle('info-open');
-  if (forceClose) infoOverlay.classList.remove('info-open');
-  siteHeader.classList.toggle('info-active', open);
-  infoBtn.setAttribute('aria-expanded', open);
-  infoOverlay.setAttribute('aria-hidden', !open);
+  if (forceClose || _infoOpen) closeInfo();
+  else openInfo();
 }
 
 infoOverlay.addEventListener('click', (e) => {
-  if (!e.target.closest('#info-content')) toggleInfo(true);
+  if (!e.target.closest('#info-content')) closeInfo();
 });
 
 infoBtn.addEventListener('click', () => toggleInfo());
 
 window.addEventListener('keydown', (e) => {
   if (e.code === 'Escape') {
-    if (infoOverlay.classList.contains('info-open')) { toggleInfo(true); return; }
+    if (_infoOpen) { closeInfo(); return; }
     if (panelZoomed) exitPanelZoom();
   }
 });
