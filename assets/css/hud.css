@@ -128,7 +128,8 @@
 }
 #info-content h3 {
   font: inherit;
-  margin: 24px 0 8px;
+  font-weight: 600;
+  margin: 12px 0 8px;
 }
 #info-content .info-tagline {
   margin: 0 0 24px;
