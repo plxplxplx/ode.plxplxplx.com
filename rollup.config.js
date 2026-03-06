@@ -34,7 +34,7 @@ function htmlPlugin() {
     writeBundle() {
       const hash = Date.now().toString(36);
       let html = readFileSync('index.html', 'utf8');
-      html = html.replace(/\s*<link[\s\S]*?href="assets\/css\/[^"]+\.css[^"]*"[\s\S]*?\/?\s*>/g, '');
+      html = html.replace(/\s*<link[^>]*href="assets\/css\/[^"]+\.css[^"]*"[^>]*\/?>/g, '');
       html = html.replace('</head>', `  <link rel="stylesheet" href="assets/css/styles.min.css?v=${hash}">\n</head>`);
       html = html.replace(/src="assets\/js\/main\.js[^"]*"/, `src="assets/js/main.min.js?v=${hash}"`);
       // Swap local vendor paths to CDN for production
