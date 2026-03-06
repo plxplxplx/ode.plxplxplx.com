@@ -1,4 +1,0 @@
-User-agent: *
-Allow: /
-
-Sitemap: https://ode.plxplxplx.com/sitemap.xml
