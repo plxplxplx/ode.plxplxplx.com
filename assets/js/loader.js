@@ -3,18 +3,15 @@ import * as THREE from 'three';
 // Shared loading manager for all asset loaders
 export const manager = new THREE.LoadingManager();
 
-const pct = document.getElementById('loader-pct');
-const headingImg = document.getElementById('heading-img');
+// Loading progress (0–1) — consumed by main.js to drive build-plane reveal
+export let loadProgress = 0;
 
 export const loaderReady = new Promise((resolve) => {
   let resolved = false;
-  const done = () => { if (!resolved) { resolved = true; resolve(); } };
+  const done = () => { if (!resolved) { resolved = true; loadProgress = 1; resolve(); } };
 
   manager.onProgress = (_url, loaded, total) => {
-    const p = Math.round((loaded / total) * 100);
-    if (pct) pct.textContent = `${p}%`;
-    // Left-to-right clip mask reveal — CSS transition smooths the jumps
-    if (headingImg) headingImg.style.clipPath = `inset(0 ${100 - p}% 0 0)`;
+    loadProgress = loaded / total;
   };
 
   manager.onLoad = done;

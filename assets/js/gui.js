@@ -148,7 +148,9 @@ export const params = {
 // =====================================================
 // INITIAL STATE (no Tweakpane needed)
 // =====================================================
-if (!params.buildMode) { buildPlane.constant = 99999; buildPlaneBottom.constant = 99999; }
+// Build planes start at 0 — main.js drives them via loadProgress during loading
+buildPlane.constant = 0;
+buildPlaneBottom.constant = 99999;
 sideTexts.forEach(st => {
   st.mesh.scale.x = params.textFlipX ? -1 : 1;
   st.mesh.scale.z = params.textFlipZ ? -1 : 1;

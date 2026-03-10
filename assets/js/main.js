@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 // Config (must be first)
-import { QUALITY, TOTAL_W, FRUSTUM } from './config.js';
+import { QUALITY, TOTAL_W, FRUSTUM, TOP_H } from './config.js';
 
 // Scene setup
 import { renderer, scene, keyLight, sunMesh, sunOccMesh, sunLight, buildPlane, buildPlaneBottom } from './scene.js';
@@ -38,7 +38,7 @@ import { composer, grainPass, godRaysPass, renderOcclusion } from './postprocess
 import { params, updateFPS } from './gui.js';
 
 // Loader
-import { loaderReady } from './loader.js';
+import { loaderReady, loadProgress } from './loader.js';
 
 // Canvas ref for cursor
 import { canvas } from './scene.js';
@@ -153,6 +153,12 @@ if (_nextBtn) _nextBtn.addEventListener('click', (e) => { e.stopPropagation(); n
 // =====================================================
 const clock = new THREE.Clock();
 let _frame = 0;
+// Build-reveal state: the scaffold grows from y=0 → TOP_H during loading,
+// then eases past TOP_H to fully disable clipping.
+let _buildReveal = 0;
+let _buildTarget = 0;     // driven by loadProgress, then snapped open
+let _buildDone = false;
+const BUILD_OPEN = TOP_H + 40; // well past the top — effectively no clipping
 
 // Reusable objects — avoids per-frame allocations / GC pressure
 const _sunScreen = new THREE.Vector3();
@@ -165,8 +171,20 @@ function animate() {
 
   updateCam(dt);
 
-  // Build-as-you-scroll — update clipping planes (top + bottom)
-  if (params.buildMode) {
+  // Build-plane reveal — smoothly grows the scaffold as assets load
+  if (!_buildDone) {
+    // Update target from live loadProgress unless we've entered the final ease-open
+    if (_buildTarget < BUILD_OPEN) _buildTarget = loadProgress * TOP_H;
+    _buildReveal += (_buildTarget - _buildReveal) * 0.08;
+    buildPlane.constant = _buildReveal;
+    buildPlaneBottom.constant = 99999;
+    // Once we've eased close enough to the fully-open value, snap off
+    if (_buildTarget >= BUILD_OPEN && _buildReveal > TOP_H) {
+      _buildDone = true;
+      if (!params.buildMode) { buildPlane.constant = 99999; buildPlaneBottom.constant = 99999; }
+    }
+  } else if (params.buildMode) {
+    // Build-as-you-scroll — update clipping planes (top + bottom)
     buildPlane.constant = scrollCurrent.y + params.buildOffset;
     buildPlaneBottom.constant = -(scrollCurrent.y - params.buildOffsetBottom);
   }
@@ -244,15 +262,18 @@ function animate() {
 // =====================================================
 // START
 // =====================================================
-Promise.all([loaderReady, scaffoldReady]).then(() => {
-  // Merge scaffold meshes by material on mobile (~93% draw call reduction)
+// Start rendering as soon as the scaffold geometry is ready — the tower
+// will grow via the buildPlane as remaining assets stream in.
+scaffoldReady.then(() => {
   mergeScaffoldForMobile();
-
-  // Warm up GPU — compile all shaders and generate shadow maps behind the overlay
   renderer.compile(scene, sceneModule.camera);
   renderer.render(scene, sceneModule.camera);
+  animate();
+});
 
+// Once all assets are loaded, ease the clipping plane past the top and reveal the UI
+loaderReady.then(() => {
+  _buildTarget = BUILD_OPEN;
   document.getElementById('loader').classList.add('loaded');
   document.body.classList.add('site-loaded');
-  animate();
 });

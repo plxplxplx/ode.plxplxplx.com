@@ -23,7 +23,9 @@ ktx2Loader.detectSupport(renderer);
 
 // Build clipping planes — clip above and below camera for "under construction" look
 // Starts disabled (constants far from tower)
-export const buildPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 99999);
+// Build clipping planes — start at ground level; main.js raises the top plane
+// as assets load, creating a "scaffold grows" loading effect
+export const buildPlane = new THREE.Plane(new THREE.Vector3(0, -1, 0), 0);
 export const buildPlaneBottom = new THREE.Plane(new THREE.Vector3(0, 1, 0), 99999);
 
 export const scene = new THREE.Scene();

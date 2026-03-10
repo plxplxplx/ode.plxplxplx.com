@@ -1,49 +1,27 @@
+/* The 3D scaffold build-offset is the loading indicator — no overlay needed.
+   The loader element stays in the DOM only to block interaction until ready. */
+
 #loader {
   position: fixed;
   inset: 0;
   z-index: var(--z-loader);
-  background: var(--color-black);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  transition: opacity var(--transition-slow) ease;
+  pointer-events: auto;
+  background: none;
 }
 
 #loader.loaded {
-  opacity: 0;
   pointer-events: none;
+  display: none;
 }
 
 #loader-pct {
   display: none;
 }
 
-/* ── Loading reveal ──
-   Heading image stays at its final navbar position but above the loader,
-   with a left-to-right clip mask driven by JS loading progress. When
-   loaded the mask is fully open, nav fades in, loader fades out. */
-
-body:not(.site-loaded) #site-header {
-  z-index: calc(var(--z-loader) + 1);
-}
-
-body:not(.site-loaded) #heading-img {
-  clip-path: inset(0 100% 0 0);
-}
-
+/* Nav hidden until loaded */
 body:not(.site-loaded) #header-nav {
   opacity: 0;
   pointer-events: none;
-}
-
-/* Transitions fire when body gains .site-loaded */
-#site-header {
-  transition: none;
-}
-
-#heading-img {
-  transition: none;
 }
 
 #header-nav {
@@ -51,7 +29,7 @@ body:not(.site-loaded) #header-nav {
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #loader, #site-header, #heading-img, #header-nav {
+  #header-nav {
     transition: none;
   }
 }
