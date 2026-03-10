@@ -18,18 +18,18 @@
   display: none;
 }
 
-/* Nav hidden until loaded */
-body:not(.site-loaded) #header-nav {
+/* Nav links hidden until loaded (heading stays visible) */
+body:not(.site-loaded) .nav-link {
   opacity: 0;
   pointer-events: none;
 }
 
-#header-nav {
+.nav-link {
   transition: none;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  #header-nav {
+  .nav-link {
     transition: none;
   }
 }
