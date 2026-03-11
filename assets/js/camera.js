@@ -229,6 +229,7 @@ function _showPanelUI(panelMesh) {
   _panelCaptionShown = false;
   const cap = document.getElementById('panel-caption');
   if (cap) cap.style.display = 'none';
+  document.getElementById('site-header')?.classList.add('panel-active');
 }
 
 function _hidePanelUI() {
@@ -236,6 +237,7 @@ function _hidePanelUI() {
     const el = document.getElementById(id);
     if (el) el.style.display = 'none';
   }
+  document.getElementById('site-header')?.classList.remove('panel-active');
 }
 
 export function exitPanelZoom() {

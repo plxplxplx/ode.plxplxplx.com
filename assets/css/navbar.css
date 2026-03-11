@@ -37,7 +37,10 @@
   z-index: var(--z-hud);
   user-select: none;
   pointer-events: none;
-  transition: none;
+  transition: transform 0.6s ease;
+}
+#site-header.panel-active {
+  transform: translate(-50%, calc(-50% - 28vh));
 }
 
 #header-nav {
