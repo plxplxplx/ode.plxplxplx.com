@@ -101,7 +101,7 @@
   justify-content: center;
   pointer-events: none;
   opacity: 0;
-  transition: opacity 0.4s ease;
+  transition: opacity 0.25s ease;
 }
 #info-overlay.info-open {
   opacity: 1;
@@ -175,11 +175,11 @@
   display: flex;
   justify-content: center;
   align-items: center;
-  gap: 32px;
+  gap: 20px;
   padding-top: 24px;
 }
 .info-logos img {
-  height: 20px;
+  height: 24px;
   width: auto;
   filter: invert(1);
 }
