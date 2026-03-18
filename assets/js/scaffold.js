@@ -227,6 +227,7 @@ export const scaffoldReady = (async () => {
           const p = box(cellCx(bi), y, cellCz(bj), BAY_W, PLAT_H, BAY_D, floorDm);
           p.castShadow = false;
           p.userData = { componentType: 'platform', stage: stage.name };
+          p.visible = false;
           scaffold.add(p);
           collidables.push(p);
         }
@@ -246,6 +247,7 @@ export const scaffoldReady = (async () => {
       const slab = box(0, y, 0, slabW, slabH, slabD, slabMat);
       slab.castShadow = false;
       slab.userData = { componentType: 'transitionSlab', stage: stage.name };
+      slab.visible = false;
       scaffold.add(slab);
     }
     // Guardrails around each floor perimeter
@@ -442,6 +444,7 @@ export const scaffoldReady = (async () => {
           const p = box(px, baseY, cellCz(bj), BAY_W, PLAT_H, BAY_D, loDeck);
           p.castShadow = false;
           p.userData = { componentType: 'lookout' };
+          p.visible = false;
           scaffold.add(p); collidables.push(p);
         }
       } else {
@@ -450,6 +453,7 @@ export const scaffoldReady = (async () => {
           const p = box(cellCx(bi), baseY, pz, BAY_W, PLAT_H, BAY_D, loDeck);
           p.castShadow = false;
           p.userData = { componentType: 'lookout' };
+          p.visible = false;
           scaffold.add(p); collidables.push(p);
         }
       }

@@ -9,17 +9,25 @@ import { buildRibbonGeo } from './zones.js';
 // ARC IMAGE CARDS (curved around tower like flags)
 // =====================================================
 export const IMG_FILES = [
-  'plxodejoy-francis.webp',
+  'plxodejoy-snejina_latev.webp',
+  'plxodejoy-patrik_söderstam.webp',
+  'plxodejoy-nils_bergendahl.webp',
+  'plxodejoy-francis_patrick_brady.webp',
+  'plxodejoy-fauna.webp',
+  'plxodejoy-emil_keller_skousen.webp',
   'plxodejoy-dina.webp',
-  'plxodejoy-emil.webp',
-  'plxodejoy-patrik.webp',
+  'plxodejoy-alexandra_karpilovski.webp',
 ];
 
 export const IMG_CREDITS = [
-  { name: 'Francis Patrick Brady', url: 'https://francispatrickbrady.com/', instagram: 'francispatrickbrady' },
-  { name: 'Dina Khashan', url: 'https://soundcloud.com/dinakhashan', instagram: 'dinakhashan' },
-  { name: 'Emil Grillting', url: 'https://grillting.com/', instagram: 'grill_ting' },
+  { name: 'Snejina Latev', url: '', instagram: '' },
   { name: 'Patrik Söderståm', url: 'https://www.showstudio.com/contributors/patrik_soderstam', instagram: 'mixpatriksoderstam' },
+  { name: 'Nils Bergendahl', url: '', instagram: '' },
+  { name: 'Francis Patrick Brady', url: 'https://francispatrickbrady.com/', instagram: 'francispatrickbrady' },
+  { name: 'Fauna', url: '', instagram: '' },
+  { name: 'Emil Keller Skousen', url: '', instagram: '' },
+  { name: 'Dina', url: '', instagram: '' },
+  { name: 'Alexandra Karpilovski', url: '', instagram: '' },
 ];
 
 export const CARD_COUNT = IMG_FILES.length;
