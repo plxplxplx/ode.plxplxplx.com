@@ -17,6 +17,12 @@ export const IMG_FILES = [
   'plxodejoy-emil_keller_skousen.webp',
   'plxodejoy-dina.webp',
   'plxodejoy-alexandra_karpilovski.webp',
+  'plxodejoy-chris_shields.webp',
+  'plxodejoy-jules_reidy.webp',
+  'plxodejoy-mohammad_reza_mortazavi.webp',
+  'plxodejoy-rebecca_moss.webp',
+  'plxodejoy-stina_force.webp',
+  'plxodejoy-zoë_mc_pherson_and_alessandra_leone.webp',
 ];
 
 export const IMG_CREDITS = [
@@ -28,6 +34,12 @@ export const IMG_CREDITS = [
   { name: 'Emil Keller Skousen', url: '', instagram: '' },
   { name: 'Dina', url: '', instagram: '' },
   { name: 'Alexandra Karpilovski', url: '', instagram: '' },
+  { name: 'Chris Shields', url: '', instagram: '' },
+  { name: 'Jules Reidy', url: '', instagram: '' },
+  { name: 'Mohammad Reza Mortazavi', url: '', instagram: '' },
+  { name: 'Rebecca Moss', url: '', instagram: '' },
+  { name: 'Stina Force', url: '', instagram: '' },
+  { name: 'Zoë Mc Pherson & Alessandra Leone', url: '', instagram: '' },
 ];
 
 export const CARD_COUNT = IMG_FILES.length;
