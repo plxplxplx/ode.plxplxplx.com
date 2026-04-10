@@ -5,9 +5,9 @@ import { manager } from './loader.js';
 import {
   BAYS_X, BAYS_Z, BAY_W, BAY_D, LEVEL_H, TOP_H,
   STAGES, ZONES_COLORS, PLAT_H, TOTAL_W, TOTAL_D,
-  gx, gz, QUALITY,
+  gx, gz, cellCx, cellCz, QUALITY,
 } from './config.js';
-import { scene, ktx2Loader } from './scene.js';
+import { scene, ktx2Loader, buildPlane, buildPlaneBottom } from './scene.js';
 import { stageGlowVert, stageGlowFrag, backdropFogVert, backdropFogFrag } from './shaders.js';
 import { totalLevels, LOOKOUTS } from './scaffold.js';
 import { seededPRNG } from './utils.js';
@@ -509,6 +509,230 @@ for (let g = 0; g < 15; g++) {
 }
 
 scene.add(shrubGroup);
+
+
+// =====================================================
+// STRING LIGHTS — catenary curves between scaffold poles
+// =====================================================
+const stringLightGroup = new THREE.Group();
+stringLightGroup.name = 'stringLights';
+
+const BULB_GEO = new THREE.SphereGeometry(0.04, 6, 6);
+const BULB_MAT = new THREE.MeshStandardMaterial({
+  color: 0xffd280,
+  emissive: 0xffa030,
+  emissiveIntensity: 2.0,
+  metalness: 0.0,
+  roughness: 0.3,
+  clippingPlanes: [buildPlane, buildPlaneBottom],
+});
+
+function catenaryY(t, sag) {
+  const x = (t - 0.5) * 2;
+  return -sag * (1 - x * x);
+}
+
+{
+  const slRand = seededPRNG(77777);
+  const bulbTransforms = [];
+  const stringCount = 20;
+
+  for (let s = 0; s < stringCount; s++) {
+    const si = Math.floor(slRand() * STAGES.length);
+    const stage = STAGES[si];
+    const lv = 2 + Math.floor(slRand() * (stage.scaffLevels - 3));
+    const y = stage.floorY + lv * LEVEL_H;
+
+    const alongX = slRand() > 0.5;
+    let x0, z0, x1, z1;
+
+    if (alongX) {
+      const j = Math.floor(slRand() * (BAYS_Z + 1));
+      const i0 = Math.floor(slRand() * BAYS_X);
+      const span = 1 + Math.floor(slRand() * Math.min(2, BAYS_X - i0));
+      x0 = gx(i0); x1 = gx(i0 + span);
+      z0 = gz(j); z1 = gz(j);
+    } else {
+      const i = Math.floor(slRand() * (BAYS_X + 1));
+      const j0 = Math.floor(slRand() * BAYS_Z);
+      const span = 1 + Math.floor(slRand() * Math.min(2, BAYS_Z - j0));
+      x0 = gx(i); x1 = gx(i);
+      z0 = gz(j0); z1 = gz(j0 + span);
+    }
+
+    const bulbCount = 8 + Math.floor(slRand() * 5);
+    const sag = 0.3 + slRand() * 0.4;
+
+    for (let b = 0; b <= bulbCount; b++) {
+      const t = b / bulbCount;
+      const bx = THREE.MathUtils.lerp(x0, x1, t);
+      const bz = THREE.MathUtils.lerp(z0, z1, t);
+      const by = y + catenaryY(t, sag);
+      bulbTransforms.push({
+        position: new THREE.Vector3(bx, by, bz),
+        scale: 0.8 + slRand() * 0.4,
+      });
+    }
+  }
+
+  const count = bulbTransforms.length;
+  const bulbMesh = new THREE.InstancedMesh(BULB_GEO, BULB_MAT, count);
+  bulbMesh.frustumCulled = false;
+
+  const m = new THREE.Matrix4();
+  const q = new THREE.Quaternion();
+
+  for (let i = 0; i < count; i++) {
+    const t = bulbTransforms[i];
+    m.compose(t.position, q.identity(), new THREE.Vector3(t.scale, t.scale, t.scale));
+    bulbMesh.setMatrixAt(i, m);
+  }
+  bulbMesh.instanceMatrix.needsUpdate = true;
+  stringLightGroup.add(bulbMesh);
+}
+
+scene.add(stringLightGroup);
+
+
+// =====================================================
+// CANDLE LANTERNS — emissive spheres on platforms
+// =====================================================
+const lanternGroup = new THREE.Group();
+lanternGroup.name = 'lanterns';
+
+const LANTERN_GEO = new THREE.SphereGeometry(0.06, 8, 8);
+const LANTERN_MAT = new THREE.MeshStandardMaterial({
+  color: 0xffe0a0,
+  emissive: 0xffb040,
+  emissiveIntensity: 3.0,
+  metalness: 0.0,
+  roughness: 0.2,
+  transparent: true,
+  opacity: 0.9,
+  clippingPlanes: [buildPlane, buildPlaneBottom],
+});
+
+{
+  const lnRand = seededPRNG(88888);
+  const lanternTransforms = [];
+
+  for (let lv = 3; lv < totalLevels - 1; lv++) {
+    const y = lv * LEVEL_H + PLAT_H + 0.06;
+    if (lnRand() > 0.15) continue;
+
+    const count = 1 + Math.floor(lnRand() * 3);
+    for (let n = 0; n < count; n++) {
+      const i = Math.floor(lnRand() * BAYS_X);
+      const j = Math.floor(lnRand() * BAYS_Z);
+      const ox = (lnRand() - 0.5) * BAY_W * 0.6;
+      const oz = (lnRand() - 0.5) * BAY_D * 0.6;
+      lanternTransforms.push({
+        position: new THREE.Vector3(cellCx(i) + ox, y, cellCz(j) + oz),
+        scale: 0.7 + lnRand() * 0.6,
+      });
+    }
+  }
+
+  const count = lanternTransforms.length;
+  const lanternMesh = new THREE.InstancedMesh(LANTERN_GEO, LANTERN_MAT, count);
+  lanternMesh.frustumCulled = false;
+
+  const m = new THREE.Matrix4();
+  const q = new THREE.Quaternion();
+
+  for (let i = 0; i < count; i++) {
+    const t = lanternTransforms[i];
+    m.compose(t.position, q.identity(), new THREE.Vector3(t.scale, t.scale, t.scale));
+    lanternMesh.setMatrixAt(i, m);
+  }
+  lanternMesh.instanceMatrix.needsUpdate = true;
+  lanternGroup.add(lanternMesh);
+
+  const lightCount = Math.min(5, count);
+  for (let i = 0; i < lightCount; i++) {
+    const idx = Math.floor(i * count / lightCount);
+    const t = lanternTransforms[idx];
+    const light = new THREE.PointLight(0xffa030, 0.4, 8, 2);
+    light.position.copy(t.position);
+    lanternGroup.add(light);
+  }
+}
+
+scene.add(lanternGroup);
+
+
+// =====================================================
+// GRAPE CLUSTERS — hanging from ledgers near vines
+// =====================================================
+const grapeGroup = new THREE.Group();
+grapeGroup.name = 'grapes';
+
+const GRAPE_GEO = new THREE.SphereGeometry(0.035, 6, 6);
+const GRAPE_MAT = new THREE.MeshStandardMaterial({
+  color: 0x2a0845,
+  emissive: 0x1a0025,
+  emissiveIntensity: 0.3,
+  metalness: 0.4,
+  roughness: 0.3,
+  clippingPlanes: [buildPlane, buildPlaneBottom],
+});
+
+{
+  const grRand = seededPRNG(99999);
+  const grapeTransforms = [];
+
+  for (let si = 0; si < STAGES.length; si++) {
+    const stage = STAGES[si];
+    for (let lv = 1; lv < stage.scaffLevels; lv++) {
+      if (grRand() > 0.12) continue;
+      const y = stage.floorY + lv * LEVEL_H;
+
+      const clusterCount = 1 + Math.floor(grRand() * 2);
+      for (let c = 0; c < clusterCount; c++) {
+        const pi = Math.floor(grRand() * (BAYS_X + 1));
+        const pj = Math.floor(grRand() * (BAYS_Z + 1));
+        const px = gx(pi) + (grRand() - 0.5) * 0.3;
+        const pz = gz(pj) + (grRand() - 0.5) * 0.3;
+
+        const grapeCount = 5 + Math.floor(grRand() * 4);
+        const clusterScale = 0.8 + grRand() * 0.4;
+
+        for (let g = 0; g < grapeCount; g++) {
+          const t = g / grapeCount;
+          const radius = (1 - t * 0.7) * 0.08 * clusterScale;
+          const angle = grRand() * Math.PI * 2;
+          const gx2 = px + Math.cos(angle) * radius;
+          const gz2 = pz + Math.sin(angle) * radius;
+          const gy = y - 0.05 - t * 0.15 * clusterScale;
+
+          grapeTransforms.push({
+            position: new THREE.Vector3(gx2, gy, gz2),
+            scale: (0.8 + grRand() * 0.4) * clusterScale,
+          });
+        }
+      }
+    }
+  }
+
+  const count = grapeTransforms.length;
+  if (count > 0) {
+    const grapeMesh = new THREE.InstancedMesh(GRAPE_GEO, GRAPE_MAT, count);
+    grapeMesh.frustumCulled = false;
+
+    const m = new THREE.Matrix4();
+    const q = new THREE.Quaternion();
+
+    for (let i = 0; i < count; i++) {
+      const t = grapeTransforms[i];
+      m.compose(t.position, q.identity(), new THREE.Vector3(t.scale, t.scale, t.scale));
+      grapeMesh.setMatrixAt(i, m);
+    }
+    grapeMesh.instanceMatrix.needsUpdate = true;
+    grapeGroup.add(grapeMesh);
+  }
+}
+
+scene.add(grapeGroup);
 
 
 // =====================================================

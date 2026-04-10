@@ -227,7 +227,6 @@ export const scaffoldReady = (async () => {
           const p = box(cellCx(bi), y, cellCz(bj), BAY_W, PLAT_H, BAY_D, floorDm);
           p.castShadow = false;
           p.userData = { componentType: 'platform', stage: stage.name };
-          p.visible = false;
           scaffold.add(p);
           collidables.push(p);
         }
@@ -276,10 +275,10 @@ export const scaffoldReady = (async () => {
       const y = lv * LEVEL_H;
       if (y > TOP_H - LEVEL_H) break;
 
-      // skip within 2 levels of any stage floor
+      // skip within 1 level of any stage floor (floor deck is already there)
       let skip = false;
       for (const s of STAGES) {
-        if (Math.abs(y - s.floorY) < LEVEL_H * 1.5) { skip = true; break; }
+        if (Math.abs(y - s.floorY) < LEVEL_H * 0.5) { skip = true; break; }
       }
       if (skip) { lv += 2; continue; }
 
