@@ -87,6 +87,33 @@ for (let si = 1; si < STAGES.length; si++) {
   }
 }
 
+// Wrap-seam fog band — smooth transition from SUMMIT back to GROUND
+{
+  const colTop = new THREE.Color(ZONES_COLORS[STAGES.length - 1]);
+  const colBot = new THREE.Color(ZONES_COLORS[0]);
+  const wrapBlend = colTop.clone().lerp(colBot, 0.5);
+
+  for (let li = 0; li < VOL_FOG_LAYERS; li++) {
+    const f = VOL_FOG_LAYERS > 1 ? (li / (VOL_FOG_LAYERS - 1)) * 2 - 1 : 0;
+    const yOff = f * VOL_FOG_SPREAD;
+    const bellCurve = Math.exp(-f * f * 2);
+    const plane = new THREE.Mesh(volFogGeo, new THREE.MeshBasicMaterial({
+      color: wrapBlend, transparent: true, opacity: 0.0,
+      depthWrite: false, side: THREE.DoubleSide,
+    }));
+    plane.rotation.x = -Math.PI / 2;
+    plane.position.y = TOP_H + yOff;
+    scene.add(plane);
+    transitionPlanes.push({
+      mesh: plane,
+      y: TOP_H,
+      layerY: TOP_H + yOff,
+      bellCurve,
+      stageIdx: 0,
+    });
+  }
+}
+
 // Dark shroud at top and bottom of tower
 const SHROUD_LAYERS = QUALITY.shroudLayers;
 const SHROUD_DEPTH = 8;
@@ -600,11 +627,11 @@ scene.add(stringLightGroup);
 const lanternGroup = new THREE.Group();
 lanternGroup.name = 'lanterns';
 
-const LANTERN_GEO = new THREE.SphereGeometry(0.06, 8, 8);
+const LANTERN_GEO = new THREE.SphereGeometry(0.12, 8, 8);
 const LANTERN_MAT = new THREE.MeshStandardMaterial({
   color: 0xffe0a0,
   emissive: 0xffb040,
-  emissiveIntensity: 3.0,
+  emissiveIntensity: 4.0,
   metalness: 0.0,
   roughness: 0.2,
   transparent: true,
@@ -618,7 +645,7 @@ const LANTERN_MAT = new THREE.MeshStandardMaterial({
 
   for (let lv = 3; lv < totalLevels - 1; lv++) {
     const y = lv * LEVEL_H + PLAT_H + 0.06;
-    if (lnRand() > 0.15) continue;
+    if (lnRand() > 0.25) continue;
 
     const count = 1 + Math.floor(lnRand() * 3);
     for (let n = 0; n < count; n++) {
@@ -667,11 +694,11 @@ scene.add(lanternGroup);
 const grapeGroup = new THREE.Group();
 grapeGroup.name = 'grapes';
 
-const GRAPE_GEO = new THREE.SphereGeometry(0.035, 6, 6);
+const GRAPE_GEO = new THREE.SphereGeometry(0.06, 6, 6);
 const GRAPE_MAT = new THREE.MeshStandardMaterial({
-  color: 0x2a0845,
-  emissive: 0x1a0025,
-  emissiveIntensity: 0.3,
+  color: 0x3a1060,
+  emissive: 0x2a0845,
+  emissiveIntensity: 0.5,
   metalness: 0.4,
   roughness: 0.3,
   clippingPlanes: [buildPlane, buildPlaneBottom],
@@ -684,7 +711,7 @@ const GRAPE_MAT = new THREE.MeshStandardMaterial({
   for (let si = 0; si < STAGES.length; si++) {
     const stage = STAGES[si];
     for (let lv = 1; lv < stage.scaffLevels; lv++) {
-      if (grRand() > 0.12) continue;
+      if (grRand() > 0.25) continue;
       const y = stage.floorY + lv * LEVEL_H;
 
       const clusterCount = 1 + Math.floor(grRand() * 2);
