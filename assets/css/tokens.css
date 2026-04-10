@@ -2,32 +2,19 @@
   /* ── Colors ── */
   --color-black: #050505;
   --color-black-warm: #0a0804;
-  --color-white: #fff;
   --color-orange: 240, 91, 48;
   --color-lime: 200, 204, 90;
   --color-cream: 255, 240, 220;
   --color-caption-bg: rgba(30, 16, 8, 0.75);
-  --color-overlay: rgba(0, 0, 0, 0.7);
   --color-disabled: rgb(180, 155, 120);
-  --color-text-muted: rgba(255, 255, 255, 0.4);
-  --color-text-subtle: rgba(255, 255, 255, 0.5);
-  --color-divider: rgba(255, 255, 255, 0.15);
 
   /* ── Typography ── */
   --font-sans: 'NHaas Grotesk', 'Helvetica Neue', Helvetica, Arial, sans-serif;
   --font-size-nav: 34px;
-  --font-size-body: clamp(15px, 1.4vw + 0.5rem, 24px);
-  --font-size-body-mobile: clamp(11px, 1.4vw + 0.5rem, 20px);
-  --font-size-label: 18px;
-  --font-size-label-mobile: 13px;
   --font-size-caption: 14px;
   --font-size-hud: 11px;
   --font-weight-light: 300;
-  --font-weight-regular: 400;
-  --font-weight-medium: 500;
   --font-weight-semi: 600;
-  --font-weight-bold: 700;
-  --letter-spacing-wide: 3px;
   --letter-spacing-tight: 2px;
 
   /* ── Spacing ── */
@@ -35,20 +22,11 @@
   --space-sm: 12px;
   --space-md: 20px;
   --space-edge: 24px;
-  --space-gap: 4px;
   --space-panel-offset: 80px;
   --button-size: 44px;
 
-  /* ── Overlay content ── */
-  --overlay-max-width: 680px;
-  --overlay-padding: 32px 48px 24px;
-  --overlay-padding-mobile: 16px 14px;
-  --overlay-width-mobile: 90vw;
-
   /* ── Radii ── */
   --radius-circle: 50%;
-  --radius-pill: 16px;
-  --radius-sm: 4px;
 
   /* ── Blur ── */
   --blur-ui: 12px;
@@ -62,7 +40,6 @@
   --z-canvas: 1;
   --z-hud: 2;
   --z-fade: 5;
-  --z-header: 10;
   --z-panel: 20;
   --z-loader: 9999;
 

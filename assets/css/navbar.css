@@ -20,13 +20,6 @@
   font-style: normal;
   font-display: swap;
 }
-@font-face {
-  font-family: 'NHaas Grotesk';
-  src: url('../fonts/NHaasGroteskDSPro-75Bd.woff2') format('woff2');
-  font-weight: 700;
-  font-style: normal;
-  font-display: swap;
-}
 
 /* ── Header ── */
 #site-header {
@@ -41,10 +34,6 @@
 }
 #site-header.panel-active {
   transform: translate(-50%, calc(-50% - 28vh));
-}
-
-#header-nav {
-  transition: opacity var(--transition-normal) ease;
 }
 
 #site-header h1 {
