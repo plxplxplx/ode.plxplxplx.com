@@ -80,7 +80,7 @@ export const params = {
   textYOffset: 3,
   textRotY: 0,
   textStartAngleOffset: 0,
-  poleThickness: 0.8,
+  poleThickness: 1.0,
   scaffoldTint: '#8a8a8a',
   steelMetalness: matSteel.metalness,
   steelRoughness: matSteel.roughness,

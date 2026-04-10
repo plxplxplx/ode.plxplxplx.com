@@ -10,11 +10,11 @@ import { registerBannerAngles } from './camera.js';
 // Banner definitions: stage index, wall face, text lines
 // face determines which wall + the camera angle needed to see it
 const BANNERS = [
-  { stage: 0, face: 'front', yLevel: 2, lines: [
+  { stage: 0, face: 'front', yLevel: 2, starSep: true, lines: [
     'PLX ODE JOY',
     '',
-    '20 år av skapande,',
-    'verklighetsflykt, performance,',
+    '20 år av skapande',
+    'verklighetsflykt, performance',
     'konst, musik, mat och umgänge.',
     '',
     'En tvådagars festival,',
@@ -25,7 +25,7 @@ const BANNERS = [
     '15 MAJ 18:00–01:00',
     '16 MAJ 12:00–01:00',
   ]},
-  { stage: 1, face: 'front', lines: [
+  { stage: 1, face: 'front', starSep: true, lines: [
     'LINEUP',
     'Alexis, Chris Shields, DINA',
     'Eli Frankel & Marika Markström & Hannes Ferm',
@@ -184,7 +184,7 @@ function drawStar(ctx, cx, cy, size) {
   ctx.restore();
 }
 
-function makeScrollTexture(lines) {
+function makeScrollTexture(lines, useStars) {
   const c = document.createElement('canvas');
   c.width = TEX_W;
   c.height = TEX_H;
@@ -219,8 +219,8 @@ function makeScrollTexture(lines) {
     const weight = i === 0 ? '500' : '300';
     ctx.font = `${weight} ${size}px ${FONT}`;
 
-    // Replace commas between artist names with star icons
-    const parts = i > 0 ? lines[i].split(', ') : null;
+    // Replace commas with star icons (only when useStars is set)
+    const parts = (useStars && i > 0) ? lines[i].split(', ') : null;
     if (parts && parts.length > 1) {
       // Measure total width with star gaps
       const starSize = size * 0.7;
@@ -299,7 +299,7 @@ const scrollGeo = buildScrollGeometry(
 const clipPlanes = [buildPlane, buildPlaneBottom];
 
 for (const def of BANNERS) {
-  const tex = makeScrollTexture(def.lines);
+  const tex = makeScrollTexture(def.lines, def.starSep);
   const mat = new THREE.MeshStandardMaterial({
     map: tex,
     side: THREE.DoubleSide,

@@ -136,6 +136,7 @@
     text-align: center;
   }
   .nav-link {
+    font-size: 20px;
     padding: 1px 10px;
   }
   .nav-link:nth-child(3),

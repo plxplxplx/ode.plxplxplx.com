@@ -56,8 +56,8 @@ const gpuTier = isMobile ? 'mobile' : detectGPUTier();
 
 // Centralised quality settings — 3 tiers: mobile / low desktop / high desktop
 const QUALITY_MOBILE = {
-  pixelRatio:     Math.min(window.devicePixelRatio, 1.25),
-  antialias:      false,
+  pixelRatio:     Math.min(window.devicePixelRatio, 2.0),
+  antialias:      true,
   shadows:        false,
   shadowMapSize:  512,
   envMap:         false,
