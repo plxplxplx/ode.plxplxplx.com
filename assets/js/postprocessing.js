@@ -50,7 +50,8 @@ colorGradePass.enabled = QUALITY.colorGrade;
 composer.addPass(colorGradePass);
 
 export const grainPass = new ShaderPass(FilmGrainShader);
-grainPass.enabled = QUALITY.filmGrain;
+grainPass.enabled = false;
+grainPass.uniforms.intensity.value = 0;
 composer.addPass(grainPass);
 
 // SMAA — high-quality sub-pixel anti-aliasing (better than FXAA for thin geometry)

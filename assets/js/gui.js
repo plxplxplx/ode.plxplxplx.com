@@ -286,6 +286,7 @@ async function initPane() {
 
   // -- Post FX --
   const fxFolder = renderPage.addFolder({ title: 'Post FX', expanded: false });
+  grainPass.uniforms.intensity.value = params.grainIntensity;
   fxFolder.addBinding(params, 'grainIntensity', { label: 'Film Grain', min: 0, max: 0.3, step: 0.005 }).on('change', ev => grainPass.uniforms.intensity.value = ev.value);
   fxFolder.addBinding(params, 'colorSaturation', { label: 'Saturation', min: 0, max: 2, step: 0.01 }).on('change', ev => colorGradePass.uniforms.saturation.value = ev.value);
   fxFolder.addBinding(params, 'colorContrast', { label: 'Contrast', min: 0.5, max: 2, step: 0.01 }).on('change', ev => colorGradePass.uniforms.contrast.value = ev.value);

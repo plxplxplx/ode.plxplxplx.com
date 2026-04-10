@@ -35,7 +35,7 @@ import { scrollCurrent, scrollTarget, updateCam, wrapFogBoost, panelZoomed, star
 import { updateAudio } from './audio.js';
 
 // Post-processing
-import { composer, grainPass, godRaysPass, renderOcclusion } from './postprocessing.js';
+import { composer, godRaysPass, renderOcclusion } from './postprocessing.js';
 
 // GUI (must be last — reads from all modules)
 import { params, updateFPS } from './gui.js';
@@ -235,9 +235,6 @@ function animate() {
 
   ++_frame;
   renderOcclusion(sceneModule.camera);
-
-  // Update film grain time
-  grainPass.uniforms.time.value = t + Math.random() * 100;
 
   // On mobile all post-processing passes are disabled — skip composer overhead
   if (QUALITY.bloom || QUALITY.filmGrain || QUALITY.vignette || QUALITY.colorGrade) {
