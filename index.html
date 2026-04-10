@@ -32,6 +32,11 @@
       type="font/woff2"
       crossorigin />
     <link
+      rel="preload"
+      href="assets/reference/heading.webp"
+      as="image"
+      type="image/webp" />
+    <link
       rel="stylesheet"
       href="assets/css/styles.css?v=2" />
 
@@ -110,88 +115,46 @@
             src="assets/reference/heading.webp"
             alt="PLX ODE JOY — 15–16 Maj, Malmö Konstmuseum i Kungsparken Slottsg. 33"
             id="heading-img"
-            width="400"
-            height="300" />
+            width="728"
+            height="474"
+            fetchpriority="high" />
         </h1>
-        <a
-          href="https://billetto.se/e/plx-ode-joy-biljetter-1856579"
-          target="_blank"
-          rel="noopener"
-          class="nav-link"
-          >Biljetter <span class="visually-hidden">(öppnas i ny flik)</span></a
-        >
-        <a
-          href="https://instagram.com/plxplxplx"
-          target="_blank"
-          rel="noopener"
-          class="nav-link"
-          >Instagram <span class="visually-hidden">(öppnas i ny flik)</span></a
-        >
-        <button
-          class="nav-link"
-          id="info-btn"
-          aria-expanded="false">
-          Ode Joy</button
-        >
-        <a
-          href="mailto:info@plxplxplx.com"
-          class="nav-link"
-          >Kontakt</a>
-      </nav>
-    </header>
-
-    <div
-      id="info-overlay"
-      aria-hidden="true">
-      <div id="info-content">
-        <p>
-          Åh PLX, ODE JOY, ODE PLX. 20 år av skapande, verklighetsflykt, performance, konst, musik, mat och umgänge kulminerar på
-          Konstmuseet i Kungsparken – det gamla casinot – i maj 2026.
-          </p>
-          <p>Välkommen till en tvådagars festival, ett musikaliskt kalejdoskop och en performativ karusell. Husets
-          själ i symbios med operans dramaturgi skapar två sammansatta dagars upplevelse.
-        </p>
-
-        <p>Dom kom, dom åt, dom slutade inte förstå varandra.</p>
-        <p>
-          Börja kvällen med att ta plats vid långbordet för 70 personer och bli en del av bjudningen som både är en middag och ett konstverk
-          signerat Ulf R med vänner.
-        </p>
-
-        <h3>Resplan i grova drag</h3>
-        <ul>
-          <li>Vi inleder med primörer – serverade med generösa såser</li>
-          <li>Till detta kommer rå marinerad fisk ta plats på bordet</li>
-          <li>Vidare följer musslor och kyckling</li>
-          <li>Avslutning, brinnande pannkakstårtor</li>
-        </ul>
-        <p class="info-note">Ett smakprov på kommande meny. Fullständig meny presenteras i samband med middagen.</p>
-
-        <h3>Bra att veta</h3>
-        <ul>
-          <li>Middagen är konstverk — alla deltagare serveras samma mat och dryck</li>
-          <li>Fördelning: ca 60% veg, 20% skaldjur, 20% kött</li>
-          <li>Alergener: nötter, fisk, skaldjur, laktos, gluten</li>
-          <li>Middagen inkluderar 2 glas vin och pågår 20.00-21.30</li>
-        </ul>
-
-        <p>
+        <div id="nav-links">
           <a
             href="https://billetto.se/e/plx-ode-joy-biljetter-1856579"
             target="_blank"
             rel="noopener"
-            class="info-link"
-            >Köp biljetter på Billetto</a
+            class="nav-link"
+            >Biljetter <span class="visually-hidden">(öppnas i ny flik)</span></a
           >
-          (biljett till middag inkluderar inte entré till hela utställningen)
-        </p>
-
-        <div class="info-logos">
-          <img src="assets/svg/PLX.svg" alt="PLX" />
-          <img src="assets/svg/Kulturrådet.svg" alt="Kulturrådet" />
-          <img src="assets/svg/Galatea.svg" alt="Galatea" />
+          <a
+            href="https://instagram.com/plxplxplx"
+            target="_blank"
+            rel="noopener"
+            class="nav-link"
+            >Instagram <span class="visually-hidden">(öppnas i ny flik)</span></a
+          >
+          <button
+            class="nav-link"
+            id="lineup-btn">
+            Lineup</button
+          >
+          <button
+            class="nav-link"
+            id="dinner-btn">
+            Middag</button
+          >
+          <a
+            href="mailto:info@plxplxplx.com"
+            class="nav-link"
+            >Kontakt</a>
         </div>
-      </div>
+      </nav>
+    </header>
+
+    <div id="site-logos" aria-label="Partners">
+      <img src="assets/svg/Kulturrådet.svg" alt="Kulturrådet" />
+      <img src="assets/svg/Galatea.svg" alt="Galatea" />
     </div>
 
     <main
@@ -239,8 +202,11 @@
       }
     </script>
 
-    <script
-      type="module"
-      src="assets/js/main.js?v=2"></script>
+    <script type="module">
+      // Yield to the browser so the header/LCP image can paint before
+      // the heavy Three.js scene begins executing on the main thread.
+      await new Promise(r => requestAnimationFrame(() => requestAnimationFrame(r)));
+      await import('./assets/js/main.js?v=2');
+    </script>
   </body>
 </html>

@@ -477,13 +477,59 @@ export const scaffoldReady = (async () => {
   {
     const rand = seededPRNG(7);
 
-    // white base material — neutral so image textures show true colour
-    glassMat = new THREE.MeshStandardMaterial({
-      color: 0xffffff, transparent: true, opacity: 0.42,
-      roughness: 0.05, metalness: 0.1,
-      side: THREE.DoubleSide, depthWrite: false,
-      clippingPlanes: [buildPlane, buildPlaneBottom],
+    // Per-stage glass materials — tinted to match stage steel colour
+    const glassBaseMats = STAGE_MATS.map(sm => {
+      const c = sm.steel.color.clone();
+      c.lerp(new THREE.Color(0xffffff), 0.5);
+      return new THREE.MeshStandardMaterial({
+        color: c, transparent: true, opacity: 0.42,
+        roughness: 0.05, metalness: 0.1,
+        side: THREE.DoubleSide, depthWrite: false,
+        clippingPlanes: [buildPlane, buildPlaneBottom],
+      });
     });
+    // Reflective variants — mirror-like panels
+    const glassReflectMats = STAGE_MATS.map(sm => {
+      const c = sm.steel.color.clone();
+      c.lerp(new THREE.Color(0xffffff), 0.7);
+      return new THREE.MeshStandardMaterial({
+        color: c, transparent: true, opacity: 0.55,
+        roughness: 0.0, metalness: 0.85,
+        side: THREE.DoubleSide, depthWrite: false,
+        clippingPlanes: [buildPlane, buildPlaneBottom],
+      });
+    });
+    // True mirror variants — fully opaque, perfect reflection
+    const glassMirrorMats = STAGE_MATS.map(sm => {
+      const c = sm.steel.color.clone();
+      c.lerp(new THREE.Color(0xffffff), 0.85);
+      return new THREE.MeshPhysicalMaterial({
+        color: c, metalness: 1.0, roughness: 0.0,
+        reflectivity: 1.0, clearcoat: 1.0, clearcoatRoughness: 0.0,
+        side: THREE.DoubleSide,
+        clippingPlanes: [buildPlane, buildPlaneBottom],
+      });
+    });
+    glassMat = glassBaseMats[0];
+
+    function glassMirrorAt(y) {
+      for (let i = STAGES.length - 1; i >= 0; i--) {
+        if (y >= STAGES[i].floorY - 1) return glassMirrorMats[i];
+      }
+      return glassMirrorMats[0];
+    }
+    function glassMatAt(y) {
+      for (let i = STAGES.length - 1; i >= 0; i--) {
+        if (y >= STAGES[i].floorY - 1) return glassBaseMats[i];
+      }
+      return glassBaseMats[0];
+    }
+    function glassReflectAt(y) {
+      for (let i = STAGES.length - 1; i >= 0; i--) {
+        if (y >= STAGES[i].floorY - 1) return glassReflectMats[i];
+      }
+      return glassReflectMats[0];
+    }
 
     // cached rect geometries (slightly inset from scaffold frame)
     const IN = 0.94;
@@ -492,9 +538,16 @@ export const scaffoldReady = (async () => {
 
     const DENSITY = 0.20;
 
+    const REFLECT_CHANCE = 0.25;
+    const MIRROR_CHANCE  = 0.1;  // 10% are true mirrors
+
     function place(cx, cy, cz, xFacing) {
       if (rand() > DENSITY) return;
-      const m = new THREE.Mesh(xFacing ? rZY : rXZ, glassMat);
+      const r = rand();
+      const mat = r < MIRROR_CHANCE ? glassMirrorAt(cy)
+        : r < MIRROR_CHANCE + REFLECT_CHANCE ? glassReflectAt(cy)
+        : glassMatAt(cy);
+      const m = new THREE.Mesh(xFacing ? rZY : rXZ, mat);
       m.position.set(cx, cy, cz);
       if (xFacing) m.rotation.y = Math.PI / 2;
       m.userData.squareFrame = xFacing; // BAY_D === LEVEL_H → square
@@ -645,6 +698,10 @@ export function applyGlassImages(params) {
     mesh.userData.imageMode = true;
     mesh.userData.imgFile = IMG_FILES[i];
   }
+  // Hide panels without images
+  for (const mesh of glassPanels) {
+    if (!mesh.userData.imageMode) mesh.visible = false;
+  }
 }
 
 export function removeGlassImages(params) {
@@ -654,6 +711,7 @@ export function removeGlassImages(params) {
       mesh.material.opacity = params.glassPanelOpacity;
     }
     mesh.userData.imageMode = false;
+    mesh.visible = true;
   });
 }
 

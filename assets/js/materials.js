@@ -64,21 +64,21 @@ export function applyMarbleTextures(enabled) {
 // MATERIALS — one palette per stage (start without textures)
 // =====================================================
 export const STAGE_MATS = [
-  { // GROUND — neutral gray steel
-    steel: new THREE.MeshStandardMaterial({ color: 0x8a8a8a, metalness: 0.1, roughness: 0.5 }),
-    deck:  new THREE.MeshStandardMaterial({ color: 0x7a7a7a, metalness: 0.3, roughness: 0.55 }),
+  { // GROUND — deep ocean blue
+    steel: new THREE.MeshStandardMaterial({ color: 0x5a7a9a, metalness: 0.1, roughness: 0.5 }),
+    deck:  new THREE.MeshStandardMaterial({ color: 0x4a6a8a, metalness: 0.3, roughness: 0.55 }),
   },
-  { // SECOND — neutral gray steel
-    steel: new THREE.MeshStandardMaterial({ color: 0x8a8a8a, metalness: 0.1, roughness: 0.5 }),
-    deck:  new THREE.MeshStandardMaterial({ color: 0x7a7a7a, metalness: 0.35, roughness: 0.5 }),
+  { // SECOND — burnt copper
+    steel: new THREE.MeshStandardMaterial({ color: 0xa07050, metalness: 0.15, roughness: 0.5 }),
+    deck:  new THREE.MeshStandardMaterial({ color: 0x906040, metalness: 0.35, roughness: 0.5 }),
   },
-  { // THIRD — neutral gray steel
-    steel: new THREE.MeshStandardMaterial({ color: 0x8a8a8a, metalness: 0.1, roughness: 0.5 }),
-    deck:  new THREE.MeshStandardMaterial({ color: 0x7a7a7a, metalness: 0.35, roughness: 0.45 }),
+  { // THIRD — indigo blue-purple
+    steel: new THREE.MeshStandardMaterial({ color: 0x6a5a90, metalness: 0.1, roughness: 0.5 }),
+    deck:  new THREE.MeshStandardMaterial({ color: 0x5a4a80, metalness: 0.35, roughness: 0.45 }),
   },
-  { // SUMMIT — neutral gray steel
-    steel: new THREE.MeshStandardMaterial({ color: 0x8a8a8a, metalness: 0.1, roughness: 0.5 }),
-    deck:  new THREE.MeshStandardMaterial({ color: 0x7a7a7a, metalness: 0.35, roughness: 0.4 }),
+  { // SUMMIT — soft lavender-rose
+    steel: new THREE.MeshStandardMaterial({ color: 0x8a6090, metalness: 0.15, roughness: 0.5 }),
+    deck:  new THREE.MeshStandardMaterial({ color: 0x7a5080, metalness: 0.35, roughness: 0.4 }),
   },
 ];
 
@@ -89,18 +89,60 @@ STAGE_MATS.forEach(sm => {
   sm.deck.clippingPlanes = clipPlanes;
 });
 
-// Helper: get material for a given Y height
-export function steelAt(y) {
-  for (let i = STAGES.length - 1; i >= 0; i--) {
-    if (y >= STAGES[i].floorY - 1) return STAGE_MATS[i].steel;
+// Gradient material cache — smoothly interpolate between stage colors
+const _steelCache = new Map();
+const _deckCache = new Map();
+const _cA = new THREE.Color();
+const _cB = new THREE.Color();
+
+function getStageBlend(y) {
+  // Find which two stages we're between
+  for (let i = 0; i < STAGES.length - 1; i++) {
+    const topY = STAGES[i].floorY + STAGES[i].scaffLevels * 2.0; // LEVEL_H = 2
+    if (y < STAGES[i + 1].floorY) {
+      // Within stage i or in the gap before stage i+1
+      const frac = Math.max(0, Math.min(1, (y - STAGES[i].floorY) / (STAGES[i + 1].floorY - STAGES[i].floorY)));
+      return { a: i, b: i + 1, frac };
+    }
   }
-  return STAGE_MATS[0].steel;
+  // Above last stage floor
+  const last = STAGES.length - 1;
+  return { a: last, b: last, frac: 0 };
+}
+
+function makeGradientMat(base, color, clipPlanes) {
+  const mat = new THREE.MeshStandardMaterial({
+    color,
+    metalness: base.metalness,
+    roughness: base.roughness,
+    clippingPlanes: clipPlanes,
+  });
+  return mat;
+}
+
+// Helper: get gradient material for a given Y height
+// Quantize to every 2 units (LEVEL_H) to limit material count
+export function steelAt(y) {
+  const key = Math.round(y / 2);
+  if (_steelCache.has(key)) return _steelCache.get(key);
+  const { a, b, frac } = getStageBlend(y);
+  _cA.copy(STAGE_MATS[a].steel.color);
+  _cB.copy(STAGE_MATS[b].steel.color);
+  _cA.lerp(_cB, frac);
+  const mat = makeGradientMat(STAGE_MATS[a].steel, _cA.clone(), clipPlanes);
+  _steelCache.set(key, mat);
+  return mat;
 }
 export function deckAt(y) {
-  for (let i = STAGES.length - 1; i >= 0; i--) {
-    if (y >= STAGES[i].floorY - 1) return STAGE_MATS[i].deck;
-  }
-  return STAGE_MATS[0].deck;
+  const key = Math.round(y / 2);
+  if (_deckCache.has(key)) return _deckCache.get(key);
+  const { a, b, frac } = getStageBlend(y);
+  _cA.copy(STAGE_MATS[a].deck.color);
+  _cB.copy(STAGE_MATS[b].deck.color);
+  _cA.lerp(_cB, frac);
+  const mat = makeGradientMat(STAGE_MATS[a].deck, _cA.clone(), clipPlanes);
+  _deckCache.set(key, mat);
+  return mat;
 }
 
 // Legacy references for GUI compatibility

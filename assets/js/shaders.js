@@ -75,7 +75,7 @@ export const FilmGrainShader = {
   uniforms: {
     tDiffuse: { value: null },
     time: { value: 0 },
-    intensity: { value: 0.015 },
+    intensity: { value: 0.04 },
   },
   vertexShader: `varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
   fragmentShader: `
@@ -100,11 +100,11 @@ export const ColorGradeShader = {
   uniforms: {
     tDiffuse: { value: null },
     saturation: { value: 1.0 },
-    contrast: { value: 1.3 },
-    brightness: { value: 0.15 },
-    tintR: { value: 1.1 },
-    tintG: { value: 0.95 },
-    tintB: { value: 0.78 },
+    contrast: { value: 1.0 },
+    brightness: { value: 0.0 },
+    tintR: { value: 1.0 },
+    tintG: { value: 1.0 },
+    tintB: { value: 1.0 },
   },
   vertexShader: `varying vec2 vUv; void main(){vUv=uv;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}`,
   fragmentShader: `

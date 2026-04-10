@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 
 // Config (must be first)
-import { QUALITY, TOTAL_W, FRUSTUM, TOP_H } from './config.js';
+import { QUALITY, TOTAL_W, FRUSTUM, TOP_H, STAGES } from './config.js';
 
 // Scene setup
 import { renderer, scene, keyLight, sunMesh, sunOccMesh, sunLight, buildPlane, buildPlaneBottom } from './scene.js';
@@ -25,8 +25,11 @@ import { cards, CARD_OPTS, cardGroup, cardRaycaster, cardPointer, hoveredCard, s
 // Effects (grid lights, particles, fireflies)
 import { updateEffects } from './effects.js';
 
+// Scroll banners
+import { bannerGroup, BANNERS } from './banners.js';
+
 // Camera & scroll
-import { scrollCurrent, updateCam, wrapFogBoost, panelZoomed, startPanelZoom, exitPanelZoom, navigatePanelZoom } from './camera.js';
+import { scrollCurrent, scrollTarget, updateCam, wrapFogBoost, panelZoomed, startPanelZoom, exitPanelZoom, navigatePanelZoom } from './camera.js';
 
 // Audio
 import { updateAudio } from './audio.js';
@@ -45,6 +48,9 @@ import { canvas } from './scene.js';
 
 // Move ribbon text into the main scene so it gets depth-occluded by the scaffold
 for (const st of sideTexts) scene.add(st.mesh);
+
+// Add scroll banners to the scene
+scene.add(bannerGroup);
 
 // =====================================================
 // PANEL ZOOM — click image to fly in, click/esc to exit
@@ -92,47 +98,31 @@ function updateScaffoldVar() {
 updateScaffoldVar();
 window.addEventListener('resize', updateScaffoldVar, { passive: true });
 
-// =====================================================
-// INFO OVERLAY — zoom into a glass panel and show text on top
-// =====================================================
-const infoBtn = document.getElementById('info-btn');
-const infoOverlay = document.getElementById('info-overlay');
-const siteHeader = document.getElementById('site-header');
-const infoContent = document.getElementById('info-content');
-let _infoOpen = false;
+// Nav buttons — scroll to relevant stage banners
+// Snap angle to nearest equivalent of FRONT_ANGLE to avoid full spins
+const FRONT_ANGLE = Math.PI * 1.5;
+function snapToFront(currentAngle) {
+  const turns = Math.round((currentAngle - FRONT_ANGLE) / (Math.PI * 2));
+  return FRONT_ANGLE + turns * Math.PI * 2;
+}
+const lineupBtn = document.getElementById('lineup-btn');
+const dinnerBtn = document.getElementById('dinner-btn');
 
-function openInfo() {
-  if (_infoOpen) return;
-  _infoOpen = true;
-  infoOverlay.classList.add('info-open');
-  siteHeader.classList.add('info-active');
-  infoBtn.setAttribute('aria-expanded', true);
-  infoOverlay.setAttribute('aria-hidden', false);
+function scrollToBanner(index) {
+  const mesh = bannerGroup.children[index];
+  if (!mesh) return;
+  const targetY = mesh.position.y;
+  let dy = targetY - scrollCurrent.y;
+  if (dy < 0) dy += TOP_H;
+  scrollTarget.y = scrollCurrent.y + dy;
+  scrollTarget.angle = snapToFront(scrollTarget.angle);
 }
 
-function closeInfo() {
-  if (!_infoOpen) return;
-  _infoOpen = false;
-  infoOverlay.classList.remove('info-open');
-  siteHeader.classList.remove('info-active');
-  infoBtn.setAttribute('aria-expanded', false);
-  infoOverlay.setAttribute('aria-hidden', true);
-}
-
-function toggleInfo(forceClose) {
-  if (forceClose || _infoOpen) closeInfo();
-  else openInfo();
-}
-
-infoOverlay.addEventListener('click', (e) => {
-  if (!e.target.closest('#info-content')) closeInfo();
-});
-
-infoBtn.addEventListener('click', () => toggleInfo());
+if (lineupBtn) lineupBtn.addEventListener('click', () => scrollToBanner(1));
+if (dinnerBtn) dinnerBtn.addEventListener('click', () => scrollToBanner(2));
 
 window.addEventListener('keydown', (e) => {
   if (e.code === 'Escape') {
-    if (_infoOpen) { closeInfo(); return; }
     if (panelZoomed) exitPanelZoom();
   }
 });

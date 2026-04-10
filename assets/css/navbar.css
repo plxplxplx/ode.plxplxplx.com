@@ -31,24 +31,20 @@
 /* ── Header ── */
 #site-header {
   position: fixed;
-  top: 40%;
+  top: 22%;
   left: 50%;
   transform: translate(-50%, -50%);
   z-index: var(--z-hud);
   user-select: none;
   pointer-events: none;
-  transition: transform 0.6s ease;
+  transition: transform var(--transition-slow) ease;
 }
 #site-header.panel-active {
   transform: translate(-50%, calc(-50% - 28vh));
 }
 
 #header-nav {
-  transition: opacity 0.4s ease;
-}
-#site-header.info-active #header-nav {
-  opacity: 0;
-  pointer-events: none;
+  transition: opacity var(--transition-normal) ease;
 }
 
 #site-header h1 {
@@ -57,8 +53,6 @@
   font-size: inherit;
   font-weight: inherit;
   line-height: 0;
-  grid-column: 1 / -1;
-  justify-self: center;
 }
 
 #heading-img {
@@ -69,40 +63,51 @@
 
 /* ── Nav links ── */
 #header-nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: auto;
+}
+
+#nav-links {
   display: grid;
   grid-template-columns: 1fr 1fr;
   gap: 0;
-  pointer-events: auto;
+  margin-top: 16px;
 }
 
 .nav-link {
   font-family: var(--font-sans);
-  font-size: 34px;
-  font-weight: 600;
+  font-size: var(--font-size-nav);
+  font-weight: var(--font-weight-semi);
   letter-spacing: 0;
+  line-height: 1.1;
   color: rgb(var(--color-orange));
   text-decoration: none;
   text-transform: uppercase;
-  padding: 2px 6px;
+  padding: 0 6px;
+  margin: 0;
   background: none;
   white-space: nowrap;
   text-align: center;
-  -webkit-text-stroke: 2px #000;
+  -webkit-text-stroke: 2px var(--color-black);
   paint-order: stroke fill;
   transition: none;
 }
 
-/* h1 is child 1, nav links are children 2–5 */
-.nav-link:nth-child(3) {
-  transform: rotate(-1.5deg) translateY(2px);
-}
-.nav-link:nth-child(4) {
-  transform: rotate(1deg) translateY(-1px);
-  text-align: right;
-}
-.nav-link:nth-child(5) {
-  transform: rotate(-0.8deg) translateY(3px);
-  text-align: left;
+/* Left column (Biljetter, Lineup) — right-aligned */
+.nav-link:nth-child(1) { text-align: right; transform: rotate(-1.6deg); }
+.nav-link:nth-child(3) { text-align: right; transform: rotate(2.0deg); }
+
+/* Right column (Instagram, Middag) — left-aligned */
+.nav-link:nth-child(2) { text-align: left; transform: rotate(1.4deg); }
+.nav-link:nth-child(4) { text-align: left; transform: rotate(-1.8deg); }
+
+/* Kontakt spans full width */
+#nav-links .nav-link:last-child {
+  grid-column: 1 / -1;
+  text-align: center;
+  transform: rotate(-1.0deg);
 }
 
 .nav-link:hover {
@@ -115,7 +120,7 @@
 }
 
 .nav-link.disabled {
-  color: rgb(180, 155, 120);
+  color: var(--color-disabled);
   pointer-events: none;
   cursor: default;
 }

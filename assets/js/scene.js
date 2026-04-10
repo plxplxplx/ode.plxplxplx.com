@@ -11,7 +11,7 @@ export const renderer = new THREE.WebGLRenderer({ canvas, antialias: QUALITY.ant
 renderer.setPixelRatio(QUALITY.pixelRatio);
 renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.45;
+renderer.toneMappingExposure = 1.0;
 renderer.shadowMap.enabled = QUALITY.shadows;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.localClippingEnabled = true;

@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-import { CAM_DIST, TOP_H, FRUSTUM, STAGES } from './config.js';
+import { CAM_DIST, TOP_H, FRUSTUM, STAGES, LEVEL_H } from './config.js';
 import { camera, canvas } from './scene.js';
 import * as sceneModule from './scene.js';
 import { playStems } from './audio.js';
@@ -36,7 +36,7 @@ controls.autoRotate = false;
 
 // Scroll state — start above fade zone
 const START_Y = 0;
-const INITIAL_ANGLE = Math.PI * 0.15;
+const INITIAL_ANGLE = Math.PI * 1.5; // face the front wall (banner side)
 export let scrollTarget = { y: START_Y, angle: INITIAL_ANGLE };
 export let scrollCurrent = { y: START_Y, angle: INITIAL_ANGLE };
 export const ORBIT_RADIUS = 12;
@@ -62,6 +62,13 @@ export const SCROLL_SENSITIVITY = 0.7;
 let _reachedTop = false; // must scroll to SUMMIT before wrapping is allowed
 const MAX_DELTA_FRAC = 0.04; // cap per-event scroll jump (prevents lag spikes from fast swipes)
 export let wrapFogBoost = 0;
+
+// Banner angle targets — populated by banners.js
+const _bannerAngleTargets = []; // { y, angle, range }
+export function registerBannerAngles(targets) {
+  _bannerAngleTargets.length = 0;
+  _bannerAngleTargets.push(...targets);
+}
 
 // Panel zoom state
 export let panelZoomed = false;
@@ -313,6 +320,33 @@ export function updateCam(dt) {
     scrollTarget.y = ((scrollTarget.y % TOP_H) + TOP_H) % TOP_H;
     scrollTarget.angle += AUTO_ANGLE_SPEED * dt;
     virtualScroll = scrollTarget.y;
+  }
+
+  // Banner angle nudge — gently steer toward banner-facing angle near each stage
+  if (_bannerAngleTargets.length > 0) {
+    let bestStrength = 0;
+    let bestAngle = 0;
+    for (const bt of _bannerAngleTargets) {
+      const dist = Math.abs(scrollCurrent.y - bt.y);
+      const range = bt.range;
+      if (dist < range) {
+        const strength = 1 - dist / range;
+        if (strength > bestStrength) {
+          bestStrength = strength;
+          bestAngle = bt.angle;
+        }
+      }
+    }
+    if (bestStrength > 0.05) {
+      // Find shortest angular path to target
+      const cur = scrollTarget.angle % (Math.PI * 2);
+      let delta = bestAngle - cur;
+      // Normalize to [-PI, PI]
+      while (delta > Math.PI) delta -= Math.PI * 2;
+      while (delta < -Math.PI) delta += Math.PI * 2;
+      const nudge = delta * bestStrength * 0.3 * dt;
+      scrollTarget.angle += nudge;
+    }
   }
 
   // Normal scroll-orbit camera

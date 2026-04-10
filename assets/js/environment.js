@@ -11,6 +11,7 @@ import { scene, ktx2Loader } from './scene.js';
 import { stageGlowVert, stageGlowFrag, backdropFogVert, backdropFogFrag } from './shaders.js';
 import { totalLevels, LOOKOUTS } from './scaffold.js';
 import { seededPRNG } from './utils.js';
+import { isInBannerZone } from './banners.js';
 
 let seededRandom = seededPRNG(12345);
 
@@ -139,6 +140,7 @@ deferLoad(() => gltfLoader.load('assets/models/vine.glb', (gltf) => {
   const vineTransforms = [];
 
   function collectVine(x, y, z, opts = {}) {
+    if (isInBannerZone(x, y, z)) return;
     const yRot = opts.yRot ?? seededRandom() * Math.PI * 2;
     const zRot = opts.zRot ?? 0;
     const xRot = opts.xRot ?? 0;
@@ -151,14 +153,16 @@ deferLoad(() => gltfLoader.load('assets/models/vine.glb', (gltf) => {
     });
   }
 
-  // Column vines
+  // Column vines — constrained to within each stage's scaffold range
   for (let i = 0; i <= BAYS_X; i++) {
     for (let j = 0; j <= BAYS_Z; j++) {
       if (seededRandom() > 0.4) continue;
       const px = gx(i), pz = gz(j);
       const count = 1 + Math.floor(seededRandom() * 3);
       for (let n = 0; n < count; n++) {
-        const y = seededRandom() * TOP_H * 0.85;
+        const si = Math.floor(seededRandom() * STAGES.length);
+        const stage = STAGES[si];
+        const y = stage.floorY + seededRandom() * stage.scaffLevels * LEVEL_H;
         collectVine(px, y, pz, { scale: 0.25 + seededRandom() * 0.5, scaleY: 0.6 + seededRandom() * 1.2 });
       }
     }
@@ -237,6 +241,7 @@ deferLoad(() => gltfLoader.load('assets/models/Ivy.glb', (gltf) => {
   const ivyTransforms = [];
 
   function collectIvy(x, y, z, opts = {}) {
+    if (isInBannerZone(x, y, z)) return;
     const yRot = opts.yRot ?? seededRandom() * Math.PI * 2;
     const zRot = opts.zRot ?? 0;
     const xRot = opts.xRot ?? 0;
@@ -270,12 +275,14 @@ deferLoad(() => gltfLoader.load('assets/models/Ivy.glb', (gltf) => {
     }
   }
 
-  // On outer edge columns — X edges
+  // On outer edge columns — X edges (constrained to stages)
   for (const i of [0, BAYS_X]) {
     for (let j = 0; j <= BAYS_Z; j++) {
       const patches = 2 + Math.floor(seededRandom() * 3);
       for (let p = 0; p < patches; p++) {
-        const y = seededRandom() * TOP_H * 0.9;
+        const si = Math.floor(seededRandom() * STAGES.length);
+        const stage = STAGES[si];
+        const y = stage.floorY + seededRandom() * stage.scaffLevels * LEVEL_H;
         collectIvy(gx(i), y, gz(j), {
           yRot: i === 0 ? Math.PI : 0,
           scale: 0.25 + seededRandom() * 0.5,
@@ -283,12 +290,14 @@ deferLoad(() => gltfLoader.load('assets/models/Ivy.glb', (gltf) => {
       }
     }
   }
-  // On outer edge columns — Z edges
+  // On outer edge columns — Z edges (constrained to stages)
   for (const j of [0, BAYS_Z]) {
     for (let i = 0; i <= BAYS_X; i++) {
       const patches = 2 + Math.floor(seededRandom() * 3);
       for (let p = 0; p < patches; p++) {
-        const y = seededRandom() * TOP_H * 0.9;
+        const si = Math.floor(seededRandom() * STAGES.length);
+        const stage = STAGES[si];
+        const y = stage.floorY + seededRandom() * stage.scaffLevels * LEVEL_H;
         collectIvy(gx(i), y, gz(j), {
           yRot: j === 0 ? -Math.PI / 2 : Math.PI / 2,
           scale: 0.25 + seededRandom() * 0.5,
@@ -322,6 +331,7 @@ deferLoad(() => gltfLoader.load('assets/models/Ivy 2.glb', (gltf) => {
   const ivy2Transforms = [];
 
   function collectIvy2(x, y, z, opts = {}) {
+    if (isInBannerZone(x, y, z)) return;
     const yRot = opts.yRot ?? seededRandom() * Math.PI * 2;
     const xRot = opts.xRot ?? 0;
     const s = opts.scale ?? (0.25 + seededRandom() * 0.45);
@@ -332,13 +342,15 @@ deferLoad(() => gltfLoader.load('assets/models/Ivy 2.glb', (gltf) => {
     });
   }
 
-  // Scatter on vertical columns
+  // Scatter on vertical columns (constrained to stages)
   for (let i = 0; i <= BAYS_X; i++) {
     for (let j = 0; j <= BAYS_Z; j++) {
       if (seededRandom() > 0.6) continue;
       const patches = 1 + Math.floor(seededRandom() * 2);
       for (let p = 0; p < patches; p++) {
-        const y = seededRandom() * TOP_H * 0.85;
+        const si = Math.floor(seededRandom() * STAGES.length);
+        const stage = STAGES[si];
+        const y = stage.floorY + seededRandom() * stage.scaffLevels * LEVEL_H;
         collectIvy2(gx(i), y, gz(j), { scale: 0.2 + seededRandom() * 0.4 });
       }
     }
@@ -378,10 +390,10 @@ deferLoad(() => gltfLoader.load('assets/models/Ivy 2.glb', (gltf) => {
 // SHRUB BILLBOARDS — InstancedMesh
 // =====================================================
 const shrubTexLoader = new THREE.TextureLoader(manager);
-const shrubAlbedo = shrubTexLoader.load('assets/textures/shrub/TCom_Shrub_Blueberry01_512_albedo.png');
-const shrubAlpha = shrubTexLoader.load('assets/textures/shrub/TCom_Shrub_Blueberry01_512_alpha.png');
-const shrubNormal = shrubTexLoader.load('assets/textures/shrub/TCom_Shrub_Blueberry01_512_normal.png');
-const shrubRough = shrubTexLoader.load('assets/textures/shrub/TCom_Shrub_Blueberry01_512_roughness.png');
+const shrubAlbedo = shrubTexLoader.load('assets/textures/shrub/TCom_Shrub_Blueberry01_512_albedo.webp');
+const shrubAlpha = shrubTexLoader.load('assets/textures/shrub/TCom_Shrub_Blueberry01_512_alpha.webp');
+const shrubNormal = shrubTexLoader.load('assets/textures/shrub/TCom_Shrub_Blueberry01_512_normal.webp');
+const shrubRough = shrubTexLoader.load('assets/textures/shrub/TCom_Shrub_Blueberry01_512_roughness.webp');
 
 const shrubMat = new THREE.MeshStandardMaterial({
   map: shrubAlbedo,
@@ -509,6 +521,7 @@ deferLoad(() => gltfLoader.load('assets/models/Vines.glb', (gltf) => {
   const vinesTransforms = [];
 
   function collectVines(x, y, z, opts = {}) {
+    if (isInBannerZone(x, y, z)) return;
     const yRot = opts.yRot ?? seededRandom() * Math.PI * 2;
     const xRot = opts.xRot ?? 0;
     const zRot = opts.zRot ?? 0;
@@ -521,13 +534,16 @@ deferLoad(() => gltfLoader.load('assets/models/Vines.glb', (gltf) => {
     });
   }
 
-  // Scatter across vertical columns
+  // Scatter across vertical columns — constrained to stage ranges
   for (let i = 0; i <= BAYS_X; i++) {
     for (let j = 0; j <= BAYS_Z; j++) {
       if (seededRandom() > 0.5) continue;
       const count = 1 + Math.floor(seededRandom() * 2);
       for (let n = 0; n < count; n++) {
-        collectVines(gx(i), seededRandom() * TOP_H * 0.8, gz(j), {
+        const si = Math.floor(seededRandom() * STAGES.length);
+        const stage = STAGES[si];
+        const y = stage.floorY + seededRandom() * stage.scaffLevels * LEVEL_H;
+        collectVines(gx(i), y, gz(j), {
           scale: 0.2 + seededRandom() * 0.4,
           scaleY: 0.5 + seededRandom() * 1.0,
         });
