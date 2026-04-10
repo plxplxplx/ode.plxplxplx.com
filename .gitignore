@@ -4,3 +4,4 @@ dist/
 docs/
 *.tif
 .claude/
+lighthouse-*.json
