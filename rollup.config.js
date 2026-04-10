@@ -36,7 +36,7 @@ function htmlPlugin() {
       let html = readFileSync('index.html', 'utf8');
       html = html.replace(/\s*<link[^>]*href="assets\/css\/[^"]+\.css[^"]*"[^>]*\/?>/g, '');
       html = html.replace('</head>', `  <link rel="stylesheet" href="assets/css/styles.min.css?v=${hash}">\n</head>`);
-      html = html.replace(/src="assets\/js\/main\.js[^"]*"/, `src="assets/js/main.min.js?v=${hash}"`);
+      html = html.replace(/assets\/js\/main\.js[^'"]*/, `assets/js/main.min.js?v=${hash}`);
       // Swap local vendor paths to CDN for production
       html = html.replace('"three": "./assets/js/vendor/three.module.min.js"', '"three": "https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.module.min.js"');
       html = html.replace('"three/addons/": "./assets/js/vendor/addons/"', '"three/addons/": "https://cdn.jsdelivr.net/npm/three@0.160.0/examples/jsm/"');
