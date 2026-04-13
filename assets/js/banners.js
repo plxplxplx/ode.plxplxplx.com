@@ -41,7 +41,7 @@ const BANNERS = [
   ]},
   { stage: 2, face: 'front', lines: [
     'MIDDAG',
-    'Långbord för 70 personer',
+    'Långbord för 60 personer',
     'Konstverk av Ulf R med vänner',
     '',
     'Primörer med generösa såser',
@@ -49,7 +49,9 @@ const BANNERS = [
     'Musslor och kyckling',
     'Brinnande pannkakstårtor',
     '',
-    'Inkl 2 glas vin, 20:00–21:30',
+    'Viss dryck ingår, 20:00–21:30',
+    'Biljett till middagen köps',
+    'i samband med entré',
   ]},
 ];
 
