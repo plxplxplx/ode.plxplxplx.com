@@ -393,7 +393,8 @@ export const bannerExclusions = BANNERS.map((def) => {
   const h = def.height || SCROLL_HEIGHT;
   const topY = stage.floorY + level * LEVEL_H;
   const botY = topY - h;
-  const hw = SCROLL_WIDTH / 2 + 0.5; // padding
+  const hw = SCROLL_WIDTH / 2 + 2.0; // wide padding to keep vines clear
+  const depth = 3.0; // depth in front of and behind banner
   const t = getBannerTransform(def.stage, def.face, def.yLevel, h);
 
   // Compute bounds based on face orientation
@@ -401,11 +402,11 @@ export const bannerExclusions = BANNERS.map((def) => {
   if (def.face === "front" || def.face === "back") {
     minX = t.x - hw;
     maxX = t.x + hw;
-    minZ = t.z - 1.0;
-    maxZ = t.z + 1.0;
+    minZ = t.z - depth;
+    maxZ = t.z + depth;
   } else {
-    minX = t.x - 1.0;
-    maxX = t.x + 1.0;
+    minX = t.x - depth;
+    maxX = t.x + depth;
     minZ = t.z - hw;
     maxZ = t.z + hw;
   }
