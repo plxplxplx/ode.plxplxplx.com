@@ -11,6 +11,7 @@ import { scene, ktx2Loader, buildPlane, buildPlaneBottom } from './scene.js';
 import { stageGlowVert, stageGlowFrag, backdropFogVert, backdropFogFrag } from './shaders.js';
 import { totalLevels, LOOKOUTS } from './scaffold.js';
 import { seededPRNG } from './utils.js';
+import { isInBannerZone } from './banners.js';
 
 let seededRandom = seededPRNG(12345);
 
@@ -166,6 +167,7 @@ deferLoad(() => gltfLoader.load('assets/models/vine.glb', (gltf) => {
   const vineTransforms = [];
 
   function collectVine(x, y, z, opts = {}) {
+    if (isInBannerZone(x, y, z)) return;
 
     const yRot = opts.yRot ?? seededRandom() * Math.PI * 2;
     const zRot = opts.zRot ?? 0;
@@ -267,6 +269,7 @@ deferLoad(() => gltfLoader.load('assets/models/Ivy.glb', (gltf) => {
   const ivyTransforms = [];
 
   function collectIvy(x, y, z, opts = {}) {
+    if (isInBannerZone(x, y, z)) return;
 
     const yRot = opts.yRot ?? seededRandom() * Math.PI * 2;
     const zRot = opts.zRot ?? 0;
@@ -721,6 +724,8 @@ const GRAPE_MAT = new THREE.MeshStandardMaterial({
         const px = gx(pi) + (grRand() - 0.5) * 0.3;
         const pz = gz(pj) + (grRand() - 0.5) * 0.3;
 
+        if (isInBannerZone(px, y, pz)) continue;
+
         const grapeCount = 5 + Math.floor(grRand() * 4);
         const clusterScale = 0.8 + grRand() * 0.4;
 
@@ -771,6 +776,7 @@ deferLoad(() => gltfLoader.load('assets/models/Vines.glb', (gltf) => {
   const vinesTransforms = [];
 
   function collectVines(x, y, z, opts = {}) {
+    if (isInBannerZone(x, y, z)) return;
 
     const yRot = opts.yRot ?? seededRandom() * Math.PI * 2;
     const xRot = opts.xRot ?? 0;
