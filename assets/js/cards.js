@@ -23,6 +23,11 @@ export const IMG_FILES = [
   'plxodejoy-rebecca_moss.webp',
   'plxodejoy-stina_force.webp',
   'plxodejoy-zoë_mc_pherson_and_alessandra_leone.webp',
+  'plxodejoy-amina_szecsödy.webp',
+  'plxodejoy-frans_felix_ahlberg_eriksson.webp',
+  'plxodejoy-johnny_essing.webp',
+  'plxodejoy-one_secret_each.webp',
+  'plxodejoy-praktikantgruppen.webp',
 ];
 
 export const IMG_CREDITS = [
@@ -40,6 +45,11 @@ export const IMG_CREDITS = [
   { name: 'Rebecca Moss', url: '', instagram: '' },
   { name: 'Stina Force', url: '', instagram: '' },
   { name: 'Zoë Mc Pherson & Alessandra Leone', url: '', instagram: '' },
+  { name: 'Amina Szecsödy', url: '', instagram: '' },
+  { name: 'Frans Felix Ahlberg Eriksson', url: '', instagram: '' },
+  { name: 'Johnny Essing', url: '', instagram: '' },
+  { name: 'One secret each', url: '', instagram: '' },
+  { name: 'Praktikantgruppen', url: '', instagram: '' },
 ];
 
 export const CARD_COUNT = IMG_FILES.length;
