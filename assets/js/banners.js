@@ -41,13 +41,12 @@ const BANNERS = [
   {
     stage: 1,
     face: "front",
-    height: 10.0,
+    height: 10.5,
     starSep: true,
     lines: [
       "LINEUP",
       "Alexis, Amina Szecsödy",
-      "Cecilia Sterner, Chris Shields",
-      "DINA",
+      "Cecilia Sterner, Chris Shields, DINA",
       "Eli Frankel & Dmn7 & Hannes Ferm",
       "Ellinor Åslund, Emil Keller Skousen",
       "Fauna, Francis Patrick Brady & TFK",
