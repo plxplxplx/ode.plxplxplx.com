@@ -28,6 +28,9 @@ import { updateEffects } from './effects.js';
 // Scroll banners
 import { bannerGroup, BANNERS } from './banners.js';
 
+// CSS3D overlay (link hit-boxes on banners)
+import { css3dRenderer } from './css3d.js';
+
 // Camera & scroll
 import { scrollCurrent, scrollTarget, updateCam, wrapFogBoost, panelZoomed, startPanelZoom, exitPanelZoom, navigatePanelZoom } from './camera.js';
 
@@ -242,6 +245,8 @@ function animate() {
   } else {
     renderer.render(scene, sceneModule.camera);
   }
+
+  css3dRenderer.render(scene, sceneModule.camera);
 
   updateFPS();
 }

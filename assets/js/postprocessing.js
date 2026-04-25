@@ -10,6 +10,7 @@ import {
   FilmGrainShader, ColorGradeShader,
 } from './shaders.js';
 import { renderer, scene, camera, occRT, occBlurRT, setOrtho, occlusionMat, occlusionScene } from './scene.js';
+import { resizeCSS3D } from './css3d.js';
 import { QUALITY } from './config.js';
 
 
@@ -86,6 +87,7 @@ function onResize() {
     smaaPass.setSize(window.innerWidth * renderer.getPixelRatio(), window.innerHeight * renderer.getPixelRatio());
     occRT.setSize(Math.floor(window.innerWidth / 2), Math.floor(window.innerHeight / 2));
     occBlurRT.setSize(Math.floor(window.innerWidth / 2), Math.floor(window.innerHeight / 2));
+    resizeCSS3D();
     // Repaint immediately so the canvas doesn't flash blank between resize events
     composer.render();
   });

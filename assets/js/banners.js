@@ -1,7 +1,37 @@
 import * as THREE from "three";
+import { CSS3DObject } from "three/addons/renderers/CSS3DRenderer.js";
 import { STAGES, LEVEL_H, TOTAL_W, TOTAL_D } from "./config.js";
 import { buildPlane, buildPlaneBottom } from "./scene.js";
 import { registerBannerAngles } from "./camera.js";
+
+// Artist → URL. Web link if present, else Instagram, else omitted.
+// Source: PLX Ode Bokningsformuläret sheet.
+const ARTIST_LINKS = {
+  "Alexis": "https://blundar.co/",
+  "Cecilia Sterner": "https://instagram.com/ceciliasterner",
+  "Chris Shields": "https://instagram.com/lucky.goldstar",
+  "DINA": "https://soundcloud.com/dinakhashan",
+  "Eli Frankel": "https://instagram.com/eli_o_frankel",
+  "Dmn7": "https://instagram.com/marikamadeleine",
+  "Hannes Ferm": "https://instagram.com/hannes_ferm",
+  "Ellinor Åslund": "https://ellinoraslund.com",
+  "Emil Keller Skousen": "https://grillting.com/",
+  "Fauna": "https://faunagbg.bandcamp.com/",
+  "Francis Patrick Brady & TFK": "https://francispatrickbrady.com/",
+  "Jonathan Sendborn Pohlin": "https://instagram.com/Sendborn",
+  "Jules Reidy": "https://instagram.com/jules_reidy",
+  "Kristoffer Grip": "https://kristoffergrip.com",
+  "Mohammad Reza Mortazavi": "https://instagram.com/m_r_mortazavi",
+  "Nils Bergendal": "https://nilsbergendal.com/",
+  "Patrik Söderstam": "https://www.showstudio.com/contributors/patrik_soderstam",
+  "Private Parts": "https://m.soundcloud.com/prvtprts",
+  "Rebecca Moss": "https://instagram.com/_rebecca.moss",
+  "SMiSK": "https://smisk.bandcamp.com",
+  "Velvet Forever": "https://instagram.com/velvet__forever",
+  "Wes Baggaley": "https://soundcloud.com/wes-baggaley",
+  "Zoë Mc Pherson": "https://instagram.com/zoemcphers",
+  "Alessandra Leone": "https://instagram.com/ale.byss",
+};
 
 // =====================================================
 // SCROLL BANNERS — fixed to scaffold walls
@@ -252,7 +282,43 @@ function makeScrollTexture(lines, useStars, heightScale) {
   const lineGap = TEX_H * 0.06;
   const emptyGap = TEX_H * 0.035;
   const topPad = 120;
-  const starSep = " \u2009\u2009 "; // separator token: comma surrounded by thin spaces
+
+  // Hit-boxes for individual artist names, in canvas pixels.
+  // Sub-names within an "&"-joined chunk get their own box.
+  const hits = [];
+  function addHit(name, xLeft, yPos, width) {
+    const url = ARTIST_LINKS[name];
+    if (!url) return;
+    // Use measureText metrics to get the actual rendered glyph bounds rather
+    // than the full EM-box, so the hit-box snugs the visible text. With
+    // textBaseline='top', actualBoundingBoxAscent is signed (typically
+    // negative because glyphs sit below the alignment point) and
+    // actualBoundingBoxDescent is positive (down to glyph bottom).
+    const m = ctx.measureText(name);
+    const top = yPos - m.actualBoundingBoxAscent;
+    const bottom = yPos + m.actualBoundingBoxDescent;
+    hits.push({ name, url, x: xLeft, y: top, w: width, h: bottom - top });
+  }
+  function emitChunk(text, xStart, yPos) {
+    // If the whole chunk is a registered artist (e.g. a "& TFK"-style group),
+    // make it one big hit-box. Otherwise split on " & " into sub-names.
+    if (ARTIST_LINKS[text]) {
+      addHit(text, xStart, yPos, ctx.measureText(text).width);
+      return;
+    }
+    const subs = text.split(" & ");
+    if (subs.length === 1) {
+      addHit(text, xStart, yPos, ctx.measureText(text).width);
+      return;
+    }
+    const ampW = ctx.measureText(" & ").width;
+    let sx = xStart;
+    for (let s = 0; s < subs.length; s++) {
+      const sw = ctx.measureText(subs[s]).width;
+      addHit(subs[s], sx, yPos, sw);
+      sx += sw + (s < subs.length - 1 ? ampW : 0);
+    }
+  }
 
   let yPos = topPad;
   for (let i = 0; i < lines.length; i++) {
@@ -277,6 +343,7 @@ function makeScrollTexture(lines, useStars, heightScale) {
       ctx.textAlign = "left";
       for (let j = 0; j < parts.length; j++) {
         ctx.fillText(parts[j], xPos, yPos);
+        if (i > 0) emitChunk(parts[j], xPos, yPos);
         xPos += partWidths[j];
         if (j < parts.length - 1) {
           xPos += starGap;
@@ -287,6 +354,10 @@ function makeScrollTexture(lines, useStars, heightScale) {
       ctx.textAlign = "center";
     } else {
       ctx.fillText(lines[i], TEX_W / 2, yPos);
+      if (i > 0) {
+        const w = ctx.measureText(lines[i]).width;
+        emitChunk(lines[i], (TEX_W - w) / 2, yPos);
+      }
     }
     yPos += i === 0 ? titleSize + lineGap : lineGap;
   }
@@ -294,7 +365,68 @@ function makeScrollTexture(lines, useStars, heightScale) {
   const tex = new THREE.CanvasTexture(c);
   tex.wrapS = THREE.ClampToEdgeWrapping;
   tex.wrapT = THREE.ClampToEdgeWrapping;
-  return tex;
+  return { tex, hits, texH };
+}
+
+// =====================================================
+// CANVAS-PIXEL \u2192 MESH-LOCAL COORD CONVERSION
+// =====================================================
+// The body of the scroll is flat at z = bodyZ, with linear y mapping.
+// Canvas y=0 maps to texture v=1 (top of mesh) and grows downward.
+function buildCoordMapper(h, texH) {
+  const curlArcLen = CURL_RADIUS * CURL_ANGLE;
+  const bodyLen = h - 2 * CURL_RADIUS;
+  const totalArc = bodyLen + 2 * curlArcLen;
+  // Top curl ends (and body begins) at y = h/2 + r*sin(curlAngle): the curl
+  // wraps upward+outward, so the body junction sits above h/2.
+  const bodyTopY = h / 2 + CURL_RADIUS * Math.sin(CURL_ANGLE);
+  // z just outside the body surface so hit-boxes float in front of the text
+  const bodyZ = -CURL_RADIUS * (Math.cos(Math.PI - CURL_ANGLE) + 1);
+  const surfaceZ = bodyZ - 0.01;
+  return {
+    surfaceZ,
+    xToMesh: (xCanvas) => (0.5 - xCanvas / TEX_W) * SCROLL_WIDTH,
+    yToMesh: (yCanvas) => bodyTopY - ((yCanvas / texH) * totalArc - curlArcLen),
+    wToMesh: (wCanvas) => (wCanvas / TEX_W) * SCROLL_WIDTH,
+    hToMesh: (hCanvas) => (hCanvas / texH) * totalArc,
+  };
+}
+
+// =====================================================
+// CSS3D LINK OVERLAYS
+// =====================================================
+// Pixels-per-world-unit for the invisible <a> elements. Larger = crisper hover
+// rectangle but no visual difference since the elements are transparent.
+const CSS_PX_PER_UNIT = 100;
+const CSS_SCALE = 1 / CSS_PX_PER_UNIT;
+
+function makeLinkObjects(hits, h, texH) {
+  const map = buildCoordMapper(h, texH);
+  const objects = [];
+  for (const hit of hits) {
+    const wMesh = map.wToMesh(hit.w);
+    const hMesh = map.hToMesh(hit.h);
+    // The text is left-anchored at hit.x and top-anchored at hit.y in canvas
+    // coords. In mesh coords +x maps from the right side of the scroll, so
+    // the hit-box's mesh-x center = leftEdge - width/2 of the text.
+    const cxMesh = map.xToMesh(hit.x + hit.w / 2);
+    const cyMesh = map.yToMesh(hit.y + hit.h / 2);
+
+    const a = document.createElement("a");
+    a.href = hit.url;
+    a.target = "_blank";
+    a.rel = "noopener noreferrer";
+    a.className = "banner-link";
+    a.textContent = hit.name; // accessible label, hidden visually via CSS
+    a.style.width = `${wMesh * CSS_PX_PER_UNIT}px`;
+    a.style.height = `${hMesh * CSS_PX_PER_UNIT}px`;
+
+    const obj = new CSS3DObject(a);
+    obj.position.set(cxMesh, cyMesh, map.surfaceZ);
+    obj.scale.setScalar(CSS_SCALE);
+    objects.push(obj);
+  }
+  return objects;
 }
 
 // =====================================================
@@ -354,7 +486,7 @@ for (const def of BANNERS) {
   const h = def.height || SCROLL_HEIGHT;
   const geo = buildScrollGeometry(SCROLL_WIDTH, h, CURL_RADIUS, CURL_ANGLE, BODY_SEGS, CURL_SEGS, H_SEGS);
   const heightScale = def.height ? def.height / SCROLL_HEIGHT : 1;
-  const tex = makeScrollTexture(def.lines, def.starSep, heightScale);
+  const { tex, hits, texH } = makeScrollTexture(def.lines, def.starSep, heightScale);
   const mat = new THREE.MeshStandardMaterial({
     map: tex,
     side: THREE.DoubleSide,
@@ -371,6 +503,8 @@ for (const def of BANNERS) {
   mesh.rotation.y = t.rotY;
   mesh.castShadow = false;
   mesh.receiveShadow = true;
+
+  for (const linkObj of makeLinkObjects(hits, h, texH)) mesh.add(linkObj);
 
   bannerGroup.add(mesh);
 }

@@ -1,1 +1,24 @@
 canvas#viewport { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: var(--z-canvas); touch-action: none; }
+
+#css3d { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: var(--z-canvas); pointer-events: none; }
+#css3d a.banner-link {
+  display: block;
+  pointer-events: auto;
+  cursor: pointer;
+  background: transparent;
+  color: transparent;
+  font-size: 0;
+  text-decoration: none;
+  border-radius: 2px;
+  transition: background 0.18s ease;
+  -webkit-tap-highlight-color: transparent;
+}
+#css3d a.banner-link:hover,
+#css3d a.banner-link:focus-visible {
+  background: rgba(var(--color-cream), 0.18);
+  outline: none;
+}
+#css3d a.banner-link:focus-visible {
+  outline: 2px solid rgba(var(--color-lime), 0.9);
+  outline-offset: 2px;
+}
