@@ -1,0 +1,114 @@
+#artist-panel {
+  position: fixed;
+  left: var(--space-edge);
+  bottom: var(--space-edge);
+  width: min(360px, calc(100vw - var(--space-edge) * 2));
+  z-index: var(--z-panel);
+  padding: var(--space-md);
+  color: rgb(var(--color-cream));
+  background: var(--color-caption-bg);
+  backdrop-filter: blur(var(--blur-ui));
+  -webkit-backdrop-filter: blur(var(--blur-ui));
+  border-radius: 6px;
+  font-family: var(--font-sans);
+  transform: translateY(12px);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform var(--transition-normal), opacity var(--transition-normal);
+}
+
+#artist-panel.open {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+#artist-panel h2 {
+  margin: 0 var(--button-size) var(--space-sm) 0;
+  font-size: 22px;
+  font-weight: var(--font-weight-semi);
+  letter-spacing: 0.5px;
+  line-height: 1.15;
+}
+
+#artist-panel-bio {
+  margin: 0 0 var(--space-sm);
+  font-size: 14px;
+  line-height: 1.45;
+  font-weight: var(--font-weight-light);
+  color: rgba(var(--color-cream), 0.85);
+}
+
+#artist-panel-bio:empty {
+  display: none;
+}
+
+#artist-panel-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+}
+
+#artist-panel-links:empty {
+  display: none;
+}
+
+#artist-panel a.artist-link {
+  display: inline-block;
+  padding: 6px 10px;
+  font-size: 12px;
+  letter-spacing: var(--letter-spacing-tight);
+  text-transform: uppercase;
+  color: rgb(var(--color-cream));
+  background: rgba(var(--color-cream), 0.1);
+  border: 1px solid rgba(var(--color-cream), 0.25);
+  border-radius: 3px;
+  text-decoration: none;
+  transition: background var(--transition-fast);
+}
+
+#artist-panel a.artist-link:hover,
+#artist-panel a.artist-link:focus-visible {
+  background: rgba(var(--color-cream), 0.22);
+  outline: none;
+}
+
+#artist-panel a.artist-link:focus-visible {
+  outline: var(--focus-outline);
+  outline-offset: var(--focus-offset);
+}
+
+#artist-panel-close {
+  position: absolute;
+  top: 6px;
+  right: 6px;
+  width: 32px;
+  height: 32px;
+  padding: 0;
+  font-size: 22px;
+  line-height: 1;
+  color: rgb(var(--color-cream));
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  border-radius: 50%;
+  transition: background var(--transition-fast);
+}
+
+#artist-panel-close:hover,
+#artist-panel-close:focus-visible {
+  background: rgba(var(--color-cream), 0.15);
+  outline: none;
+}
+
+@media (max-width: 600px) {
+  #artist-panel {
+    left: 0;
+    right: 0;
+    bottom: 0;
+    width: 100%;
+    border-radius: 6px 6px 0 0;
+    transform: translateY(100%);
+  }
+  #artist-panel.open { transform: translateY(0); }
+}

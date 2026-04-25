@@ -3,35 +3,7 @@ import { CSS3DObject } from "three/addons/renderers/CSS3DRenderer.js";
 import { STAGES, LEVEL_H, TOTAL_W, TOTAL_D } from "./config.js";
 import { buildPlane, buildPlaneBottom } from "./scene.js";
 import { registerBannerAngles } from "./camera.js";
-
-// Artist → URL. Web link if present, else Instagram, else omitted.
-// Source: PLX Ode Bokningsformuläret sheet.
-const ARTIST_LINKS = {
-  "Alexis": "https://blundar.co/",
-  "Cecilia Sterner": "https://instagram.com/ceciliasterner",
-  "Chris Shields": "https://instagram.com/lucky.goldstar",
-  "DINA": "https://soundcloud.com/dinakhashan",
-  "Eli Frankel": "https://instagram.com/eli_o_frankel",
-  "Dmn7": "https://instagram.com/marikamadeleine",
-  "Hannes Ferm": "https://instagram.com/hannes_ferm",
-  "Ellinor Åslund": "https://ellinoraslund.com",
-  "Emil Keller Skousen": "https://grillting.com/",
-  "Fauna": "https://faunagbg.bandcamp.com/",
-  "Francis Patrick Brady & TFK": "https://francispatrickbrady.com/",
-  "Jonathan Sendborn Pohlin": "https://instagram.com/Sendborn",
-  "Jules Reidy": "https://instagram.com/jules_reidy",
-  "Kristoffer Grip": "https://kristoffergrip.com",
-  "Mohammad Reza Mortazavi": "https://instagram.com/m_r_mortazavi",
-  "Nils Bergendal": "https://nilsbergendal.com/",
-  "Patrik Söderstam": "https://www.showstudio.com/contributors/patrik_soderstam",
-  "Private Parts": "https://m.soundcloud.com/prvtprts",
-  "Rebecca Moss": "https://instagram.com/_rebecca.moss",
-  "SMiSK": "https://smisk.bandcamp.com",
-  "Velvet Forever": "https://instagram.com/velvet__forever",
-  "Wes Baggaley": "https://soundcloud.com/wes-baggaley",
-  "Zoë Mc Pherson": "https://instagram.com/zoemcphers",
-  "Alessandra Leone": "https://instagram.com/ale.byss",
-};
+import { ARTISTS, artistUrl } from "./artists.js";
 
 // =====================================================
 // SCROLL BANNERS — fixed to scaffold walls
@@ -287,7 +259,7 @@ function makeScrollTexture(lines, useStars, heightScale) {
   // Sub-names within an "&"-joined chunk get their own box.
   const hits = [];
   function addHit(name, xLeft, yPos, width) {
-    const url = ARTIST_LINKS[name];
+    const url = artistUrl(name);
     if (!url) return;
     // Use measureText metrics to get the actual rendered glyph bounds rather
     // than the full EM-box, so the hit-box snugs the visible text. With
@@ -302,7 +274,7 @@ function makeScrollTexture(lines, useStars, heightScale) {
   function emitChunk(text, xStart, yPos) {
     // If the whole chunk is a registered artist (e.g. a "& TFK"-style group),
     // make it one big hit-box. Otherwise split on " & " into sub-names.
-    if (ARTIST_LINKS[text]) {
+    if (ARTISTS[text]) {
       addHit(text, xStart, yPos, ctx.measureText(text).width);
       return;
     }

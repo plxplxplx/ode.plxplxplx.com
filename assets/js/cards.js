@@ -4,55 +4,37 @@ import { cardArcVert, cardArcFrag } from './shaders.js';
 import { scene, canvas } from './scene.js';
 import { manager } from './loader.js';
 import { buildRibbonGeo } from './zones.js';
+import { openArtistPanel } from './artist-panel.js';
 
 // =====================================================
 // ARC IMAGE CARDS (curved around tower like flags)
 // =====================================================
-export const IMG_FILES = [
-  'plxodejoy-snejina_latev.webp',
-  'plxodejoy-patrik_söderstam.webp',
-  'plxodejoy-nils_bergendahl.webp',
-  'plxodejoy-francis_patrick_brady.webp',
-  'plxodejoy-fauna.webp',
-  'plxodejoy-emil_keller_skousen.webp',
-  'plxodejoy-dina.webp',
-  'plxodejoy-alexandra_karpilovski.webp',
-  'plxodejoy-chris_shields.webp',
-  'plxodejoy-jules_reidy.webp',
-  'plxodejoy-mohammad_reza_mortazavi.webp',
-  'plxodejoy-rebecca_moss.webp',
-  'plxodejoy-stina_force.webp',
-  'plxodejoy-zoë_mc_pherson_and_alessandra_leone.webp',
-  'plxodejoy-amina_szecsödy.webp',
-  'plxodejoy-frans_felix_ahlberg_eriksson.webp',
-  'plxodejoy-johnny_essing.webp',
-  'plxodejoy-one_secret_each.webp',
-  'plxodejoy-praktikantgruppen.webp',
+// Each entry maps a card image to an ARTISTS key for the info panel.
+export const CARD_IMAGES = [
+  { file: 'plxodejoy-snejina_latev.webp', artist: 'Snejina Latev' },
+  { file: 'plxodejoy-patrik_söderstam.webp', artist: 'Patrik Söderstam' },
+  { file: 'plxodejoy-nils_bergendahl.webp', artist: 'Nils Bergendal' },
+  { file: 'plxodejoy-francis_patrick_brady.webp', artist: 'Francis Patrick Brady & TFK' },
+  { file: 'plxodejoy-fauna.webp', artist: 'Fauna' },
+  { file: 'plxodejoy-emil_keller_skousen.webp', artist: 'Emil Keller Skousen' },
+  { file: 'plxodejoy-dina.webp', artist: 'DINA' },
+  { file: 'plxodejoy-alexandra_karpilovski.webp', artist: 'Private Parts' },
+  { file: 'plxodejoy-chris_shields.webp', artist: 'Chris Shields' },
+  { file: 'plxodejoy-jules_reidy.webp', artist: 'Jules Reidy' },
+  { file: 'plxodejoy-mohammad_reza_mortazavi.webp', artist: 'Mohammad Reza Mortazavi' },
+  { file: 'plxodejoy-rebecca_moss.webp', artist: 'Rebecca Moss' },
+  { file: 'plxodejoy-stina_force.webp', artist: 'Stina Force' },
+  { file: 'plxodejoy-zoë_mc_pherson_and_alessandra_leone.webp', artist: 'Zoë Mc Pherson' },
+  { file: 'plxodejoy-amina_szecsödy.webp', artist: 'Amina Szecsödy' },
+  { file: 'plxodejoy-frans_felix_ahlberg_eriksson.webp', artist: 'Frans Felix Ahlberg Eriksson' },
+  { file: 'plxodejoy-johnny_essing.webp', artist: 'Johnny Essing' },
+  { file: 'plxodejoy-one_secret_each.webp', artist: 'One secret each' },
+  { file: 'plxodejoy-praktikantgruppen.webp', artist: 'Praktikantgruppen' },
 ];
 
-export const IMG_CREDITS = [
-  { name: 'Snejina Latev', url: '', instagram: '' },
-  { name: 'Patrik Söderståm', url: 'https://www.showstudio.com/contributors/patrik_soderstam', instagram: 'mixpatriksoderstam' },
-  { name: 'Nils Bergendahl', url: '', instagram: '' },
-  { name: 'Francis Patrick Brady', url: 'https://francispatrickbrady.com/', instagram: 'francispatrickbrady' },
-  { name: 'Fauna', url: '', instagram: '' },
-  { name: 'Emil Keller Skousen', url: '', instagram: '' },
-  { name: 'Dina', url: '', instagram: '' },
-  { name: 'Alexandra Karpilovski', url: '', instagram: '' },
-  { name: 'Chris Shields', url: '', instagram: '' },
-  { name: 'Jules Reidy', url: '', instagram: '' },
-  { name: 'Mohammad Reza Mortazavi', url: '', instagram: '' },
-  { name: 'Rebecca Moss', url: '', instagram: '' },
-  { name: 'Stina Force', url: '', instagram: '' },
-  { name: 'Zoë Mc Pherson & Alessandra Leone', url: '', instagram: '' },
-  { name: 'Amina Szecsödy', url: '', instagram: '' },
-  { name: 'Frans Felix Ahlberg Eriksson', url: '', instagram: '' },
-  { name: 'Johnny Essing', url: '', instagram: '' },
-  { name: 'One secret each', url: '', instagram: '' },
-  { name: 'Praktikantgruppen', url: '', instagram: '' },
-];
-
-export const CARD_COUNT = IMG_FILES.length;
+export const CARD_COUNT = CARD_IMAGES.length;
+// Backward-compat: scaffold.js / gui.js still import IMG_FILES.
+export const IMG_FILES = CARD_IMAGES.map(c => c.file);
 const texLoader = new THREE.TextureLoader(manager);
 
 export const CARD_OPTS = {
@@ -93,8 +75,8 @@ for (let i = 0; i < CARD_COUNT; i++) {
   const phase = Math.random() * Math.PI * 2;
 
   // Load texture with aspect ratio callback
-  const imgFile = IMG_FILES[i % IMG_FILES.length];
-  const tex = texLoader.load('assets/img/' + imgFile, (loadedTex) => {
+  const cardImage = CARD_IMAGES[i % CARD_IMAGES.length];
+  const tex = texLoader.load('assets/img/' + cardImage.file, (loadedTex) => {
     const aspect = loadedTex.image.width / loadedTex.image.height;
     card.aspect = aspect;
     // Recompute arc from aspect ratio: arcLength = cardH * aspect, arcAngle = arcLength / radius
@@ -160,6 +142,7 @@ for (let i = 0; i < CARD_COUNT; i++) {
     hovered: false,
     baseScale: scale,
     currentScale: scale,
+    artist: cardImage.artist,
   };
   cards.push(card);
 }
@@ -201,8 +184,5 @@ canvas.addEventListener('pointermove', (e) => {
 }, { passive: true });
 
 canvas.addEventListener('click', () => {
-  if (hoveredCard) {
-    const idx = cards.indexOf(hoveredCard);
-    console.log('[card click]', idx, IMG_FILES[idx % IMG_FILES.length]);
-  }
+  if (hoveredCard) openArtistPanel(hoveredCard.artist);
 });
