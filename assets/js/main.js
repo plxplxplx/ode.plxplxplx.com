@@ -31,6 +31,9 @@ import { bannerGroup, BANNERS } from './banners.js';
 // CSS3D overlay (link hit-boxes on banners)
 import { css3dRenderer } from './css3d.js';
 
+// Artist info panel (opened from cards & glass panels)
+import { openArtistPanel } from './artist-panel.js';
+
 // Camera & scroll
 import { scrollCurrent, scrollTarget, updateCam, wrapFogBoost, panelZoomed, startPanelZoom, exitPanelZoom, navigatePanelZoom } from './camera.js';
 
@@ -71,7 +74,9 @@ function navigatePanel(dir) {
   const panels = getImagePanels();
   if (panels.length === 0) return;
   _currentPanelIdx = ((_currentPanelIdx + dir) % panels.length + panels.length) % panels.length;
-  navigatePanelZoom(panels[_currentPanelIdx]);
+  const next = panels[_currentPanelIdx];
+  navigatePanelZoom(next);
+  if (next.userData.artist) openArtistPanel(next.userData.artist);
 }
 
 canvas.addEventListener('click', (e) => {
@@ -85,6 +90,7 @@ canvas.addEventListener('click', (e) => {
     const panels = getImagePanels();
     _currentPanelIdx = panels.indexOf(hits[0].object);
     startPanelZoom(hits[0].object);
+    if (hits[0].object.userData.artist) openArtistPanel(hits[0].object.userData.artist);
   }
 });
 

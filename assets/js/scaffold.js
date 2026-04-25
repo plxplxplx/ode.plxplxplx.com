@@ -652,7 +652,7 @@ export function mergeScaffoldForMobile() {
 // =====================================================
 // GLASS PANEL IMAGE MANAGEMENT
 // =====================================================
-import { IMG_FILES } from './cards.js';
+import { IMG_FILES, CARD_IMAGES } from './cards.js';
 
 const glassTexLoader = new THREE.TextureLoader();
 const glassTexCache = new Map();
@@ -696,6 +696,7 @@ export function applyGlassImages(params) {
     mesh.material = glassImageMats[i];
     mesh.userData.imageMode = true;
     mesh.userData.imgFile = IMG_FILES[i];
+    mesh.userData.artist = CARD_IMAGES[i].artist;
   }
   // Hide panels without images
   for (const mesh of glassPanels) {

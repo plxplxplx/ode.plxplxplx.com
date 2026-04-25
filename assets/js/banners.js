@@ -334,6 +334,13 @@ function makeScrollTexture(lines, useStars, heightScale) {
     yPos += i === 0 ? titleSize + lineGap : lineGap;
   }
 
+  // Persistent affordance: a thin warm-cream underline beneath each linked
+  // name, so visitors can see at a glance which artists have a destination.
+  ctx.fillStyle = "rgba(255, 232, 208, 0.5)";
+  for (const h of hits) {
+    ctx.fillRect(h.x, h.y + h.h + 4, h.w, 1.5);
+  }
+
   const tex = new THREE.CanvasTexture(c);
   tex.wrapS = THREE.ClampToEdgeWrapping;
   tex.wrapT = THREE.ClampToEdgeWrapping;
