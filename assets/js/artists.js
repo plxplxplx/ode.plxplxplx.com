@@ -123,7 +123,6 @@ export const ARTISTS = {
     bio: "Patrik Söderstam is an artist, graphic designer, costume designer and photographer. Born and educated in Sweden, he studied menswear construction at the Stockholm Cutting Academy and went on to study Menswear Fashion at MA level at Central Saint Martins College, London.",
     web: "https://www.showstudio.com/contributors/patrik_soderstam",
     instagram: "mixpatriksoderstam",
-    work: "Con",
   },
   "Praktikantgruppen": {
     name: "Praktikantgruppen",
