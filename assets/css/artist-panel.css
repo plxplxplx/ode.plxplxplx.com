@@ -43,6 +43,40 @@
   display: none;
 }
 
+#artist-panel-work {
+  margin: 0 0 var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid rgba(var(--color-cream), 0.18);
+}
+
+#artist-panel-work[hidden] {
+  display: none;
+}
+
+#artist-panel-work h3 {
+  margin: 0 0 4px;
+  font-size: 14px;
+  font-weight: var(--font-weight-light);
+  font-style: italic;
+  color: rgb(var(--color-cream));
+}
+
+#artist-panel-work h3:empty {
+  display: none;
+}
+
+#artist-panel-work-text {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.45;
+  font-weight: var(--font-weight-light);
+  color: rgba(var(--color-cream), 0.75);
+}
+
+#artist-panel-work-text:empty {
+  display: none;
+}
+
 #artist-panel-links {
   display: flex;
   flex-wrap: wrap;

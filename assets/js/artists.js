@@ -33,22 +33,30 @@ export const ARTISTS = {
     name: "Eli Frankel",
     bio: "Swedish performer, artistic director, dramaturge, composer, and educator. Active member of art collectives such as RadioArt, Alice Collective for Sound & Stage and PLX. He curates festivals, creates new music-theatre works, and explores the intersection of performance, sound, and politics.",
     instagram: "eli_o_frankel",
+    work: "IRIDAE",
+    workText: "A newly composed electroacoustic opera, with music and libretto by Marika Markström in collaboration with PLX, directed by Eli Frankel and performed by singer and performance artist Hannes Ferm. Voice, song, and phonetic fragments merge with an acousmatic texture, and the work unfolds in five short acts that touch upon the balancing state of the contemporary world and the human condition through (un)conscious journeys across inner and outer environments.",
   },
   "Dmn7": {
     name: "Dmn7",
     bio: "Marika Markström is a composer, performer and audiovisual artist, graduated in electroacoustic composition from the Royal College of Music in Stockholm. Her first retrospective album, Voices of the Unheard, was released by PLX Records in 2025 under the artist name DMN7.",
     instagram: "marikamadeleine",
+    work: "IRIDAE",
+    workText: "A newly composed electroacoustic opera, with music and libretto by Marika Markström in collaboration with PLX, directed by Eli Frankel and performed by singer and performance artist Hannes Ferm. Voice, song, and phonetic fragments merge with an acousmatic texture, and the work unfolds in five short acts that touch upon the balancing state of the contemporary world and the human condition through (un)conscious journeys across inner and outer environments.",
   },
   "Hannes Ferm": {
     name: "Hannes Ferm",
     bio: "Artist and music producer born 1994 in Piteå, Sweden. Graduated from the bachelor program in fine arts at Konstfack in 2021, since then active in music production, composition, and performance — including a series of works around the historic and timbral world of the castrati singers.",
     instagram: "hannes_ferm",
+    work: "IRIDAE",
+    workText: "A newly composed electroacoustic opera, with music and libretto by Marika Markström in collaboration with PLX, directed by Eli Frankel and performed by singer and performance artist Hannes Ferm. Voice, song, and phonetic fragments merge with an acousmatic texture, and the work unfolds in five short acts that touch upon the balancing state of the contemporary world and the human condition through (un)conscious journeys across inner and outer environments.",
   },
   "Ellinor Åslund": {
     name: "Ellinor Åslund",
     bio: "Ellinor Åslund är en multimedial konstnär utbildad på Det Kongelige Danske Kunstakademi, med flera performances och utställningar i Danmark och Sverige bakom sig — bland annat på Kunsthal Charlottenborg, Wilson Saplana Gallery och Four Boxes Gallery.",
     web: "https://ellinoraslund.com",
     instagram: "elli_nor_st._aaslund",
+    work: "Die Ewige Suppe",
+    workText: "En surreell dockteater-opera som utspelar sig i en bar, där protagonisten — en keramisk docka modellerad efter konstnären själv — genom sånger berättar fragmenterade minnen som tar sin utgångspunkt i graviditet och moderskap. Teatern utvecklar sig som en evig soppa: en evigt föränderlig blandning av minnen, drömmar och politiska verkligheter, allt eftersom baren omvandlas till en skiftande scen där sjuksystrar, sagofigurer, byråkratiska utövare, nationalistiska gatubokhandlare och krigsspöken sammanstrålar för att kasta ljus över hur personliga och kollektiva historier sammanvävs.",
   },
   "Emil Keller Skousen": {
     name: "Emil Keller Skousen",
@@ -115,6 +123,7 @@ export const ARTISTS = {
     bio: "Patrik Söderstam is an artist, graphic designer, costume designer and photographer. Born and educated in Sweden, he studied menswear construction at the Stockholm Cutting Academy and went on to study Menswear Fashion at MA level at Central Saint Martins College, London.",
     web: "https://www.showstudio.com/contributors/patrik_soderstam",
     instagram: "mixpatriksoderstam",
+    work: "Con",
   },
   "Praktikantgruppen": {
     name: "Praktikantgruppen",
@@ -130,6 +139,7 @@ export const ARTISTS = {
     name: "Rebecca Moss",
     bio: "Rebecca Moss is a UK-based artist whose work explores absurdity and precarity through sculpture, video, performance, installation, and participatory practice. She is especially inspired by slapstick performance — for its emotional expression of instability and its potential to challenge power.",
     instagram: "_rebecca.moss",
+    work: "Danse Macabre",
   },
   "SMiSK": {
     name: "SMiSK",

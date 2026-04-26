@@ -3,6 +3,9 @@ import { ARTISTS } from './artists.js';
 const panel = document.getElementById('artist-panel');
 const nameEl = document.getElementById('artist-panel-name');
 const bioEl = document.getElementById('artist-panel-bio');
+const workEl = document.getElementById('artist-panel-work');
+const workTitleEl = document.getElementById('artist-panel-work-title');
+const workTextEl = document.getElementById('artist-panel-work-text');
 const linksEl = document.getElementById('artist-panel-links');
 const closeBtn = document.getElementById('artist-panel-close');
 
@@ -21,6 +24,10 @@ export function openArtistPanel(key) {
   if (!data) return;
   nameEl.textContent = data.name;
   bioEl.textContent = data.bio || '';
+
+  workTitleEl.textContent = data.work || '';
+  workTextEl.textContent = data.workText || '';
+  workEl.hidden = !data.work && !data.workText;
 
   linksEl.replaceChildren();
   if (data.web) {
