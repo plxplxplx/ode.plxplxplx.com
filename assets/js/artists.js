@@ -138,7 +138,6 @@ export const ARTISTS = {
     name: "Rebecca Moss",
     bio: "Rebecca Moss is a UK-based artist whose work explores absurdity and precarity through sculpture, video, performance, installation, and participatory practice. She is especially inspired by slapstick performance — for its emotional expression of instability and its potential to challenge power.",
     instagram: "_rebecca.moss",
-    work: "Danse Macabre",
   },
   "SMiSK": {
     name: "SMiSK",
