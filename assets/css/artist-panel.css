@@ -1,8 +1,10 @@
+/* Width matches the zoomed glass-panel image: 1.88u panel at frustum 3.5
+   gives 1.88/3.5 ≈ 53.7vh. Capped to viewport so it never overflows. */
 #artist-panel {
   position: fixed;
-  left: var(--space-edge);
+  left: 50%;
   bottom: var(--space-edge);
-  width: min(360px, calc(100vw - var(--space-edge) * 2));
+  width: min(53.7vh, calc(100vw - var(--space-edge) * 2));
   z-index: var(--z-panel);
   padding: var(--space-md);
   color: rgb(var(--color-cream));
@@ -11,20 +13,20 @@
   -webkit-backdrop-filter: blur(var(--blur-ui));
   border-radius: 6px;
   font-family: var(--font-sans);
-  transform: translateY(12px);
+  transform: translate(-50%, 12px);
   opacity: 0;
   pointer-events: none;
   transition: transform var(--transition-normal), opacity var(--transition-normal);
 }
 
 #artist-panel.open {
-  transform: translateY(0);
+  transform: translate(-50%, 0);
   opacity: 1;
   pointer-events: auto;
 }
 
 #artist-panel h2 {
-  margin: 0 var(--button-size) var(--space-sm) 0;
+  margin: 0 0 var(--space-sm);
   font-size: 22px;
   font-weight: var(--font-weight-semi);
   letter-spacing: 0.5px;
@@ -110,29 +112,6 @@
 #artist-panel a.artist-link:focus-visible {
   outline: var(--focus-outline);
   outline-offset: var(--focus-offset);
-}
-
-#artist-panel-close {
-  position: absolute;
-  top: 6px;
-  right: 6px;
-  width: 32px;
-  height: 32px;
-  padding: 0;
-  font-size: 22px;
-  line-height: 1;
-  color: rgb(var(--color-cream));
-  background: transparent;
-  border: 0;
-  cursor: pointer;
-  border-radius: 50%;
-  transition: background var(--transition-fast);
-}
-
-#artist-panel-close:hover,
-#artist-panel-close:focus-visible {
-  background: rgba(var(--color-cream), 0.15);
-  outline: none;
 }
 
 @media (max-width: 600px) {

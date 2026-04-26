@@ -32,7 +32,7 @@ import { bannerGroup, BANNERS } from './banners.js';
 import { css3dRenderer } from './css3d.js';
 
 // Artist info panel (opened from cards & glass panels)
-import { openArtistPanel } from './artist-panel.js';
+import { openArtistPanel, closeArtistPanel } from './artist-panel.js';
 
 // Camera & scroll
 import { scrollCurrent, scrollTarget, updateCam, wrapFogBoost, panelZoomed, startPanelZoom, exitPanelZoom, navigatePanelZoom } from './camera.js';
@@ -80,7 +80,7 @@ function navigatePanel(dir) {
 }
 
 canvas.addEventListener('click', (e) => {
-  if (panelZoomed) { exitPanelZoom(); return; }
+  if (panelZoomed) { exitPanelZoom(); closeArtistPanel(); return; }
   if (!params.glassPanelImages) return;
   _panelPtr.x = (e.clientX / window.innerWidth) * 2 - 1;
   _panelPtr.y = -(e.clientY / window.innerHeight) * 2 + 1;
@@ -140,6 +140,7 @@ const _closeBtn = document.getElementById('panel-close');
 if (_closeBtn) _closeBtn.addEventListener('click', (e) => {
   e.stopPropagation();
   exitPanelZoom();
+  closeArtistPanel();
 });
 
 const _prevBtn = document.getElementById('panel-prev');

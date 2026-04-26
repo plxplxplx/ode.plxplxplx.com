@@ -7,7 +7,6 @@ const workEl = document.getElementById('artist-panel-work');
 const workTitleEl = document.getElementById('artist-panel-work-title');
 const workTextEl = document.getElementById('artist-panel-work-text');
 const linksEl = document.getElementById('artist-panel-links');
-const closeBtn = document.getElementById('artist-panel-close');
 
 function makeLink(href, label) {
   const a = document.createElement('a');
@@ -48,7 +47,6 @@ export function closeArtistPanel() {
   panel.setAttribute('aria-hidden', 'true');
 }
 
-closeBtn.addEventListener('click', closeArtistPanel);
 window.addEventListener('keydown', (e) => {
   if (e.code === 'Escape' && panel.classList.contains('open')) closeArtistPanel();
 });
