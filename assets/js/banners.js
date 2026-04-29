@@ -29,7 +29,7 @@ const BANNERS = [
       "ett musikaliskt kalejdoskop",
       "och en performativ karusell.",
       "",
-      "Konstmuseet i Folkparken,",
+      "Konstmuseet i Kungsparken,",
       "gamla casinot",
       "",
       "ÖPPETTIDER",

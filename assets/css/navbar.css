@@ -24,16 +24,16 @@
 /* ── Header ── */
 #site-header {
   position: fixed;
-  top: 22%;
+  top: 1rem;
   left: 50%;
-  transform: translate(-50%, -50%);
+  transform: translate(-50%, 0);
   z-index: var(--z-hud);
   user-select: none;
   pointer-events: none;
   transition: transform var(--transition-slow) ease;
 }
 #site-header.panel-active {
-  transform: translate(-50%, calc(-50% - 28vh));
+  transform: translate(-50%, -28vh);
 }
 
 #site-header h1 {
@@ -45,7 +45,7 @@
 }
 
 #heading-img {
-  width: min(40vw, 400px);
+  width: min(60vw, 400px);
   height: auto;
   display: block;
 }
@@ -116,16 +116,7 @@
 
 /* ── Mobile ── */
 @media (max-width: 600px) {
-  #heading-img {
-    width: 60vw;
-  }
-  #header-nav {
-    grid-template-columns: 1fr;
-    justify-items: center;
-    text-align: center;
-  }
   .nav-link {
-    font-size: 20px;
     padding: 1px 10px;
   }
   .nav-link:nth-child(3),
