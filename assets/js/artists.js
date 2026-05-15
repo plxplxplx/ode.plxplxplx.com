@@ -13,6 +13,12 @@ export const ARTISTS = {
     name: "Amina Szecsödy",
     bio: "Amina Szecsödy (b. 1995) works across theatre, choreography, and visual arts. Her work engages text, sound and the body to draw on elements of pop culture, newspaper articles, cinema and mythmaking. She edits, cuts and pastes dissonant voices and phenomena of the past and the future into the immediate present.",
   },
+  "Carl Fredrik Emrik": {
+    name: "Carl Fredrik Emrik",
+    bio: "Carl Fredrik Emrik arbetar med installationer där skulpturer och objekt tar plats i och skapar rum. Genom sitt arbete undersöker han symmetri, upprepning och rytm.",
+    web: "https://www.carlfredrikemrik.com",
+    instagram: "carlfredrikemrik",
+  },
   "Cecilia Sterner": {
     name: "Cecilia Sterner",
     bio: "Cecilia Sterner is a visual artist based in Malmö. She works with installation and performance and lures you into a playful world where the ugly, raw, dark, sophisticated and ludicrous meet — because the world is full of contradictions.",
@@ -28,6 +34,10 @@ export const ARTISTS = {
     bio: "DINA is a Berlin-based producer and DJ and co-founder of Nachtcrew — a label and party series fusing rave sounds, art and 3D mapping into immersive sensorial experiences. Her production spans spacey ambience, punching basslines, and ethereal trance.",
     web: "https://soundcloud.com/dinakhashan",
     instagram: "dinakhashan",
+  },
+  "Dungeon Acid": {
+    name: "Dungeon Acid",
+    bio: "Jean-Louis Huhta — born in Gothenburg, now based in Copenhagen — has been obsessed with sound and rhythm since childhood. He has played with bands such as Anti-Cimex, Cortex, Lucky People Center and Skull Defekts. As Dungeon Acid he has performed around the world and released records on a string of underground labels.",
   },
   "Eli Frankel": {
     name: "Eli Frankel",
@@ -58,6 +68,10 @@ export const ARTISTS = {
     work: "Die Ewige Suppe",
     workText: "En surreell dockteater-opera som utspelar sig i en bar, där protagonisten — en keramisk docka modellerad efter konstnären själv — genom sånger berättar fragmenterade minnen som tar sin utgångspunkt i graviditet och moderskap. Teatern utvecklar sig som en evig soppa: en evigt föränderlig blandning av minnen, drömmar och politiska verkligheter, allt eftersom baren omvandlas till en skiftande scen där sjuksystrar, sagofigurer, byråkratiska utövare, nationalistiska gatubokhandlare och krigsspöken sammanstrålar för att kasta ljus över hur personliga och kollektiva historier sammanvävs.",
   },
+  "EMG Trio": {
+    name: "EMG Trio",
+    bio: "EMG Trio bjuder på klassiker från den amerikanska sångboken med sin helt egen prägel — Ellen Mölck på trummor, Gustav Sundquist på bas och Martin Friis på gitarr. Smittande sväng, subtila nyanser och improvisatorisk frihet.",
+  },
   "Emil Keller Skousen": {
     name: "Emil Keller Skousen",
     bio: "Emil Keller Skousen works with a blend of sound, performance, text, drawing, and sculpture. In recent years he has toured with the performance “Mr. Szinck”, a drone-noise show featuring the lonely knight of the post-apocalypse.",
@@ -80,9 +94,21 @@ export const ARTISTS = {
     name: "Frans Felix Ahlberg Eriksson",
     bio: "Felix is a visual artist and interior architect based in Stockholm. Educated at Konstfack (Bachelor of Fine Arts 2011) and Nyckelviken. Apart from his art practice he has worked in architectural offices and freelance in interior architecture and art production.",
   },
+  "Fulvio Castelli": {
+    name: "Fulvio Castelli",
+    bio: "Stockholm-based composer Fulvio Castelli (b. 1989, Rome) works with flugelhorn, improvisation and electronics. His solo project Respiro is breath shaped into sound — fragments of melody, distant rituals and shimmering decay that drift between tone and texture.",
+    instagram: "fulviocastelli",
+    work: "Respiro",
+    workText: "Respiro is a solo flugelhorn and electronics project exploring breath, space and sonic transformation. Each performance unfolds as a space for listening, where presence deepens and sound lingers like the trace of something just out of reach.",
+  },
   "Jenny Palén": {
     name: "Jenny Palén",
     bio: "Jenny Palén (f. 1982 i Stockholm) tog examen från Kungliga Konsthögskolan 2015. Hennes arbete omfattar installation, video, skulptur och måleri, med fokus på existentiella och surrealistiska teman som utforskas genom film, performance och scenografi.",
+  },
+  "Jenny Seth": {
+    name: "Jenny Seth",
+    bio: "Jenny Seth — musikläggare, dj och allmänt bra.",
+    instagram: "jennyseth",
   },
   "Johnny Essing": {
     name: "Johnny Essing",
@@ -98,10 +124,19 @@ export const ARTISTS = {
     bio: "Jules Reidy’s sublime music maps the human experience in glittering constellations of sound. The Berlin-based guitarist explores microtonal mysticism and alternate tunings drawn from transcendental folk and minimalism, alongside playful experiments with smudged pop melodics and sampling.",
     instagram: "jules_reidy",
   },
+  "Kalevi Palomäki": {
+    name: "Kalevi Palomäki",
+    bio: "Kalevi Palomäki är en technoentusiast från Malmö. Han kommer inte spela techno.",
+  },
   "Kristoffer Grip": {
     name: "Kristoffer Grip",
     bio: "Kristoffer Grip (born 1984) lives outside of Ronneby and works with painting, vitreous enamels, drawing, writing and music in regard to stories, myths, symbols and our relationship to the immaterial and the imagined. He released his debut album “Wildest Hope” in March 2026.",
     web: "https://kristoffergrip.com",
+  },
+  "Lashing Chain": {
+    name: "Lashing Chain",
+    bio: "Lashing Chain is a Malmö-based project fusing industrial with techno and ambient/noise. Compositions push sonic boundaries to create a visceral, cathartic experience that challenges the listener and immerses them in a haunting world.",
+    instagram: "lashingchain",
   },
   "Mohammad Reza Mortazavi": {
     name: "Mohammad Reza Mortazavi",
@@ -151,6 +186,11 @@ export const ARTISTS = {
   "Stina Force": {
     name: "Stina Force",
     bio: "With a taste for the absurd and the strange, Fors creates solo works that move between dance, theater, music, and experimental performance. She is known for her one-woman band Stina Force, the performance A Mouthful of Tongues, and most recently the durational piece Answer Me Pythia.",
+  },
+  "Tommie X": {
+    name: "Tommie X",
+    bio: "Tommie Daniel Damberg (född 1986) skapar skulpturer i form av bland annat ljusstakar och dioraman av upphittat material och begagnade leksaker. Har medverkat på Millesgården, Galleri Thomassen och Gauche, där han även har sin ateljé.",
+    instagram: "tommiesex",
   },
   "Velvet Forever": {
     name: "Velvet Forever",
